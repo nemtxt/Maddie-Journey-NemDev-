@@ -50,3 +50,9 @@
 .assigned-panel .heading-line{margin:0}
 @media(max-width:1120px){.division-grid{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}.role-chip{display:none}}
 @media(max-width:760px){.screen-summary .metric{padding:13px}.screen-summary .metric strong{font-size:21px}.division-grid{grid-template-columns:1fr}.division-card{min-height:212px}.division-toolbar-row{align-items:stretch;flex-direction:column}.division-switch{width:100%}.division-members th,.division-members td{padding:12px}.summary-heading{align-items:flex-start}.division-card-footer{padding-top:15px}.assigned-panel .heading-line{align-items:flex-start}}
+
+.employee-mini-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:0 0 19px}
+.employee-mini-summary span{display:flex;flex-direction:column;gap:5px;background:#fff;border:1px solid var(--line);border-radius:11px;padding:12px}
+.employee-mini-summary small{font-size:10px;color:#878b92}
+.employee-mini-summary strong{font:800 17px Manrope;letter-spacing:-.055em}
+@media(max-width:580px){.employee-mini-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
