@@ -1197,4 +1197,86 @@ check('New small monitoring labels use accessible text contrast in both themes',
   assert(ratio('#a82759','#ffffff')>=4.5);
   assert(ratio('#f278aa','#111111')>=4.5);
 });
+check('Phase 7 operational focus reuses attendance, 201 documents and calendar fixture counts',()=>{
+  user.navigate('overview');
+  const html=user.html();
+  const rail=html.split('class="monitor-pulse monitor-focus"')[1]?.split('</section>')[0];
+  assert(rail);
+  const snap=user.win.MJ_SOURCE_ADAPTER.getSnapshot();
+  const docs=user.win.MJ_MONITORING.fileSummary(snap);
+  const today=user.win.MJ_MONITORING.todayManila();
+  const scheduled=user.win.MJ_MONITORING.events(snap,today.slice(0,7))
+    .filter(e=>e.date>=today);
+  assert.equal((rail.match(/class="monitor-focus-item"/g)||[]).length,3);
+  for(const tab of ['attendance','files201','calendar']){
+    assert(rail.includes('data-action="nav" data-tab="'+tab+'"'),tab);
+  }
+  assert(rail.includes('class="monitor-focus-value">'+docs.groups.missing.length+'</span>'));
+  assert(rail.includes('class="monitor-focus-value">'+scheduled.length+'</span>'));
+  assert(rail.includes(docs.groups['not-checked'].length+' other people have documents not yet checked'));
+  assert(rail.includes('fictional records only'));
+  if(scheduled.length)assert(rail.includes('Next: '+scheduled[0].employee.name));
+  assert(!rail.includes('Connected now'));
+});
+check('Phase 7 201 Files attention category lists exactly the people with sample gaps',()=>{
+  user.navigate('overview');
+  user.click('work-view',{mode:'list'});
+  user.click('attention-filter',{kind:'documents'});
+  let html=user.html();
+  assert(html.includes('data-kind="documents" class="queue-filter active" aria-pressed="true"'));
+  const snap=user.win.MJ_SOURCE_ADAPTER.getSnapshot();
+  const docs=user.win.MJ_MONITORING.fileSummary(snap);
+  const people=docs.groups.missing.length+docs.groups['not-checked'].length;
+  const summary=html.split('class="queue-count" aria-live="polite">')[1]?.split('</span>')[0];
+  assert.equal(summary,people+' people · '+people+' signals');
+  user.click('attention-more');
+  html=user.html();
+  const entries=html.split('class="work-list-row"').slice(1).map(row=>
+    row.split('data-action="open" data-id="')[1]?.split('"')[0]).filter(Boolean);
+  assert.equal(entries.length,people);
+  assert.equal(new Set(entries).size,people);
+  assert(entries.every(id=>{
+    const e=snap.employees.find(x=>x.id===id);
+    const states=Object.values(e.files201);
+    return states.includes('missing')||states.includes('not-checked');
+  }));
+  assert(html.includes('data-detail="files201"'));
+});
+check('Phase 7 direct 201 file triage opens the existing read-only employee reader',()=>{
+  user.navigate('overview');
+  user.click('attention-filter',{kind:'documents'});
+  const snap=user.win.MJ_SOURCE_ADAPTER.getSnapshot();
+  const matching=snap.employees.find(e=>Object.values(e.files201).includes('missing'));
+  assert(matching);
+  user.click('open',{id:matching.id,detail:'files201'});
+  const modal=user.html();
+  assert(modal.includes('class="monitor-person-documents"'));
+  assert(modal.includes('201 Files Checklist'));
+  assert(modal.includes('Fictional per-document statuses'));
+  assert(!modal.includes('type="file"'));
+  user.click('close');
+  assert(user.html().includes('class="monitor-pulse monitor-focus"'));
+});
+check('Phase 7 compact monitoring focus adapts to tablet/mobile and reduced motion',()=>{
+  const css=src['mono.css'];
+  assert(css.includes('body .monitor-pulse.monitor-focus'));
+  assert(css.includes('grid-template-columns:repeat(3,minmax(0,1fr))'));
+  assert(css.includes('@media(min-width:761px) and (max-width:1050px)'));
+  assert(css.includes('body .monitor-focus-grid{grid-template-columns:minmax(0,1fr)}'));
+  assert(css.includes('body .monitor-focus-item{transition:none!important}'));
+  assert(css.includes('body .monitor-focus-item:hover{outline:1px solid Highlight}'));
+  assert(css.includes('outline-offset:-3px!important'));
+});
+check('Phase 7 monitoring links change view but never modify underlying sample documents',()=>{
+  const original=JSON.stringify(user.win.MJ_SEED.employees);
+  for(const tab of ['attendance','files201','calendar']){
+    user.navigate('overview');
+    assert(user.html().includes('data-action="nav" data-tab="'+tab+'"'));
+    user.click('nav',{tab});
+    const h=user.html();
+    assert(h.includes('<h1>'),tab);
+    assert(h.includes('workspace-sidebar'),tab);
+  }
+  assert.equal(JSON.stringify(user.win.MJ_SEED.employees),original);
+});
 console.log('\n'+results.length+' smoke tests passed. Physical-device visual QA is separate.');
