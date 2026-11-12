@@ -467,6 +467,78 @@
       audit(e,'Updated sample compensation: '+field);
     }else return;render();
   }
+  function openMilestoneEditor(kind,employeeId,recordId){
+    const e=emp(employeeId),allowed=['promotion','perfect','discipline'].includes(kind);
+    const listName={promotion:'promotions',perfect:'attendanceAwards',discipline:'disciplinaryActions'}[kind];
+    if(!e||!allowed)return;
+    if(kind==='promotion'&&!(isHR()||roleCanHead(e))){toast('Only HR or the assigned evaluator can record promotions.');return;}
+    if(kind!=='promotion'&&!isHR()){toast('Only HR can maintain this type of milestone.');return;}
+    const list=e[listName],old=recordId?list.find(function(x){return x.id===recordId;}):null;
+    if(recordId&&!old){toast('Record not found.');return;}
+    if(kind==='promotion'&&old&&old.status==='Approved'&&!isHR()){toast('Only HR can edit approved promotion records.');return;}
+    const statusOptions=function(arr,selected){return opts(arr.map(function(x){return {label:x,value:x};}),selected);};
+    const modal=document.createElement('div');modal.id='milestone-edit-modal';modal.className='overlay center-overlay milestone-edit-overlay';modal.setAttribute('data-overlay','milestone-editor');
+    const field=function(name,label,value,type,required){return '<label><span class="field-label">'+label+'</span><input class="field" name="'+name+'" type="'+(type||'text')+'" value="'+safe(value||'')+'" '+(required?'required':'')+'></label>';};
+    let formFields='';
+    if(kind==='promotion'){
+      formFields=field('date','Effective date',old?old.date:now(),'date',true)+field('from','Previous position',old?old.from:e.jobTitle,'text',true)+field('to','New position',old?old.to:'','text',true)+
+        '<label><span class="field-label">Promotion status</span><select class="field" name="status">'+statusOptions(isHR()?['Proposed','Recommended','Approved']:['Proposed','Recommended'],old&&old.status)+'</select></label>';
+    }else if(kind==='perfect'){
+      formFields=field('period','Attendance period (month)',old?old.period:now().slice(0,7),'month',true)+
+        '<label><span class="field-label">Verification</span><select class="field" name="status">'+statusOptions(['Pending verification','HR confirmed'],old&&old.status)+'</select></label>'+
+        '<p class="muted micro">Do not award perfect attendance automatically from incomplete attendance entries.</p>';
+    }else{
+      formFields=field('date','Date recorded',old?old.date:now(),'date',true)+field('category','Policy category',old?old.category:'','text',true)+
+        '<label><span class="field-label">Action level</span><select class="field" name="severity">'+statusOptions(['Advisory','Written warning','Final warning','Suspension','Other'],old&&old.severity)+'</select></label>'+
+        '<label><span class="field-label">Case status</span><select class="field" name="status">'+statusOptions(['Under review','Active','Resolved'],old&&old.status)+'</select></label>';
+    }
+    const heading={promotion:'Promotion record',perfect:'Perfect-attendance recognition',discipline:'Disciplinary case'}[kind];
+    modal.innerHTML='<section class="workspace-modal milestone-editor-panel" role="dialog" aria-modal="true" aria-labelledby="milestone-editor-title" tabindex="-1">'+
+      '<div class="modal-fixed-head"><div><span class="eyebrow">SAMPLE RECORD · '+safe(e.id)+'</span><h2 id="milestone-editor-title">'+(old?'Edit ':'New ')+heading+'</h2><p>'+safe(e.name)+' · '+safe(div(e.division).name)+'</p></div><button type="button" class="modal-close" data-milestone-close="1" aria-label="Close form">×</button></div>'+
+      '<div class="workspace-modal-scroll"><form id="milestone-form" class="stack milestone-form">'+
+      (kind==='discipline'?'<div class="callout orange"><strong>Confidential demonstration:</strong> Do not enter real disciplinary or personal records on this public prototype.</div>':'')+
+      '<div class="form-grid">'+formFields+'</div>'+
+      '<label><span class="field-label">Record note (optional)</span><textarea class="field textarea" name="note" maxlength="500" placeholder="Sample note only — no real confidential information">'+safe(old?old.note:'')+'</textarea></label>'+
+      '<div class="milestone-form-actions">'+(old?'<button type="button" class="button danger" data-milestone-delete="1">Remove</button>':'')+
+      '<button type="button" class="button" data-milestone-close="1">Cancel</button><button type="submit" class="button primary">Save record</button></div>'+
+      '</form></div></section>';
+    document.body.appendChild(modal);
+    const close=function(){modal.remove();};
+    modal.querySelectorAll('[data-milestone-close]').forEach(function(el){el.addEventListener('click',close);});
+    modal.addEventListener('click',function(ev){if(ev.target===modal)close();});
+    modal.addEventListener('keydown',function(ev){if(ev.key==='Escape'){ev.preventDefault();ev.stopPropagation();close();}});
+    const deletion=modal.querySelector('[data-milestone-delete]');
+    if(deletion)deletion.addEventListener('click',function(){
+      if(!confirm('Remove this fictional milestone record?'))return;
+      const idx=list.findIndex(function(x){return x.id===recordId;});
+      if(idx!==-1)list.splice(idx,1);
+      audit(e,'Removed demo '+kind+' milestone');close();render();toast('Record removed from this browser.');
+    });
+    modal.querySelector('#milestone-form').addEventListener('submit',function(ev){
+      ev.preventDefault();if(!isHR()&&kind!=='promotion' || !isHR()&&kind==='promotion'&&!roleCanHead(e))return;
+      const f=new FormData(ev.currentTarget),val=function(key){return String(f.get(key)||'').trim().slice(0,500);};
+      const next={id:old?old.id:'mj-'+kind+'-'+e.id+'-'+Date.now(),note:val('note'),status:val('status')};
+      if(kind==='promotion'){
+        next.date=val('date');next.from=val('from');next.to=val('to');
+        if(!next.from||!next.to||!isValidDate(next.date)){toast('Enter a valid date and both job positions.');return;}
+        if(!isHR()&&!['Proposed','Recommended'].includes(next.status)){toast('Only HR can approve promotions.');return;}
+        if(!['Proposed','Recommended','Approved'].includes(next.status))return;
+      }else if(kind==='perfect'){
+        next.period=val('period');if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(next.period)||!['Pending verification','HR confirmed'].includes(next.status)){toast('Select a valid month and verification status.');return;}
+      }else{
+        next.date=val('date');next.category=val('category');next.severity=val('severity');
+        if(!isValidDate(next.date)||!next.category||!['Advisory','Written warning','Final warning','Suspension','Other'].includes(next.severity)||!['Under review','Active','Resolved'].includes(next.status)){toast('Complete all case details correctly.');return;}
+      }
+      if(old)Object.assign(old,next);else list.push(next);
+      audit(e,(old?'Updated':'Recorded')+' demo '+kind+' milestone');
+      close();render();toast('Milestone saved locally.');
+    });
+    const first=modal.querySelector('input');if(first&&typeof first.focus==='function')first.focus({preventScroll:true});
+  }
+  function isValidDate(value){
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(value||''))return false;
+    const d=new Date(value+'T00:00:00Z');return Number.isFinite(d.getTime())&&d.toISOString().slice(0,10)===value;
+  }
   function openRecordEditor(id){
     if(!isHR()){toast('Select an HR demo workspace to edit attendance.');return;}
     const e=emp(),old=id?e.attendance.find(function(x){return x.id===id;}):null;
