@@ -524,3 +524,283 @@ body .landing-footer span{color:inherit}
 @media(prefers-reduced-motion:reduce){
   .overview-summary-grid button.overview-signal{transition:none}
 }
+
+
+/* ==========================================================
+   Phase 1: coherent interface system · v2.9
+   Inter / neutral surfaces / one operational accent.
+   These variables are shared by every monitoring view.
+   ========================================================== */
+:root{
+  --mj-space-1:4px;--mj-space-2:8px;--mj-space-3:12px;
+  --mj-space-4:16px;--mj-space-5:20px;--mj-space-6:24px;
+  --mj-space-8:32px;--mj-space-10:40px;
+  --mj-radius-control:9px;--mj-radius-panel:14px;
+  --mj-type-caption:11px;--mj-type-body:13px;--mj-type-section:17px;
+  --mj-control-min:40px;--mj-page-width:1620px
+}
+body .main{max-width:var(--mj-page-width);min-width:0}
+body .page-header{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  gap:var(--mj-space-5);padding-top:var(--mj-space-8);
+  padding-bottom:var(--mj-space-5);margin-bottom:var(--mj-space-2)
+}
+body .page-header>div:first-child{min-width:0}
+body .page-header .eyebrow{
+  margin-bottom:var(--mj-space-2);font-size:10px;
+  color:var(--mono-secondary);letter-spacing:.11em;font-weight:700
+}
+body .page-header h1{
+  font-size:clamp(27px,2.7vw,39px);font-weight:750;
+  letter-spacing:-.055em;line-height:1.1;margin:0
+}
+body .page-header p{
+  color:var(--mono-secondary);font-size:var(--mj-type-body);
+  max-width:72ch;line-height:1.55;margin:var(--mj-space-2) 0 0
+}
+body .page-header .actions{align-self:flex-end;flex-wrap:wrap}
+body .panel,body .overview-spotlight{
+  border-radius:var(--mj-radius-panel);border-color:var(--mono-border);
+  box-shadow:none
+}
+body .panel-head h2,body .overview-section-heading h2{
+  font-size:var(--mj-type-section);font-weight:730;
+  letter-spacing:-.035em;line-height:1.25
+}
+body .panel-head p,body .overview-section-heading p{
+  color:var(--mono-secondary);font-size:var(--mj-type-caption);
+  line-height:1.5
+}
+body .button:not(.landing-primary-cta),body .field,
+body .search,body .directory-search-label .search,
+body .directory-sort-label .directory-sort{
+  min-height:var(--mj-control-min);border-radius:var(--mj-radius-control)
+}
+body .button:not(.landing-primary-cta){font-weight:650;letter-spacing:-.01em}
+body .workspace-mainnav .workspace-mainnav-item{
+  min-height:46px;border-radius:var(--mj-radius-control);
+  font-weight:600;letter-spacing:-.01em
+}
+body .workspace-mainnav .workspace-mainnav-item[aria-current]{
+  background:var(--mono-soft);color:var(--mono-text);
+  box-shadow:inset 3px 0 var(--mono-accent)
+}
+body .workspace-subnav a{
+  border-radius:7px;font-weight:580;white-space:nowrap
+}
+body .workspace-subnav a[aria-current]{font-weight:720;color:var(--mono-accent)}
+body .workspace-topbar .reader-source-status{
+  display:inline-flex;justify-content:center;align-items:center;
+  min-height:31px;padding:6px 10px;border-radius:7px;
+  color:var(--mono-secondary);background:var(--mono-soft);
+  border:1px solid var(--mono-border);font-size:10.5px;
+  font-weight:650;white-space:nowrap;cursor:pointer
+}
+body .workspace-topbar .reader-source-status:hover{
+  background:var(--mono-hover);color:var(--mono-text)
+}
+body .table th{
+  font-size:10.5px;letter-spacing:.04em;
+  font-weight:700;color:var(--mono-secondary)
+}
+body .table td{font-size:12px}
+body .directory-results-count,body .work-queue .queue-count{
+  font-variant-numeric:tabular-nums
+}
+@media(max-width:760px){
+  body .page-header{align-items:flex-start;gap:var(--mj-space-3);padding-top:var(--mj-space-5)}
+  body .page-header h1{font-size:clamp(25px,6vw,34px)}
+  body .page-header p{font-size:12px}
+  body .page-header .actions{align-self:flex-start}
+  body .workspace-mainnav .workspace-mainnav-item{min-height:46px}
+}
+
+/* ==========================================================
+   Phase 2: a signal-led operational overview.
+   Explicit sample provenance. No invented trend, severity, or sync.
+   ========================================================== */
+.monitor-pulse{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:var(--mj-space-5);margin:0 0 var(--mj-space-4);
+  padding:var(--mj-space-4) var(--mj-space-5);
+  border:1px solid var(--mono-border);border-left:3px solid var(--mono-accent);
+  border-radius:var(--mj-radius-control);background:var(--mono-surface)
+}
+.monitor-pulse-copy{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0}
+.monitor-pulse-kicker{
+  color:var(--mono-secondary);font-size:10px;font-weight:750;
+  letter-spacing:.1em
+}
+.monitor-pulse-copy>strong{
+  color:var(--mono-text);font-size:clamp(13px,1.15vw,16px);
+  line-height:1.35;font-weight:710;letter-spacing:-.025em
+}
+.monitor-pulse-primary-count{font-variant-numeric:tabular-nums;color:var(--mono-accent)}
+.monitor-pulse-copy>small{font-size:11px;color:var(--mono-secondary);line-height:1.5}
+.monitor-pulse-link{
+  display:inline-flex;align-items:center;justify-content:space-between;
+  gap:13px;flex:0 0 auto;min-height:var(--mj-control-min);
+  padding:8px 12px;color:var(--mono-text);
+  border:1px solid var(--mono-border);background:var(--mono-soft);
+  border-radius:var(--mj-radius-control);font-size:11.5px;
+  font-weight:690;cursor:pointer
+}
+.monitor-pulse-link:hover{background:var(--mono-hover);border-color:var(--mono-accent)}
+.monitor-pulse-link span{font-size:15px;color:var(--mono-accent)}
+.overview-monitor-grid{grid-template-columns:minmax(0,1.35fr) minmax(330px,.65fr)}
+.overview-monitor-grid .work-list-row{
+  grid-template-columns:minmax(120px,1.1fr) minmax(190px,1.7fr) minmax(66px,.6fr) 60px;
+  gap:var(--mj-space-3);padding:12px var(--mj-space-4)
+}
+.overview-monitor-grid .work-list-head{
+  grid-template-columns:minmax(120px,1.1fr) minmax(190px,1.7fr) minmax(66px,.6fr) 60px;
+  gap:var(--mj-space-3);padding:9px var(--mj-space-4)
+}
+.monitor-priority-cue{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:72px;flex:0 0 auto;padding:5px 7px;
+  border:1px solid var(--mono-border);border-radius:6px;
+  background:var(--mono-soft);color:var(--mono-secondary);
+  font-size:10px;font-weight:730;line-height:1.1
+}
+.monitor-priority-check{
+  background:var(--mono-tint);color:var(--mono-accent);
+  border-color:var(--mono-accent)
+}
+.monitor-signal-text{
+  display:flex;flex-direction:column;min-width:0;gap:2px;
+  color:var(--mono-text);line-height:1.35
+}
+.monitor-signal-text>small{color:var(--mono-secondary);font-size:10px;font-weight:550}
+.overview-monitor-grid .work-list-subject{gap:var(--mj-space-2);min-width:0}
+.overview-monitor-grid .work-list-person strong{font-size:12px}
+.overview-monitor-grid .work-queue{padding:var(--mj-space-5)}
+.overview-stage-track[role="img"]{min-width:0}
+
+/* The eight divisions are one comparative scan, not eight decorative cards. */
+.monitor-division-section{padding:var(--mj-space-5);min-width:0}
+.monitor-division-section .overview-section-heading{padding-bottom:var(--mj-space-4)}
+.overview-division-rail.monitor-division-matrix{
+  display:block!important;overflow:hidden!important;
+  padding:0!important;gap:0!important;
+  border:1px solid var(--mono-border);border-radius:11px;
+  background:var(--mono-surface);scroll-snap-type:none!important
+}
+.monitor-division-head,.monitor-division-row{
+  display:grid;grid-template-columns:minmax(190px,2fr) 58px minmax(106px,.9fr) 80px 95px 125px 20px;
+  align-items:center;gap:var(--mj-space-3);width:100%;
+  padding:var(--mj-space-3) var(--mj-space-4)
+}
+.monitor-division-head{
+  background:var(--mono-soft);color:var(--mono-secondary);
+  font-size:10px;font-weight:720;letter-spacing:.03em
+}
+.monitor-division-head span:not(:first-child){text-align:right}
+.monitor-division-row{
+  appearance:none;-webkit-appearance:none;
+  text-align:left;border:0;border-top:1px solid var(--mono-border);
+  border-radius:0;background:var(--mono-surface);
+  color:var(--mono-text);cursor:pointer;font-size:12px;
+  font-weight:600;transition:background-color .15s ease
+}
+.monitor-division-row:hover,.monitor-division-row:focus-visible{
+  background:var(--mono-hover)
+}
+.monitor-division-row:focus-visible{outline-offset:-3px!important;position:relative;z-index:1}
+.monitor-division-identity{display:flex;align-items:center;gap:var(--mj-space-3);min-width:0}
+.monitor-division-code{
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:6px 7px;min-width:39px;border:1px solid var(--mono-border);
+  background:var(--mono-soft);border-radius:6px;
+  font-size:10px;font-weight:750;color:var(--mono-secondary)
+}
+.monitor-division-identity strong{
+  font-size:12px;line-height:1.35;min-width:0;font-weight:710;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap
+}
+.monitor-division-cell{
+  display:block;text-align:right;min-width:0;
+  font-size:12px;font-variant-numeric:tabular-nums
+}
+.monitor-division-cell>b{font-weight:690}
+.monitor-division-journey{
+  display:flex;align-items:center;justify-content:flex-end;gap:10px
+}
+.monitor-mini-track{
+  display:block;flex:0 0 46px;height:5px;
+  border-radius:99px;overflow:hidden;background:var(--mono-soft)
+}
+.monitor-mini-track>span{
+  display:block;height:100%;background:var(--mono-accent);border-radius:99px
+}
+.monitor-division-arrow{
+  display:block;color:var(--mono-secondary);font-size:16px;text-align:right
+}
+.monitor-division-row:hover .monitor-division-arrow{color:var(--mono-accent)}
+@media(max-width:1420px){
+  .monitor-division-head,.monitor-division-row{
+    grid-template-columns:minmax(155px,2fr) 43px minmax(80px,.95fr) 65px 77px 93px 20px;
+    gap:var(--mj-space-2);padding:var(--mj-space-3)
+  }
+  .monitor-mini-track{flex-basis:25px}
+}
+@media(max-width:1180px){
+  .monitor-division-head{display:none}
+  .monitor-division-row{
+    grid-template-columns:minmax(160px,1.6fr) minmax(60px,.6fr) minmax(105px,1fr) 22px;
+    grid-template-areas:"name people journey arrow" "name kit reviews concerns";
+    gap:6px var(--mj-space-3);padding:var(--mj-space-4)
+  }
+  .monitor-division-identity{grid-area:name}
+  .monitor-division-people{grid-area:people}
+  .monitor-division-journey{grid-area:journey}
+  .monitor-division-kit{grid-area:kit}
+  .monitor-division-reviews{grid-area:reviews}
+  .monitor-division-concerns{grid-area:concerns}
+  .monitor-division-arrow{grid-area:arrow}
+  .monitor-division-cell::before{
+    content:attr(data-label);display:block;
+    margin-bottom:3px;color:var(--mono-secondary);
+    font-size:9px;line-height:1.2;font-weight:550
+  }
+  .monitor-division-journey{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+  .monitor-division-journey::before{align-self:flex-end}
+  .monitor-mini-track{width:74px;flex:0 0 5px}
+}
+@media(max-width:880px){
+  .overview-monitor-grid{grid-template-columns:minmax(0,1fr)}
+  .overview-monitor-grid .overview-insight-grid{
+    display:grid;grid-template-columns:repeat(2,minmax(0,1fr))
+  }
+}
+@media(max-width:760px){
+  .monitor-pulse{align-items:stretch;flex-direction:column;gap:var(--mj-space-3)}
+  .monitor-pulse-link{align-self:flex-start}
+  .overview-monitor-grid .work-list-head{display:none}
+  .overview-monitor-grid .work-list-row{
+    grid-template-columns:minmax(0,1fr) auto;
+    grid-template-areas:"person action" "subject subject" "division division";
+    gap:7px;padding:var(--mj-space-4)
+  }
+  .overview-monitor-grid .work-list-person{grid-area:person}
+  .overview-monitor-grid .work-list-subject{grid-area:subject}
+  .overview-monitor-grid .work-list-division{grid-area:division}
+  .overview-monitor-grid .work-list-row>.button{grid-area:action;min-height:38px}
+  .overview-monitor-grid .overview-insight-grid{grid-template-columns:1fr}
+}
+@media(max-width:520px){
+  .monitor-division-row{
+    grid-template-columns:1fr 1fr;
+    grid-template-areas:"name name" "people journey" "kit reviews" "concerns arrow";
+    gap:var(--mj-space-3);padding:var(--mj-space-4)
+  }
+  .monitor-division-identity strong{white-space:normal}
+  .monitor-division-cell{text-align:left}
+  .monitor-division-journey{align-items:flex-start}
+  .monitor-division-journey::before{align-self:flex-start}
+  .monitor-division-arrow{align-self:end;text-align:right}
+  .overview-monitor-grid .work-list-subject{flex-wrap:wrap}
+}
+@media(prefers-reduced-motion:reduce){
+  .monitor-division-row{transition:none}
+}

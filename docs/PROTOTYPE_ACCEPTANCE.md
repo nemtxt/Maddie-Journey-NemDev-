@@ -1,6 +1,6 @@
 # Maddie Journey — Prototype Acceptance Checklist
 
-Release: **v2.7**. Scope: **HTML/CSS/vanilla JavaScript + fictional fixture only**.
+Release: **v2.9**. Scope: **HTML/CSS/vanilla JavaScript + fictional fixture only**.
 
 This document distinguishes code-level verification from human visual acceptance. The automated smoke checks confirm the named routing and data contracts but cannot prove pixel-level accuracy on physical Windows, macOS, Android or iOS devices.
 
@@ -17,7 +17,7 @@ This document distinguishes code-level verification from human visual acceptance
 
 | Parent menu | Top tabs | Checks |
 | --- | --- | --- |
-| Dashboard | Overview, Divisions | One continuous metric strip, attention-first queue, eight-division matrix, Journey distribution, milestones and follow-up Board/List |
+| Dashboard | Overview, Divisions | Four linked metric indicators, verified-attendance snapshot, person-first queue with explicit priority cues, eight-row division comparison, Journey stages and milestones |
 | People | Directory, Milestones | Search, sorting, division filters, visible-only CSV, centered employee modal, milestone categories |
 | Journey | Journey board, Welcome Kit, Attendance | Eight Kanban columns (seven stages + Completed), Table view, division scope, Kit summary, attendance chart and weekly/monthly breakdown |
 | Performance | KPI scorecards, Reviews | Read-only weighted KPI previews, source/validation flags, review timeline, final status summaries |
@@ -47,8 +47,10 @@ The smoke suite covers:
 - No unwanted landing-card strips or percentage widgets; one Inter font and one pink accent.
 - Motion enhancement for page/dialog/mobile drawer, graceful missing-CDN fallback and reduced-motion preference.
 - Single landing dashboard CTA, no redundant modal navigation buttons and restored dialog focus.
-- Four direct, keyboard-accessible KPI shortcuts; queue distinguishes unique people from underlying signals and supports full expansion.
+- Four direct, keyboard-accessible KPI shortcuts; queue distinguishes unique people from underlying signals, shows priority descriptions and supports full expansion.
 - In-place controls maintain keyboard focus; mobile drawer locks background scrolling.
+- Phase 1: shared `--mj-*` design tokens, consistent header/panel/control hierarchy and a navigation shortcut to data-source provenance.
+- Phase 2: verified-attendance count and unverified-entry tally from the fixture; eight responsive division comparison rows with valid drill-downs.
 - Invalid fixture recovery and zero writes to fictional source records.
 - Rendered HTML action names against implemented action handlers.
 

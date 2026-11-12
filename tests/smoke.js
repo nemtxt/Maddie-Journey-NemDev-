@@ -1,4 +1,4 @@
-/* Maddie Journey v2.7 — dependency-free read-only smoke checks.
+/* Maddie Journey v2.9 — dependency-free read-only smoke checks.
    Run from repository root: node tests/smoke.js
    Simulated interactions; browser/device visual QA is separate. */
 'use strict';
@@ -86,12 +86,12 @@ check('Source adapter returns safe copies and reports all five integrations as d
   assert(src['index.html'].indexOf('data-adapter.js')<src['index.html'].indexOf('app.js'));
 });
 
-check('Reference-inspired dashboard has real summaries, all division cards and milestones',()=>{
+check('Monitoring overview presents eight comparable divisions and milestones',()=>{
   user.navigate('overview');
   const html=user.html();
   assert(html.includes('overview-summary-grid'));
   assert(html.includes('overview-division-rail'));
-  assert.equal((html.match(/class="overview-division-card tone-/g)||[]).length,8);
+  assert.equal((html.match(/class="monitor-division-row"/g)||[]).length,8);
   assert.equal((html.match(/class="overview-stage-row"/g)||[]).length,8);
   assert(html.includes('overview-milestone-list'));
   assert(html.includes('overview-followups'));
@@ -526,5 +526,56 @@ check('Keyboard focus is restored after in-place priority filter change',()=>{
   fresh.click('attention-filter',{kind:'kpi'});
   assert.equal(focused,1);
   assert(fresh.html().includes('aria-pressed="true">KPI'));
+});
+check('Phase 1 design tokens and compact navigation are consistent',()=>{
+  const css=src['mono.css'];
+  for(const token of ['--mj-space-1','--mj-space-4','--mj-radius-panel','--mj-type-section','--mj-control-min']){
+    assert(css.includes(token),token);
+  }
+  user.navigate('overview');
+  const h=user.html();
+  assert(!h.includes('workspace-sidebar-caption'));
+  assert(h.includes('data-action="nav" data-tab="sources"'));
+  assert(h.includes('Sample · Not connected'));
+  assert(!h.includes('51 fictional employees · Read-only preview'));
+});
+check('Phase 2 attendance snapshot reflects verified concerns and unverified entries',()=>{
+  const team=user.win.MJ_SEED.employees;
+  const affected=team.filter(e=>e.attendance.some(r=>
+    r.verified&&((r.type==='Late'&&r.approval!=='Excused')||
+    (r.type==='Absent'&&r.approval==='Unapproved')))).length;
+  const unverified=team.reduce((n,e)=>n+e.attendance.filter(r=>!r.verified).length,0);
+  user.navigate('overview');
+  const h=user.html();
+  assert(h.includes('class="monitor-pulse-primary-count">'+affected+'</span>'));
+  assert(h.includes(unverified+' attendance entries await verification'));
+  assert(h.includes('data-action="nav" data-tab="attendance"'));
+  assert(h.includes('fictional records only'));
+});
+check('Phase 2 division comparison is derived from the eight real fixture groups',()=>{
+  user.navigate('overview');
+  const h=user.html();
+  const matrix=h.split('class="overview-division-rail monitor-division-matrix"')[1]?.split('</section>')[0];
+  assert(matrix);
+  assert.equal((matrix.match(/class="monitor-division-row"/g)||[]).length,8);
+  for(const division of user.win.MJ_SEED.divisions){
+    const subset=user.win.MJ_SEED.employees.filter(e=>e.division===division.id);
+    assert(matrix.includes('data-division="'+division.id+'"'));
+    assert(matrix.includes('Open '+division.name+': '+subset.length+' people'));
+  }
+  const first=user.win.MJ_SEED.divisions[0];
+  user.click('goto-division',{division:first.id});
+  assert(user.html().includes(first.name));
+  assert(user.html().includes('division-tabs'));
+});
+check('Phase 2 triage explains priority and signals without duplicate people',()=>{
+  user.navigate('overview');
+  user.click('work-view',{mode:'list'});
+  user.click('attention-filter',{kind:'all'});
+  const h=user.html();
+  assert(h.includes('class="monitor-priority-cue monitor-priority-'));
+  assert(h.includes('class="monitor-signal-text"'));
+  assert(h.includes('other signals for this person')||h.includes('other signal for this person'));
+  assert(!h.includes('Critical'));
 });
 console.log('\n'+results.length+' smoke tests passed. Physical-device visual QA is separate.');

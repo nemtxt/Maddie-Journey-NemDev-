@@ -116,7 +116,7 @@
       '<div class="top-actions workspace-top-actions">'+
       '<button type="button" class="workspace-search" data-action="quick-search" aria-label="Find an employee" title="Search employees · Ctrl/Command + K">'+landingIcon('search')+'<span>Find employee</span></button>'+
       themeControl()+
-      '<span class="reader-source-status" title="Fictional data, no live integrations">Sample data</span>'+
+      '<button type="button" class="reader-source-status" data-action="nav" data-tab="sources" title="Inspect disconnected source providers" aria-label="View source status: fictional sample, no providers connected">Sample · Not connected</button>'+
       '</div></header>'+
       '<nav class="workspace-subnav" aria-label="'+safe(group.label)+' sections"><div class="workspace-subnav-links">'+
       group.tabs.map(function(t){const selected=current===t[0];return '<a href="#'+t[0]+'" data-nav="'+t[0]+'"'+(selected?' aria-current="page"':'')+' class="'+(selected?'active':'')+'">'+safe(t[1])+'</a>';}).join('')+
@@ -129,7 +129,7 @@
       '<a href="#welcome" data-nav="welcome" class="brand brand-official-link" aria-label="Maddie Journey landing" title="Maddie Journey landing">'+
       '<span class="sidebar-brand-mini" aria-hidden="true">M</span>'+
       '<span class="brand-product-name">Maddie Journey<small class="brand-product-subtitle">MONITORING</small></span></a>'+
-      '<p class="workspace-sidebar-caption">PEOPLE MONITORING</p>'+
+
       '<nav id="primary-navigation" class="nav workspace-mainnav" aria-label="Workspace sections">'+navGroups.map(function(g){
         return '<a href="#'+g.defaultTab+'" data-nav="'+g.defaultTab+'" aria-label="'+safe(g.label)+'" title="'+safe(g.label)+'" class="workspace-mainnav-item '+(g.id===active?'active':'')+'"'+
         (g.id===active?' aria-current="location"':'')+'><span class="nav-icon" aria-hidden="true">'+landingIcon(g.icon)+'</span>'+
@@ -315,6 +315,12 @@
     });
     return items.sort(function(a,b){return b.weight-a.weight||a.e.name.localeCompare(b.e.name);});
   }
+  function attentionCue(item){
+    if(item.weight>=94)return {label:'Check',kind:'check'};
+    if(item.weight>=80)return {label:'Validate',kind:'validate'};
+    if(item.weight>=72)return {label:'Review',kind:'review'};
+    return {label:'In progress',kind:'progress'};
+  }
   function attentionPanel(team){
     const all=attentionItems(team);
     // Distinct people are the unit of triage; raw signals remain available by category.
@@ -329,15 +335,20 @@
     const active=categories.some(function(x){return x[0]===ui.attentionFilter;})?ui.attentionFilter:'all';
     const relevant=active==='all'?all:all.filter(function(x){return x.group===active;});
     const rows=uniquePeople(relevant);
+    const perPerson=new Map();
+    relevant.forEach(function(item){perPerson.set(item.e.id,(perPerson.get(item.e.id)||0)+1);});
     const listLimit=ui.attentionShowAll?rows.length:8;
     const boardLimit=ui.attentionShowAll?all.length:4;
     const tabs='<div class="workspace-view-switch" role="group" aria-label="Choose tracker view">'+
       ['list','board'].map(function(mode){return '<button type="button" data-action="work-view" data-mode="'+mode+'" aria-pressed="'+(ui.workView===mode)+'" class="'+(ui.workView===mode?'active':'')+'">'+landingIcon(mode==='board'?'grid':'list')+(mode==='board'?'Board':'List')+'</button>';}).join('')+'</div>';
     const list='<div class="work-list-table"><div class="work-list-head"><span>Employee</span><span>Follow-up</span><span>Department</span><span></span></div>'+
       (rows.length?rows.slice(0,listLimit).map(function(item){
+        const cue=attentionCue(item),extra=(perPerson.get(item.e.id)||1)-1;
         return '<div class="work-list-row">'+
           '<div class="work-list-person">'+avatar(item.e.name)+'<div><strong>'+safe(item.e.name)+'</strong><small>'+safe(item.e.jobTitle)+'</small></div></div>'+
-          '<div class="work-list-subject"><span class="work-type work-type-'+item.group+'">'+safe(item.group==='kpi'?'KPI':item.group==='reviews'?'Review':item.group==='onboarding'?'Onboarding':'Attendance')+'</span><span>'+safe(item.label)+'</span></div>'+
+          '<div class="work-list-subject"><span class="monitor-priority-cue monitor-priority-'+cue.kind+'">'+cue.label+'</span>'+
+          '<span class="monitor-signal-text">'+safe(item.label)+
+          (extra?'<small>+'+extra+' other '+(extra===1?'signal':'signals')+' for this person</small>':'')+'</span></div>'+
           '<span class="work-list-division">'+safe(div(item.e.division).short)+'</span>'+button('Open','open','data-id="'+safe(item.e.id)+'" data-detail="'+item.detail+'"','small')+'</div>';
       }).join(''):'<p class="empty">No sample follow-ups in this category.</p>')+'</div>';
     const groups=categories.slice(1).filter(function(c){return active==='all'||active===c[0];});
@@ -359,7 +370,7 @@
     const visibleTotal=ui.workView==='board'?boardTotal:rows.length;
     const collapsedLimit=ui.workView==='board'?groups.length*4:8;
     return '<section class="panel work-queue"><div class="panel-head"><div><h2>Needs attention</h2>'+
-      '<p>List highlights the top signal per person; Board groups signals by category. Fictional sample data.</p></div>'+
+      '<p>Highest-priority recorded signal per person. Switch categories to inspect other sample follow-ups.</p></div>'+
       '<div class="work-queue-tools"><span class="queue-count" aria-live="polite">'+rows.length+' people · '+relevant.length+' signals</span>'+tabs+'</div></div>'+
       '<div class="queue-filters" role="group" aria-label="Filter follow-ups">'+categories.map(function(c){
         const count=c[0]==='all'?uniquePeople(all).length:uniquePeople(all.filter(function(x){return x.group===c[0];})).length;
@@ -383,23 +394,34 @@
       '<div><strong>Sample data</strong><span>Fictional sample snapshot · No live Airtable or Google sync</span></div>'+
       button('Source details','nav','data-tab="sources"','small')+'</div>';
   }
+  // One comparative row per division; avoid eight competing cards and duplicate CTAs.
+  // All values are computed from the exact employees seen in the division workspace.
   function overviewDivisionRail(){
-    const colors=['pink','yellow','blue','violet'];
-    const cards=data.divisions.map(function(d,i){
-      const team=data.employees.filter(function(e){return e.division===d.id;}),pct=meanOf(team,journeyPct);
-      return '<article class="overview-division-card tone-'+colors[i%colors.length]+'">'+
-        '<div class="overview-division-meta"><span class="overview-division-label">'+safe(d.short)+'</span>'+
-        '<span>'+team.length+' people</span></div>'+
-        '<h3>'+safe(d.name)+'</h3><p>'+safe(divisionEvaluatorNames(d))+'</p>'+
-        '<div class="overview-division-progress"><div class="overview-division-progress-label"><span>Journey completion</span><b>'+pct+'%</b></div>'+
-        '<div class="overview-division-track"><span style="width:'+pct+'%"></span></div></div>'+
-        '<button type="button" class="overview-division-open" data-action="goto-division" data-division="'+safe(d.id)+'">Open division <span aria-hidden="true">→</span></button>'+
-        '</article>';
+    const columns=['Division','People','Journey','Welcome Kit','Reviews open','Attendance concerns',''];
+    const rows=data.divisions.map(function(d){
+      const team=data.employees.filter(function(e){return e.division===d.id;});
+      const journey=meanOf(team,journeyPct),kit=meanOf(team,kitPct);
+      const reviews=team.filter(function(e){return reviewStatus(e,'division')!=='Endorsed';}).length;
+      const concerns=team.filter(function(e){return attend(e).concerns>0;}).length;
+      const detail='Open '+d.name+': '+team.length+' people, Journey '+journey+
+        '%, Welcome Kit '+kit+'%, '+reviews+' division reviews open, '+concerns+' people with verified attendance concerns';
+      return '<button type="button" class="monitor-division-row" data-action="goto-division"'+
+        ' data-division="'+safe(d.id)+'" aria-label="'+safe(detail)+'">'+
+        '<span class="monitor-division-identity"><span class="monitor-division-code">'+safe(d.short)+'</span>'+
+          '<strong>'+safe(d.name)+'</strong></span>'+
+        '<span class="monitor-division-cell monitor-division-people" data-label="People"><b>'+team.length+'</b></span>'+
+        '<span class="monitor-division-cell monitor-division-journey" data-label="Journey"><b>'+journey+'%</b>'+
+          '<span class="monitor-mini-track" aria-hidden="true"><span style="width:'+journey+'%"></span></span></span>'+
+        '<span class="monitor-division-cell monitor-division-kit" data-label="Welcome Kit"><b>'+kit+'%</b></span>'+
+        '<span class="monitor-division-cell monitor-division-reviews" data-label="Reviews open"><b>'+reviews+'</b></span>'+
+        '<span class="monitor-division-cell monitor-division-concerns" data-label="Attendance concerns"><b>'+concerns+'</b></span>'+
+        '<span class="monitor-division-arrow" aria-hidden="true">↗</span></button>';
     });
-    return '<section class="overview-spotlight"><div class="overview-section-heading"><div><h2>Division overview</h2>'+
-      '<p>Eight divisions · select a card for its complete sample dashboard</p></div>'+
-      button('All divisions','nav','data-tab="divisions"','small')+'</div>'+
-      '<div class="overview-division-rail" aria-label="Explore division summaries">'+cards.join('')+'</div></section>';
+    return '<section class="overview-spotlight monitor-division-section"><div class="overview-section-heading">'+
+      '<div><h2>Division comparison</h2><p>Eight divisions · one consistent read-only snapshot</p></div></div>'+
+      '<div class="overview-division-rail monitor-division-matrix" aria-label="Division monitoring comparison">'+
+      '<div class="monitor-division-head" aria-hidden="true">'+columns.map(function(x){return '<span>'+safe(x)+'</span>';}).join('')+'</div>'+
+      '<div class="monitor-division-list">'+rows.join('')+'</div></div></section>';
   }
   function overviewStagePanel(){
     const staff=data.employees,stages=data.stages.map(function(stage,i){
@@ -412,7 +434,7 @@
       button('Open Kanban','nav','data-tab="journey"','small')+'</div>'+
       '<div class="overview-stage-rows">'+stages.map(function(stage){
         return '<div class="overview-stage-row"><span title="'+safe(stage.name)+'">'+safe(stage.name)+'</span>'+
-          '<div class="overview-stage-track"><span style="width:'+(stage.count/max*100)+'%"></span></div>'+
+          '<div class="overview-stage-track" role="img" aria-label="'+stage.count+' of '+staff.length+' people at '+safe(stage.name)+'"><span style="width:'+(stage.count/max*100)+'%"></span></div>'+
           '<b>'+stage.count+'</b></div>';
       }).join('')+'</div></section>';
   }
@@ -437,6 +459,18 @@
       }).join(''):'<p class="empty">No upcoming sample milestones in the next 90 days.</p>')+
       '</div></section>';
   }
+  // Only a computed snapshot. This must never imply real-time or authenticated HR data.
+  function monitorPulse(staff){
+    const verified=staff.filter(function(e){return attend(e).concerns>0;}).length;
+    const unverified=staff.reduce(function(n,e){return n+e.attendance.filter(function(r){return !r.verified;}).length;},0);
+    return '<div class="monitor-pulse" role="note" aria-label="Sample attendance monitoring context">'+
+      '<div class="monitor-pulse-copy"><span class="monitor-pulse-kicker">ATTENDANCE SNAPSHOT</span>'+
+      '<strong><span class="monitor-pulse-primary-count">'+verified+'</span> of '+staff.length+
+      ' people have verified attendance concerns</strong>'+
+      '<small>'+unverified+' attendance entries await verification · fictional records only</small></div>'+
+      '<button type="button" class="monitor-pulse-link" data-action="nav" data-tab="attendance">'+
+      'Inspect attendance <span aria-hidden="true">↗</span></button></div>';
+  }
   function roleHome(){
     const staff=data.employees;
     const concerns=staff.reduce(function(total,e){return total+attend(e).concerns;},0);
@@ -449,9 +483,9 @@
       ['Kits pending',kitPending,'Employees with open requirements','yellow','kit'],
       ['KPI to verify',unvalidated,'Sample records without validation','violet','kpi']
     ];
-    return header('MONITORING / SAMPLE DATA','Organization overview',
-      'What is progressing, what needs review, and where to look next. Figures are fictional, not live.',
-      button('People directory','nav','data-tab="employees"','small'))+
+    return header('PEOPLE MONITORING / DEMO SNAPSHOT','Organization overview',
+      '51 fictional people across eight divisions. Open signals to inspect the recorded details; this is not live data.',
+      '')+
       '<section class="overview-summary-grid" aria-label="Monitoring signals">'+cards.map(function(card){
         return '<button type="button" class="overview-summary-tile tone-'+card[3]+' overview-signal"'+
           ' data-action="nav" data-tab="'+card[4]+'"'+
@@ -459,6 +493,7 @@
           '<span>'+safe(card[0])+'</span><strong>'+safe(card[1])+'</strong>'+
           '<small>'+safe(card[2])+'</small></button>';
       }).join('')+'</section>'+
+      monitorPulse(staff)+
       '<div class="overview-monitor-grid" aria-label="Monitoring priorities">'+
         '<div class="overview-followups">'+attentionPanel(staff)+'</div>'+
         '<div class="overview-insight-grid">'+overviewStagePanel()+overviewMilestonesPanel()+'</div>'+
@@ -916,7 +951,7 @@
       '<footer class="landing-footer"><span>MADHOUSE DESIGN STUDIO</span>'+
       '<span>Fictional data · Demonstration only</span></footer></main></div>';
   }
-  function render(){if(ui.tab==='welcome'){$('app').innerHTML=landingView();document.title='Maddie Journey · Madhouse Design Studio';if(window.MJ_MOTION)window.MJ_MOTION.refresh('welcome');return;}const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,milestones:milestonesView,journey:journey,kit:kitView,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,sources:sourcesView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open ':'')+(ui.sidebarCollapsed?'sidebar-collapsed':'')+'">'+sidebar()+'<button type="button" class="workspace-scrim" aria-label="Close navigation" data-action="mobile"></button><main id="main-content" class="main" tabindex="-1">'+topnav()+(views[ui.tab]||overview)()+'<footer class="footer"><span>Maddie Journey · Prototype v2.7</span><span>51 fictional employees · Read-only preview · No live integrations</span></footer></main></div>'+(ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.employeeModalOpen?employeeModal():'');document.title=title(ui.tab)+' · Maddie Journey';if(window.MJ_MOTION)window.MJ_MOTION.refresh(ui.tab);if(ui.employeeModalOpen||ui.divisionModal||ui.employeePicker){const modal=$('app').querySelector('[role="dialog"]');if(modal&&typeof modal.focus==='function')modal.focus({preventScroll:true});}}
+  function render(){if(ui.tab==='welcome'){$('app').innerHTML=landingView();document.title='Maddie Journey · Madhouse Design Studio';if(window.MJ_MOTION)window.MJ_MOTION.refresh('welcome');return;}const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,milestones:milestonesView,journey:journey,kit:kitView,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,sources:sourcesView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open ':'')+(ui.sidebarCollapsed?'sidebar-collapsed':'')+'">'+sidebar()+'<button type="button" class="workspace-scrim" aria-label="Close navigation" data-action="mobile"></button><main id="main-content" class="main" tabindex="-1">'+topnav()+(views[ui.tab]||overview)()+'<footer class="footer"><span>Maddie Journey · Prototype v2.9</span><span>Fictional snapshot · No connected sources</span></footer></main></div>'+(ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.employeeModalOpen?employeeModal():'');document.title=title(ui.tab)+' · Maddie Journey';if(window.MJ_MOTION)window.MJ_MOTION.refresh(ui.tab);if(ui.employeeModalOpen||ui.divisionModal||ui.employeePicker){const modal=$('app').querySelector('[role="dialog"]');if(modal&&typeof modal.focus==='function')modal.focus({preventScroll:true});}}
   function openDivision(id){if(!data.divisions.some(function(d){return d.id===id;}))return;ui.scope=id;ui.activeDivision=id;ui.divisionTab='summary';ensureEmployeeScope();ui.tab='division';ui.employeeModalOpen=false;ui.divisionModal=false;ui.employeePicker=false;ui.mobile=false;ui.query='';ui.division='all';if(location.hash!=='#division/'+id)location.hash='#division/'+id;window.scrollTo({top:0,behavior:'instant'});render();}
   function navigate(tab){modalOrigin=null;if(tab==='division'){openDivision(ui.activeDivision);return;}ui.scope='all';ensureEmployeeScope();ui.tab=tab;ui.employeeModalOpen=false;ui.divisionModal=false;ui.employeePicker=false;ui.mobile=false;ui.query='';ui.division='all';if(location.hash!=='#'+tab)location.hash='#'+tab;window.scrollTo({top:0,behavior:'instant'});render();}
   // All data-editing functions were removed: this frontend never mutates employee records.
