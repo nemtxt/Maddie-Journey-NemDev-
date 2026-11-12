@@ -16,7 +16,7 @@
     {id:'trizia',name:'TRIZIA BALDOVI',title:'Chief Experience Officer · RMD',role:'head',divisions:['rmd']},
     {id:'aj',name:'AR. AJ TRABADO',title:'Design Operations Manager · Design',role:'head',divisions:['design']},
     {id:'renato',name:'RENATO RENDON',title:'Corporate Operations Head',role:'corp',divisions:['corp']},
-    {id:'zsarina',name:'ZSARINA MAE LACUMBA',title:'Corporate Operations · Reviewer',role:'corp',divisions:['corp']},
+    {id:'zsarina',name:'ZSARINA MAE LACUMBA',title:'Corporate Operations Head',role:'corp',divisions:['corp']},
     {id:'michelle',name:'MICHELLE OROCIO',title:'Media Manager',role:'head',divisions:['media']},
     {id:'inigo',name:'INIGO ARELLANO',title:'COO · IT & GenCon',role:'coo',divisions:['it','gencon']},
     {id:'cristine',name:'MA. CRISTINE ORTIZ',title:'Business Development Head',role:'head',divisions:['bd']},
