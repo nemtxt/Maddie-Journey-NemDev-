@@ -1633,4 +1633,180 @@ check('Phase 8 compact preference never modifies full-screen non-scrolling landi
   assert(!h.includes('data-action="toggle-density"'));
   assert.equal(JSON.stringify(ctx.win.MJ_SEED.employees),before);
 });
+
+check('Phase 9 201 Files preview browses only visible people in the selected status',()=>{
+  const ctx=boot({},'#files201'),snapshot=ctx.win.MJ_SOURCE_ADAPTER.getSnapshot();
+  const report=ctx.win.MJ_MONITORING.fileSummary(snapshot);
+  const missing=report.groups.missing.slice().sort((a,b)=>
+    b.missing.length-a.missing.length||a.employee.name.localeCompare(b.employee.name));
+  assert(missing.length>12);
+  const first=missing[0];
+  ctx.click('open',{id:first.employee.id,detail:'files201',
+    originLabel:'Missing: '+first.missing.map(d=>d.label).join(' · ')});
+  let h=ctx.html();
+  assert(h.includes('EMPLOYEE · '+first.employee.id));
+  assert(h.includes('1 of 12'));
+  assert(h.includes('Opened from</span> Missing documents'));
+  assert(h.includes('class="employee-context-match" aria-live="polite"'));
+  assert(h.includes(first.missing[0].label));
+  assert(h.includes('data-action="viewer-return"'));
+  ctx.click('viewer-next');
+  h=ctx.html();
+  assert(h.includes('EMPLOYEE · '+missing[1].employee.id));
+  assert(h.includes('2 of 12'));
+  assert(h.includes(missing[1].missing[0].label));
+  ctx.click('viewer-return');
+  assert(ctx.html().includes('Who is missing what'));
+  assert(!ctx.html().includes('role="dialog"'));
+});
+check('Phase 9 expanding 201 Files changes the preview roster only for visible filters',()=>{
+  const ctx=boot({},'#files201'),r=ctx.win.MJ_MONITORING.fileSummary(ctx.win.MJ_SOURCE_ADAPTER.getSnapshot());
+  ctx.click('files-more');
+  const first=r.groups.missing.slice().sort((a,b)=>
+    b.missing.length-a.missing.length||a.employee.name.localeCompare(b.employee.name))[0];
+  ctx.click('open',{id:first.employee.id,detail:'files201'});
+  assert(ctx.html().includes('1 of '+r.groups.missing.length));
+  ctx.click('close');
+  ctx.click('files-filter',{kind:'not-checked'});
+  const people=r.groups['not-checked'].slice().sort((a,b)=>a.employee.name.localeCompare(b.employee.name));
+  ctx.click('open',{id:people[0].employee.id,detail:'files201'});
+  const h=ctx.html();
+  assert(h.includes('1 of '+people.length));
+  assert(h.includes('Not checked: '));
+  assert(h.includes('Opened from</span> Not checked'));
+  ctx.click('close');
+  assert(ctx.html().includes('data-kind="not-checked" aria-pressed="true"'));
+});
+check('Phase 9 Calendar day preview preserves dated origin and date-scoped browsing',()=>{
+  const ctx=boot({},'#calendar'),api=ctx.win.MJ_MONITORING;
+  const start=api.todayManila().slice(0,7),events=api.events(ctx.win.MJ_SOURCE_ADAPTER.getSnapshot(),start);
+  const first=events.find(e=>e.date.startsWith(start));
+  assert(first);
+  ctx.click('calendar-day',{date:first.date});
+  const visible=events.filter(e=>e.date===first.date);
+  const people=[...new Set(visible.map(e=>e.employee.id))];
+  assert(ctx.html().includes('data-date="'+first.date+'" data-origin-label='));
+  ctx.click('open',{id:first.employee.id,detail:first.type==='checkin'||first.type==='employment'?'journey':'milestones',
+    date:first.date,originLabel:first.title});
+  const h=ctx.html();
+  assert(h.includes('Opened from</span> Calendar date · '));
+  assert(h.includes('Example date: '));
+  assert(h.includes(first.title));
+  assert(h.includes(' of '+people.length));
+  assert(h.includes('aria-label="Return to Three-month calendar"'));
+  ctx.click('viewer-return');
+  assert(ctx.html().includes('monitor-calendar-three'));
+  assert(ctx.html().includes('aria-pressed="true"'));
+});
+check('Phase 9 attention queue previews remain scoped to the chosen follow-up category',()=>{
+  const ctx=boot({},'#overview'),snap=ctx.win.MJ_SOURCE_ADAPTER.getSnapshot();
+  ctx.click('attention-filter',{kind:'documents'});
+  const docs=ctx.win.MJ_MONITORING.fileSummary(snap);
+  const first=[...docs.groups.missing,...docs.groups['not-checked']][0].employee;
+  ctx.click('open',{id:first.id,detail:'files201',originKind:'documents',
+    originLabel:'Recorded 201 file follow-up'});
+  const h=ctx.html();
+  assert(h.includes('Opened from</span> 201 Files follow-ups'));
+  assert(h.includes(' of 8'));
+  assert(h.includes('201 document'));
+  assert(h.includes('201 document states are synthetic'));
+  ctx.click('viewer-return');
+  assert(ctx.html().includes('data-kind="documents" class="queue-filter active"'));
+});
+check('Phase 9 employee detail tabs are semantic and support bounded keyboard focus',()=>{
+  const ctx=boot({},'#employees');
+  ctx.click('open',{id:'MJ-001',detail:'kpi'});
+  let h=ctx.html();
+  assert(h.includes('class="employee-modal-tabs" role="tablist"'));
+  assert(h.includes('role="tab" id="employee-tab-kpi" aria-controls="employee-panel" aria-selected="true" tabindex="0"'));
+  assert(h.includes('data-tab="kpi" aria-current="page"'));
+  assert(h.includes('role="tabpanel" aria-labelledby="employee-tab-kpi" tabindex="0"'));
+  assert(h.includes('Weighted scores are calculated from demo values'));
+  assert(h.includes('data-action="viewer-return"'));
+  ctx.click('detail',{tab:'approvals'});
+  h=ctx.html();
+  assert(h.includes('id="employee-tab-approvals" aria-controls="employee-panel" aria-selected="true"'));
+  assert(h.includes('not a verified chronology or approval action'));
+  ctx.click('detail',{tab:'not-a-section'});
+  assert(ctx.html().includes('aria-labelledby="employee-tab-approvals"'));
+  ctx.click('close');
+});
+check('Phase 9 return action restores original row focus and prior scroll position',()=>{
+  const ctx=boot({},'#files201');
+  const report=ctx.win.MJ_MONITORING.fileSummary(ctx.win.MJ_SOURCE_ADAPTER.getSnapshot());
+  const chosen=report.groups.missing[0].employee,attrs={action:'open',id:chosen.id,detail:'files201',originLabel:'Missing documents'};
+  let focused=0,scroll=null;
+  const source={dataset:attrs,focus(){focused++;}};
+  const wrap={scrollLeft:87,scrollTop:23};
+  ctx.win.scrollY=411;
+  ctx.win.scrollTo=position=>{scroll=position;};
+  ctx.doc.querySelectorAll=selector=>selector==='[data-action]'?[source]:
+    selector==='.table-wrap, .journey-kanban, .work-board, .work-list-table'?[wrap]:[];
+  ctx.click('open',{id:attrs.id,detail:attrs.detail,originLabel:attrs.originLabel});
+  assert(ctx.html().includes('201 Files Checklist'));
+  wrap.scrollLeft=0;wrap.scrollTop=0;
+  ctx.click('viewer-return');
+  assert.equal(focused,1);
+  assert.equal(wrap.scrollLeft,87);
+  assert.equal(wrap.scrollTop,23);
+  assert.equal(scroll.top,411);
+  assert.equal(scroll.behavior,'instant');
+  assert.equal(ctx.loc.hash,'#files201');
+});
+check('Phase 9 close, Escape and backdrop keep filters and source records intact',()=>{
+  const ctx=boot({},'#employees'),before=JSON.stringify(ctx.win.MJ_SEED.employees);
+  ctx.setFilter('query','MJ-003');
+  ctx.click('open',{id:'MJ-003',detail:'journey'});
+  ctx.key('Escape');
+  assert(!ctx.html().includes('role="dialog"'));
+  assert(ctx.html().includes('value="MJ-003"'));
+  ctx.click('open',{id:'MJ-003',detail:'journey'});
+  ctx.click('close');
+  assert(!ctx.html().includes('role="dialog"'));
+  assert.equal(ctx.loc.hash,'#employees');
+  assert.equal(JSON.stringify(ctx.win.MJ_SEED.employees),before);
+});
+check('Phase 9 provenance notes remain contextual and never grant edit capabilities',()=>{
+  const ctx=boot({},'#employees'),original=JSON.stringify(ctx.win.MJ_SEED.employees);
+  const expected={
+    preview:'fictional employee fixture',
+    milestones:'calculated dates are not booked appointments',
+    kpi:'not verified performance reports',
+    journey:'fictional checklist steps',
+    kit:'not confirmed delivery',
+    files201:'No official employee file',
+    attendance:'Pending entries remain separate',
+    approvals:'not a verified chronology',
+    info:'not synchronized with a personnel directory'
+  };
+  ctx.click('open',{id:'MJ-001',detail:'preview'});
+  for(const [tab,fragment] of Object.entries(expected)){
+    if(tab!=='preview')ctx.click('detail',{tab});
+    const html=ctx.html();
+    assert(html.includes('class="employee-evidence-note" role="note"'),tab);
+    assert(html.includes(fragment),tab);
+    assert(!html.includes('type="file"'));
+    assert(!html.includes('data-action="save"'));
+  }
+  ctx.click('close');
+  assert.equal(JSON.stringify(ctx.win.MJ_SEED.employees),original);
+});
+check('Phase 9 context actions retain consistent icons and 320px accessibility safeguards',()=>{
+  const css=src['mono.css'],js=src['app.js'];
+  for(const item of [
+    'body .employee-context-return',
+    'body .employee-context-filter',
+    'body .employee-context-match',
+    'body .employee-evidence-note',
+    'body .employee-modal-tabs[role="tablist"]',
+    '@media(max-width:380px)',
+    'min-height:44px',
+    '@media(prefers-reduced-motion:reduce)',
+    '@media(forced-colors:active)'
+  ])assert(css.includes(item),item);
+  assert(js.includes('window.scrollTo({top:origin.y,behavior:'));
+  assert(js.includes('data-action="viewer-return"'));
+  assert(js.includes('function readerRecordCue(e)'));
+  assert(js.includes("role=\"tabpanel\""));
+});
 console.log('\n'+results.length+' smoke tests passed. Physical-device visual QA is separate.');
