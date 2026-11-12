@@ -64,47 +64,50 @@
       el.classList.toggle('active',pressed);
     });
   }
+  const navGroups=[
+    {id:'dashboard',label:'Dashboard',icon:'◫',defaultTab:'overview',tabs:[['overview','Overview'],['divisions','Divisions']]},
+    {id:'people',label:'People',icon:'◎',defaultTab:'employees',tabs:[['employees','Directory'],['milestones','Milestones']]},
+    {id:'journeys',label:'Journey',icon:'◷',defaultTab:'journey',tabs:[['journey','Journey board'],['kit','Welcome Kit'],['attendance','Attendance']]},
+    {id:'performance',label:'Performance',icon:'◈',defaultTab:'kpi',tabs:[['kpi','KPI scorecards'],['approvals','Reviews']]},
+    {id:'information',label:'Data & Sources',icon:'▤',defaultTab:'sources',tabs:[['sources','Data sources'],['audit','About the prototype']]}
+  ];
+  function activeNavGroup(){
+    return navGroups.find(function(g){return g.tabs.some(function(t){return t[0]===ui.tab||(ui.tab==='division'&&t[0]==='divisions');});})||navGroups[0];
+  }
   function topnav(){
-    const place=ui.tab==='division'?div(ui.activeDivision).name:title(ui.tab);
+    const group=activeNavGroup(),current=ui.tab==='division'?'Divisions':ui.tab;
     return '<div class="mobile-top"><a href="#welcome" data-nav="welcome" class="brand mobile-brand" aria-label="Maddie Journey landing">'+
       '<img src="./assets/madhouse-logo.png" alt="Madhouse Design Studio" class="mobile-official-logo"><b>Maddie Journey</b></a>'+
       '<button type="button" class="button small" data-action="mobile" aria-label="'+(ui.mobile?'Close':'Open')+' navigation" aria-expanded="'+ui.mobile+'">☰ Menu</button></div>'+
-      '<header class="topbar workspace-topbar"><div class="workspace-location"><span class="workspace-location-prefix">Workspace</span>'+
-      '<span class="workspace-location-sep">/</span><strong>'+safe(place)+'</strong></div>'+
-      '<div class="top-actions workspace-top-actions"><span class="reader-source-status" title="Fictional data · No live integration">Sample data</span>'+
-      '<button type="button" class="workspace-search" data-action="quick-search" aria-label="Find an employee">'+landingIcon('search')+
-      '<span>Find employee</span></button>'+themeControl()+
-      '<button type="button" class="workspace-persona" data-action="choose-workspace" aria-label="Change dashboard viewer: '+safe(viewer().name)+'">'+
-      avatar(viewer().name)+'<span><strong>'+safe(viewer().name)+'</strong><small>'+safe(viewer().role==='hr'?'HR':viewer().role==='head'||viewer().role==='corp'?'Division Head':'Executive overview')+'</small></span>'+
-      '<span aria-hidden="true">⌄</span></button></div></header>';
+      '<header class="topbar workspace-topbar"><div class="workspace-location"><span class="workspace-location-prefix">'+safe(group.label)+'</span>'+
+      '<span class="workspace-location-sep">/</span><strong>'+safe(title(ui.tab))+'</strong></div>'+
+      '<div class="top-actions workspace-top-actions">'+
+      '<button type="button" class="workspace-search" data-action="quick-search" aria-label="Find an employee">'+landingIcon('search')+'<span>Find employee</span></button>'+
+      themeControl()+
+      '<span class="reader-source-status" title="Fictional data, no live integrations">Sample data</span>'+
+      '</div></header>'+
+      '<nav class="workspace-subnav" aria-label="'+safe(group.label)+' sections"><div class="workspace-subnav-links">'+
+      group.tabs.map(function(t){const selected=current===t[0];return '<a href="#'+t[0]+'" data-nav="'+t[0]+'"'+(selected?' aria-current="page"':'')+' class="'+(selected?'active':'')+'">'+safe(t[1])+'</a>';}).join('')+
+      '</div><span class="workspace-subnav-caption">Read-only monitoring</span></nav>';
   }
   const items=[['overview','◫','Overview'],['divisions','▦','Divisions'],['employees','◎','Employees'],['milestones','✦','Milestones'],['journey','◷','Journey board'],['kit','▣','Welcome Kit'],['attendance','◩','Attendance'],['kpi','◈','KPI scorecards'],['approvals','✓','Reviews'],['sources','↗','Data sources'],['audit','≡','About data']];
   function sidebar(){
-    const groups=[
-      ['OVERVIEW',['overview','divisions']],
-      ['PEOPLE',['employees','milestones']],
-      ['MONITORING',['journey','kit','attendance','kpi','approvals']],
-      ['INFORMATION',['sources','audit']]
-    ];
-    const navItems=function(ids){
-      return ids.map(function(id){
-        const item=items.find(function(x){return x[0]===id;});if(!item)return '';
-        const active=ui.tab===id||(id==='divisions'&&ui.tab==='division');
-        return '<a href="#'+id+'" data-nav="'+id+'" '+(active?'aria-current="page" ':'')+'class="'+(active?'active':'')+'">'+
-          '<span class="nav-icon" aria-hidden="true">'+item[1]+'</span><span>'+item[2]+'</span></a>';
-      }).join('');
-    };
-    return '<aside class="sidebar workspace-sidebar" aria-label="Main dashboard navigation"><div class="workspace-sidepanel">'+
+    const active=activeNavGroup().id;
+    return '<aside class="sidebar workspace-sidebar" aria-label="Main navigation"><div class="workspace-sidepanel">'+
       '<a href="#welcome" data-nav="welcome" class="brand brand-official-link" aria-label="Maddie Journey landing">'+
       '<img class="sidebar-official-logo" src="./assets/madhouse-logo.png" alt="Madhouse Design Studio">'+
       '<span class="brand-product-name">Maddie Journey</span></a>'+
-      '<div class="workspace-sidebar-caption">PEOPLE MONITORING</div>'+
-      groups.map(function(group){return '<div class="sidebar-label">'+group[0]+'</div>'+
-        '<nav class="nav" aria-label="'+group[0]+'">'+navItems(group[1])+'</nav>';}).join('')+
+      '<p class="workspace-sidebar-caption">PEOPLE MONITORING</p>'+
+      '<nav class="nav workspace-mainnav" aria-label="Workspace sections">'+navGroups.map(function(g){
+        return '<a href="#'+g.defaultTab+'" data-nav="'+g.defaultTab+'" class="workspace-mainnav-item '+(g.id===active?'active':'')+'"'+
+        (g.id===active?' aria-current="location"':'')+'><span class="nav-icon" aria-hidden="true">'+g.icon+'</span><span>'+g.label+'</span>'+
+        '<span class="workspace-mainnav-chevron" aria-hidden="true">›</span></a>';
+      }).join('')+'</nav>'+
       '<div class="sidebar-bottom"><div class="reader-sidebar-status"><span class="data-provenance-dot"></span>'+
-      '<div><strong>Preview mode</strong><small>Read-only · 51 sample employees</small></div></div>'+
-      '<p class="reader-sidebar-footnote">Original records belong to the connected source applications, not this dashboard.</p></div>'+
-      '</div></aside>';
+      '<div><strong>Sample workspace</strong><small>51 people · 8 divisions</small></div></div>'+
+      '<p class="reader-sidebar-footnote">View and compare data here. Updates belong in the original source systems.</p>'+
+      '<a class="sidebar-return-link" data-nav="welcome" href="#welcome">Return to landing</a>'+
+      '</div></div></aside>';
   }
   function title(t){if(t==='division')return div(ui.activeDivision).name;return {divisions:'Divisions',overview:'Overview',milestones:'Employee milestones',employees:'People directory',journey:'Employee journey',kit:'Welcome Maddie Kit',attendance:'Attendance analytics',kpi:'2026 KPI evaluations',approvals:'Reviews',sources:'Data sources',audit:'About this prototype'}[t]||'Overview';}
   function header(eyebrow,heading,description,actions){return '<div class="page-header"><div><div class="eyebrow">'+safe(eyebrow)+'</div><h1>'+safe(heading)+'</h1><p>'+safe(description)+'</p></div><div class="actions">'+(actions||'')+'</div></div>'+(ui.tab==='overview'?'':screenSummary());}
@@ -275,9 +278,9 @@
     team.forEach(function(e){
       const a=attend(e),pending=e.attendance.filter(function(r){return !r.verified;}).length;
       if(a.concerns>0)create(e,'attendance',a.concerns+' verified attendance concern'+(a.concerns===1?'':'s'),'attendance',100+a.concerns);
-      if(pending>0&&role==='hr')create(e,'attendance',pending+' attendance entr'+(pending===1?'y':'ies')+' awaiting verification','attendance',94+pending);
+      if(pending>0)create(e,'attendance',pending+' attendance entr'+(pending===1?'y':'ies')+' awaiting verification','attendance',94+pending);
       if(!e.kpiValidated)create(e,'kpi','KPI source not validated','kpi',80);
-      if(reviewStatus(e,'division')!=='Endorsed'&&role!=='hr')create(e,'reviews','Division evaluation pending','approvals',72);
+      if(reviewStatus(e,'division')!=='Endorsed')create(e,'reviews','Division evaluation pending','approvals',72);
       if(kitPct(e)<100)create(e,'onboarding','Welcome Kit '+kitPct(e)+'% complete','kit',58+(100-kitPct(e))/100);
       if(journeyPct(e)<100)create(e,'onboarding','Journey '+journeyPct(e)+'% complete','journey',46+(100-journeyPct(e))/100);
     });
@@ -337,41 +340,33 @@
       button('Source details','nav','data-tab="sources"','small')+'</div>';
   }
   function roleHome(){
-    const v=viewer(),role=v.role;
-    const isManager=role==='head'||role==='corp';
-    const team=isManager?data.employees.filter(function(e){return (v.divisions||[]).includes(e.division);}):data.employees;
-    const divs=isManager?data.divisions.filter(function(d){return (v.divisions||[]).includes(d.id);}):data.divisions;
+    const team=data.employees,divs=data.divisions;
     const pending=team.filter(function(e){return reviewStatus(e,'division')!=='Endorsed';}).length;
-    const a=team.reduce(function(n,e){return n+attend(e).concerns;},0);
+    const concerns=team.reduce(function(n,e){return n+attend(e).concerns;},0);
     const openKit=team.filter(function(e){return kitPct(e)<100;}).length;
     const unvalidated=team.filter(function(e){return !e.kpiValidated;}).length;
-    const heading=isManager?'My departments':role==='hr'?'People & Culture overview':'Organization overview';
-    const desc=isManager?'Track the departments you evaluate, and open only the records you need.':
-      'Eight divisions, one clear overview. Every value shown is fictional sample data.';
-    const cards=isManager?[
-      ['Team members',team.length,'Across '+divs.length+' assigned divisions'],
-      ['Evaluations pending',pending,'Division review not endorsed'],
-      ['KPI sources to verify',unvalidated,'Official sources not linked'],
-      ['Average onboarding',meanOf(team,journeyPct)+'%','Across seven stages']
-    ]:[
-      ['Employees',team.length,'Eight fictional divisions'],
-      ['Kits incomplete',openKit,'Open onboarding requirements'],
-      ['Attendance concerns',a,'Verified, unexcused incidents'],
+    const cards=[
+      ['Employees',team.length,'Across 8 fictional divisions'],
+      ['Welcome Kits pending',openKit,'Employees with open checklist items'],
+      ['Attendance concerns',concerns,'Recorded unexcused incidents'],
       ['KPI sources to verify',unvalidated,'Live sources not connected']
     ];
-    return header('DASHBOARD',heading,desc,button('Browse divisions','nav','data-tab="divisions"','small'))+
+    return header('OVERVIEW','Organization overview','All eight divisions at a glance. Every value is fictional sample data.',
+      button('Explore divisions','nav','data-tab="divisions"','small'))+
       '<section class="grid metrics summary-metrics">'+cards.map(function(c){return metricCard(c[0],c[1],c[2]);}).join('')+'</section>'+
       dataProvenanceStrip()+
-      '<div class="workspace-action-center">'+attentionPanel(team,role)+'</div><div class="dashboard-main dashboard-secondary"><div class="dashboard-side">'+
-      '<section class="panel next-step-panel"><h2>Quick access</h2><p>Choose a destination. You can return here at any time.</p>'+
-      '<div class="next-step-actions">'+button('Employee directory','nav','data-tab="employees"','small')+
-      button('Milestones','nav','data-tab="milestones"','small')+
+      '<div class="workspace-action-center">'+attentionPanel(team,'all')+'</div>'+
+      '<div class="dashboard-main dashboard-secondary"><div class="dashboard-side">'+
+      '<section class="panel next-step-panel"><h2>Quick access</h2><p>Jump directly to a monitoring view.</p>'+
+      '<div class="next-step-actions">'+button('Journey board','nav','data-tab="journey"','small')+
+      button('Employees','nav','data-tab="employees"','small')+
       button('KPI scorecards','nav','data-tab="kpi"','small')+
       button('Attendance','nav','data-tab="attendance"','small')+'</div></section>'+
-      '<section class="panel overview-brief"><h2>Evaluation progress</h2><div class="division-stat-line"><span>Pending division reviews</span><b>'+pending+'</b></div>'+
+      '<section class="panel overview-brief"><h2>Progress snapshot</h2>'+
+      '<div class="division-stat-line"><span>Pending division reviews</span><b>'+pending+'</b></div>'+
       '<div class="division-stat-line"><span>Average Welcome Kit completion</span><b>'+meanOf(team,kitPct)+'%</b></div>'+
-      '<div class="division-stat-line"><span>Average journey completion</span><b>'+meanOf(team,journeyPct)+'%</b></div></section></div></div>'+
-      divisionPulseTable(divs);
+      '<div class="division-stat-line"><span>Average Journey completion</span><b>'+meanOf(team,journeyPct)+'%</b></div></section>'+
+      '</div></div>'+divisionPulseTable(divs);
   }
   function overview(){return roleHome();}
   function employeesTable(list,mode){if(!list.length)return '<div class="empty"><span class="big">⌕</span>No employees match these filters.</div>';
