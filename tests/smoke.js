@@ -251,4 +251,87 @@ check('Direct deep links work without a viewer choice',()=>{
   assert(user.html().includes('landing-hero'));
 });
 
+check('Employee directory supports search, division scope, stable sort and clearing',()=>{
+  user.navigate('employees');
+  assert(user.html().includes('data-ui="employeeSort"'));
+  assert(user.html().includes('51 of 51 employees'));
+  const person=user.win.MJ_SEED.employees[0];
+  user.setFilter('query',person.id);
+  assert(user.html().includes('1 of 51 employees'),person.id);
+  assert(user.html().includes(person.id));
+  assert(user.html().includes('data-action="clear-search"'));
+  user.setFilter('employeeSort','kpi');
+  assert(user.html().includes('data-ui="employeeSort"'));
+  assert(user.html().includes('1 of 51 employees'));
+  user.click('clear-search');
+  assert(user.html().includes('51 of 51 employees'));
+  user.click('set-scope',{division:'design'});
+  const expected=user.win.MJ_SEED.employees.filter(e=>e.division==='design').length;
+  assert(user.html().includes(expected+' of '+expected+' employees'));
+});
+
+check('Directory CSV exports only visible rows and does not modify employee data',()=>{
+  user.navigate('employees');
+  const before=JSON.stringify(user.win.MJ_SEED.employees);
+  const id=user.win.MJ_SEED.employees[2].id;
+  user.setFilter('query',id);
+  user.click('export-csv');
+  const file=user.downloads.at(-1);
+  assert.equal(file.filename,'maddie-journey-directory-visible.csv');
+  assert(file.mime.startsWith('text/csv'));
+  assert.equal(file.text.trim().split('\r\n').length,2);
+  assert(file.text.includes(id));
+  assert.equal(JSON.stringify(user.win.MJ_SEED.employees),before);
+});
+
+check('CSV formula-like values are protected when exported from sample fixtures',()=>{
+  const isolated=boot({},'#employees',fixture=>{fixture.employees[0].name='=SUM(1,2)';});
+  isolated.click('export-csv');
+  const file=isolated.downloads.at(-1);
+  assert(file.text.includes('"'+"'"+'=SUM(1,2)"'));
+  assert.equal(isolated.win.MJ_SEED.employees[0].name,'=SUM(1,2)');
+});
+
+check('Data Sources discloses sample quality checks without implying source verification',()=>{
+  user.navigate('sources');
+  const q=user.win.MJ_SOURCE_ADAPTER.getQualityReport();
+  assert(q.structureValid);
+  assert.equal(q.issueCount,0);
+  assert.equal(q.uniqueEmployeeIds,51);
+  assert.equal(q.divisionCount,8);
+  assert.equal(q.stageCount,7);
+  assert.equal(q.kitItemCount,11);
+  const h=user.html();
+  assert(h.includes('Sample data integrity'));
+  assert(h.includes('Structural checks on the fictional fixture only'));
+  assert(h.includes('Structure checks passed'));
+  assert(h.includes('Not connected'));
+});
+
+check('An invalid sample fixture shows a recoverable screen instead of an app crash',()=>{
+  const broken=boot({},'#overview',fixture=>{fixture.employees[0].division='nonexistent';});
+  const h=broken.html();
+  assert(h.includes('Sample data unavailable'));
+  assert(h.includes('Reload dashboard'));
+  assert(!h.includes('workspace-sidebar'));
+});
+
+check('Division employee list shortcut selects a visible List tab',()=>{
+  user.click('goto-division',{division:'rmd'});
+  assert(user.html().includes('data-tab="list"'));
+  user.click('division-tab',{tab:'list'});
+  assert(user.html().includes('class="table department-table"'));
+  assert(user.html().includes('data-tab="list"'));
+});
+
+check('Every rendered screen uses handled action names',()=>{
+  const handlers=new Set([...src['app.js'].matchAll(/if\(name==='([^']+)'\)/g)].map(m=>m[1]));
+  for(const tab of ['overview','divisions','employees','milestones','journey','kit','attendance','kpi','approvals','sources','audit']){
+    user.navigate(tab);
+    for(const m of user.html().matchAll(/data-action="([^"]+)"/g)){
+      assert(handlers.has(m[1]),'Unimplemented '+m[1]+' on '+tab);
+    }
+  }
+});
+
 console.log('\n'+results.length+' smoke tests passed. Physical-device visual QA is separate.');
