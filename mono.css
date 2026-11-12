@@ -804,3 +804,15 @@ body .directory-results-count,body .work-queue .queue-count{
 @media(prefers-reduced-motion:reduce){
   .monitor-division-row{transition:none}
 }
+
+
+/* Phase 3 — division follow-ups and contextual roster focus */
+.department-table .department-focus-row{
+  background:var(--mono-soft);
+  box-shadow:inset 3px 0 var(--mono-accent)
+}
+.department-table .department-focus-row td:first-child strong{color:var(--mono-text)}
+.division-next .quick-item .grow p{
+  display:flex;align-items:center;flex-wrap:wrap;gap:6px;line-height:1.4
+}
+.division-next .monitor-priority-cue{min-width:0;font-size:10px}

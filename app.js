@@ -18,7 +18,7 @@
       '<a class="button primary" href="./">Reload dashboard</a></div></main>';
     return;
   }
-  let ui={tab:'welcome',division:'all',activeDivision:'rmd',scope:'all',divisionPickerMode:'view',query:'',employeeSort:'name',employee:data.employees[0].id,detail:'preview',employeeModalOpen:false,divisionModal:false,employeePicker:false,pickerDivision:'rmd',frequency:'monthly',mobile:false,milestoneCategory:'birthday',milestoneDivision:'all',milestoneShowAll:false,milestonePicking:false,divisionTab:'summary',attentionFilter:'all',attentionShowAll:false,workView:'list',journeyView:'board',journeyShowAll:false,sidebarCollapsed:false,};
+  let ui={tab:'welcome',division:'all',activeDivision:'rmd',scope:'all',divisionPickerMode:'view',query:'',employeeSort:'name',employee:data.employees[0].id,detail:'preview',employeeModalOpen:false,divisionModal:false,employeePicker:false,pickerDivision:'rmd',frequency:'monthly',mobile:false,milestoneCategory:'birthday',milestoneDivision:'all',milestoneShowAll:false,milestonePicking:false,divisionTab:'summary',attentionFilter:'all',attentionShowAll:false,workView:'list',journeyView:'board',journeyShowAll:false,sidebarCollapsed:false,highlightMember:'',};
   // UI preferences do not alter or store employee records.
   try{
     const remembered=sessionStorage.getItem('maddie-journey-workview');
@@ -204,21 +204,26 @@
     return '<button type="button" data-action="division-tab" data-tab="'+id+'" aria-pressed="'+(ui.divisionTab===id)+'" class="division-tab'+(ui.divisionTab===id?' active':'')+'">'+safe(name)+'</button>';
   }
   function divisionPulse(d,team){
-    const attention=team.map(function(e){
-      const issues=attend(e).concerns,notValidated=!e.kpiValidated,unfinished=kitPct(e)<100;
-      return {e:e,priority:issues*8+(notValidated?2:0)+(unfinished?2:0),reason:issues?issues+' verified attendance concern'+(issues===1?'':'s'):notValidated?'KPI source not verified':unfinished?'Welcome Kit incomplete':'Review pending'};
-    }).sort(function(a,b){return b.priority-a.priority;}).slice(0,4);
+    // Follow-ups share the overview's priority weighting and always select distinct people.
+    const seen=new Set();
+    const attention=attentionItems(team).filter(function(item){
+      if(seen.has(item.e.id))return false;
+      seen.add(item.e.id);return true;
+    }).slice(0,4);
     const kitPending=team.filter(function(e){return kitPct(e)<100;}).length;
     const reviews=team.filter(function(e){return reviewStatus(e,'division')!=='Endorsed';}).length;
-    return '<div class="division-overview-grid"><section class="panel division-next"><div class="panel-head"><div><h2>Follow-up snapshot</h2><p>Review the sample items most likely to need attention</p></div></div>'+
-      '<div class="quick-list">'+attention.map(function(x){return '<div class="quick-item">'+avatar(x.e.name)+'<div class="grow"><b>'+safe(x.e.name)+'</b><p>'+safe(x.reason)+'</p></div>'+
-        button('Preview','open','data-id="'+safe(x.e.id)+'" data-detail="preview"','small')+'</div>';}).join('')+'</div></section>'+
+    return '<div class="division-overview-grid"><section class="panel division-next"><div class="panel-head"><div><h2>Follow-up snapshot</h2><p>Highest-priority recorded signal per person · direct employee detail</p></div></div>'+
+      '<div class="quick-list">'+(attention.length?attention.map(function(item){
+        const cue=attentionCue(item);
+        return '<div class="quick-item">'+avatar(item.e.name)+
+          '<div class="grow"><b>'+safe(item.e.name)+'</b><p><span class="monitor-priority-cue monitor-priority-'+cue.kind+'">'+cue.label+'</span> '+safe(item.label)+'</p></div>'+
+          button('Inspect','open','data-id="'+safe(item.e.id)+'" data-detail="'+item.detail+'"','small')+'</div>';
+      }).join(''):'<p class="muted micro">No recorded sample follow-ups for this division.</p>')+'</div></section>'+
       '<section class="panel division-quick"><h2>Department at a glance</h2>'+
       '<div class="division-stat-line"><span>Employees</span><b>'+team.length+'</b></div>'+
       '<div class="division-stat-line"><span>Open Welcome Kits</span><b>'+kitPending+'</b></div>'+
       '<div class="division-stat-line"><span>Awaiting evaluation</span><b>'+reviews+'</b></div>'+
       '<div class="division-stat-line"><span>Average onboarding</span><b>'+meanOf(team,journeyPct)+'%</b></div>'+
-      '<div class="division-next-actions">'+button('Organization chart','division-tab','data-tab="chart"','small')+button('Employee list','division-tab','data-tab="list"','small primary')+'</div>'+
       '</section></div>';
   }
   function divisionCard(d){
@@ -272,7 +277,7 @@
     const names={todo:'To do',progress:'In progress',review:'For review',complete:'Completed'};
     return '<section class="panel department-table-panel"><div class="panel-head"><div><h2>Team directory</h2><p>Progress and review status for all '+team.length+' sample members</p></div></div>'+
       '<div class="table-wrap"><table class="table department-table"><thead><tr><th scope="col">Employee</th><th scope="col">Status</th><th scope="col">Journey</th><th scope="col">Welcome Kit</th><th scope="col">KPI</th><th scope="col"></th></tr></thead>'+
-      '<tbody>'+order.map(function(e){const stage=divisionStage(e);return '<tr><td><div class="name-cell">'+avatar(e.name)+'<div><strong>'+safe(e.name)+'</strong><small>'+safe(e.jobTitle)+'</small></div></div></td>'+
+      '<tbody>'+order.map(function(e){const stage=divisionStage(e);return '<tr'+(ui.highlightMember===e.id?' class="department-focus-row" aria-label="Employee selected from preview"':'')+'><td><div class="name-cell">'+avatar(e.name)+'<div><strong>'+safe(e.name)+'</strong><small>'+safe(e.jobTitle)+'</small></div></div></td>'+
       '<td><span class="work-type work-stage-'+stage+'">'+names[stage]+'</span></td>'+
       '<td>'+journeyPct(e)+'%</td><td>'+kitPct(e)+'%</td><td>'+score(e).toFixed(1)+'%</td>'+
       '<td>'+button('Preview','open','data-id="'+safe(e.id)+'" data-detail="preview"','small')+'</td></tr>';}).join('')+'</tbody></table></div></section>';
@@ -286,7 +291,7 @@
       list:divisionList(team),
       chart:orgChart(d)
     };
-    return header('DIVISION OVERVIEW',d.name,team.length+' sample employees · '+divisionEvaluatorNames(d),button('All divisions','nav','data-tab="divisions"','small'))+
+    return header('DIVISION OVERVIEW',d.name,team.length+' sample employees · '+divisionEvaluatorNames(d),'')+
       '<nav class="division-tabs" aria-label="Division views">'+divisionTabButton('summary','Summary')+divisionTabButton('board','Board')+divisionTabButton('list','List')+divisionTabButton('chart','Org chart')+'</nav>'+
       (sub[ui.divisionTab]||sub.summary);
   }
@@ -952,8 +957,19 @@
       '<span>Fictional data · Demonstration only</span></footer></main></div>';
   }
   function render(){if(ui.tab==='welcome'){$('app').innerHTML=landingView();document.title='Maddie Journey · Madhouse Design Studio';if(window.MJ_MOTION)window.MJ_MOTION.refresh('welcome');return;}const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,milestones:milestonesView,journey:journey,kit:kitView,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,sources:sourcesView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open ':'')+(ui.sidebarCollapsed?'sidebar-collapsed':'')+'">'+sidebar()+'<button type="button" class="workspace-scrim" aria-label="Close navigation" data-action="mobile"></button><main id="main-content" class="main" tabindex="-1">'+topnav()+(views[ui.tab]||overview)()+'<footer class="footer"><span>Maddie Journey · Prototype v2.9</span><span>Fictional snapshot · No connected sources</span></footer></main></div>'+(ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.employeeModalOpen?employeeModal():'');document.title=title(ui.tab)+' · Maddie Journey';if(window.MJ_MOTION)window.MJ_MOTION.refresh(ui.tab);if(ui.employeeModalOpen||ui.divisionModal||ui.employeePicker){const modal=$('app').querySelector('[role="dialog"]');if(modal&&typeof modal.focus==='function')modal.focus({preventScroll:true});}}
-  function openDivision(id){if(!data.divisions.some(function(d){return d.id===id;}))return;ui.scope=id;ui.activeDivision=id;ui.divisionTab='summary';ensureEmployeeScope();ui.tab='division';ui.employeeModalOpen=false;ui.divisionModal=false;ui.employeePicker=false;ui.mobile=false;ui.query='';ui.division='all';if(location.hash!=='#division/'+id)location.hash='#division/'+id;window.scrollTo({top:0,behavior:'instant'});render();}
-  function navigate(tab){modalOrigin=null;if(tab==='division'){openDivision(ui.activeDivision);return;}ui.scope='all';ensureEmployeeScope();ui.tab=tab;ui.employeeModalOpen=false;ui.divisionModal=false;ui.employeePicker=false;ui.mobile=false;ui.query='';ui.division='all';if(location.hash!=='#'+tab)location.hash='#'+tab;window.scrollTo({top:0,behavior:'instant'});render();}
+  function openDivision(id,view,focusId){
+    if(!data.divisions.some(function(d){return d.id===id;}))return;
+    ui.scope=id;ui.activeDivision=id;
+    ui.divisionTab=['summary','board','list','chart'].includes(view)?view:'summary';
+    ui.highlightMember=focusId&&data.employees.some(function(e){return e.id===focusId&&e.division===id;})?focusId:'';
+    modalOrigin=null;ensureEmployeeScope();
+    ui.tab='division';ui.employeeModalOpen=false;ui.divisionModal=false;ui.employeePicker=false;
+    ui.mobile=false;ui.query='';ui.division='all';
+    const route='#division/'+id+(ui.divisionTab==='summary'?'':'/'+ui.divisionTab);
+    if(location.hash!==route)location.hash=route;
+    window.scrollTo({top:0,behavior:'instant'});render();
+  }
+  function navigate(tab){modalOrigin=null;if(tab==='division'){openDivision(ui.activeDivision,ui.divisionTab);return;}ui.highlightMember='';ui.scope='all';ensureEmployeeScope();ui.tab=tab;ui.employeeModalOpen=false;ui.divisionModal=false;ui.employeePicker=false;ui.mobile=false;ui.query='';ui.division='all';if(location.hash!=='#'+tab)location.hash='#'+tab;window.scrollTo({top:0,behavior:'instant'});render();}
   // All data-editing functions were removed: this frontend never mutates employee records.
   function toCSV(rows){
     return rows.map(function(row){return row.map(function(value){
@@ -986,8 +1002,13 @@
     if(name==='journey-view'){ui.journeyView=button.dataset.mode==='table'?'table':'board';render();focusActionAfterRender(button);return;}
     if(name==='attention-filter'){ui.attentionFilter=['all','attendance','kpi','onboarding','reviews'].includes(button.dataset.kind)?button.dataset.kind:'all';ui.attentionShowAll=false;render();focusActionAfterRender(button);return;}
     if(name==='attention-more'){ui.attentionShowAll=!ui.attentionShowAll;render();focusActionAfterRender(button);return;}
-    if(name==='division-tab'){ui.divisionTab=['summary','board','list','chart'].includes(button.dataset.tab)?button.dataset.tab:'summary';render();focusActionAfterRender(button);return;}
-    if(name==='open-org'){openDivision(button.dataset.division);ui.divisionTab='chart';render();return;}
+    if(name==='division-tab'){
+      ui.divisionTab=['summary','board','list','chart'].includes(button.dataset.tab)?button.dataset.tab:'summary';
+      const route='#division/'+ui.activeDivision+(ui.divisionTab==='summary'?'':'/'+ui.divisionTab);
+      if(ui.tab==='division'&&location.hash!==route)location.hash=route;
+      render();focusActionAfterRender(button);return;
+    }
+    if(name==='open-org'){openDivision(button.dataset.division,'chart');return;}
     if(name==='milestone-category'){if(!milestoneKinds.some(function(k){return k.id===button.dataset.kind;}))return;ui.milestoneCategory=button.dataset.kind;ui.milestoneShowAll=false;render();focusActionAfterRender(button);return;}
     if(name==='milestone-more'){ui.milestoneShowAll=!ui.milestoneShowAll;render();focusActionAfterRender(button);return;}
     if(name==='milestone-division'){ui.divisionPickerMode='milestone';ui.divisionModal=true;ui.employeePicker=false;render();return;}
@@ -1043,7 +1064,22 @@
     if(ev.shiftKey&&document.activeElement===first){ev.preventDefault();last.focus();}
     else if(!ev.shiftKey&&document.activeElement===last){ev.preventDefault();first.focus();}
   });
-  window.addEventListener('hashchange',function(){const target=location.hash.slice(1);if(target==='welcome'&&ui.tab!=='welcome'){navigate('welcome');}else if(target.startsWith('division/')){const id=target.slice(9);if(data.divisions.some(function(d){return d.id===id;})&&(ui.tab!=='division'||ui.activeDivision!==id))openDivision(id);}else if(items.some(function(a){return a[0]===target;})&&target!==ui.tab)navigate(target);});
-  const hash=location.hash.slice(1);if(hash.startsWith('division/')&&data.divisions.some(function(d){return d.id===hash.slice(9);})) {ui.tab='division';ui.activeDivision=hash.slice(9);ui.scope=ui.activeDivision;ensureEmployeeScope();}else if(items.some(function(a){return a[0]===hash;}))ui.tab=hash;else ui.tab='welcome';
+  window.addEventListener('hashchange',function(){
+    const target=location.hash.slice(1);
+    if(target==='welcome'&&ui.tab!=='welcome')navigate('welcome');
+    else if(target.startsWith('division/')){
+      const parts=target.slice(9).split('/'),id=parts[0],view=parts[1]||'summary';
+      if(parts.length<=2&&['summary','board','list','chart'].includes(view)&&
+        data.divisions.some(function(d){return d.id===id;})&&
+        (ui.tab!=='division'||ui.activeDivision!==id||ui.divisionTab!==view))openDivision(id,view);
+    }else if(items.some(function(a){return a[0]===target;})&&target!==ui.tab)navigate(target);
+  });
+  const hash=location.hash.slice(1),parts=hash.startsWith('division/')?hash.slice(9).split('/'):[],
+    validDivision=parts.length>0&&parts.length<=2&&
+      data.divisions.some(function(d){return d.id===parts[0];})&&
+      (!parts[1]||['summary','board','list','chart'].includes(parts[1]));
+  if(validDivision){ui.tab='division';ui.activeDivision=parts[0];ui.scope=ui.activeDivision;
+    ui.divisionTab=parts[1]||'summary';ensureEmployeeScope();
+  }else if(items.some(function(a){return a[0]===hash;}))ui.tab=hash;else ui.tab='welcome';
   render();
 })();

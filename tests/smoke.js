@@ -578,4 +578,31 @@ check('Phase 2 triage explains priority and signals without duplicate people',()
   assert(h.includes('other signals for this person')||h.includes('other signal for this person'));
   assert(!h.includes('Critical'));
 });
+check('Phase 3 division tabs preserve shareable subview routes',()=>{
+  user.click('goto-division',{division:'rmd'});
+  assert.equal(user.loc.hash,'#division/rmd');
+  user.click('division-tab',{tab:'list'});
+  assert.equal(user.loc.hash,'#division/rmd/list');
+  assert(user.html().includes('department-table'));
+  const reload=boot({},'#division/rmd/list');
+  assert(reload.html().includes('department-table'));
+  user.click('division-tab',{tab:'chart'});
+  assert.equal(user.loc.hash,'#division/rmd/chart');
+  assert(user.html().includes('org-canvas'));
+  const reloadChart=boot({},'#division/rmd/chart');
+  assert(reloadChart.html().includes('org-canvas'));
+  user.click('division-tab',{tab:'summary'});
+  assert.equal(user.loc.hash,'#division/rmd');
+});
+check('Phase 3 division follow-ups use one issue per person with accurate detail links',()=>{
+  user.click('goto-division',{division:'rmd'});
+  const h=user.html(),section=h.split('class="panel division-next"')[1]?.split('</section>')[0];
+  assert(section);
+  assert(section.includes('Highest-priority recorded signal'));
+  assert(section.includes('monitor-priority-cue'));
+  assert(section.includes('data-detail="attendance"')||section.includes('data-detail="kpi"'));
+  assert(!h.includes('division-next-actions'));
+  const ids=[...section.matchAll(/data-action="open" data-id="([^"]+)"/g)].map(x=>x[1]);
+  assert.equal(new Set(ids).size,ids.length);
+});
 console.log('\n'+results.length+' smoke tests passed. Physical-device visual QA is separate.');
