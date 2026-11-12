@@ -1,4 +1,4 @@
-# Maddie Journey · Prototype v1.4
+# Maddie Journey · Prototype v1.5
 
 A lightweight, button-first People & Culture prototype built using **HTML, CSS and vanilla JavaScript only**. No build tools, paid subscriptions, login, Airtable or cloud service are needed for demonstration.
 
@@ -13,6 +13,20 @@ To deploy, open **GitHub repository → Settings → Pages → Deploy from a bra
 https://nemtxt.github.io/Maddie-Journey-NemDev-/
 
 The URL is not assumed live until Pages publication is verified.
+
+## v1.5 — Nemesis-inspired interface and progressive appearance
+
+The interface now follows the design language of the **Nemesis Corporation** website supplied with this project: **Inter typography, restrained dark canvas, fine dividers, low-emphasis card surfaces, subtle department accents, compact pill buttons and a translucent sticky header**. It does not copy the corporate website's brand assets or introduce marketing-page animations into operational workflows.
+
+- **Appearance:** Use the **Light / Dark** segmented control in the **top-right header**. The current choice is stored in the browser under \`maddie-journey-theme\`, separately from HR sample records. The initial default is dark to reflect the reference site; both themes cover all pages, charts, forms, division cards and popups.
+- **Progressive transition:** Theme colors blend gently instead of flashing. Modal entrances and card hover states are subtle; the CSS respects \`prefers-reduced-motion\` and disables nonessential movement when required.
+- **Eight divisions:** Each division has a small, consistent accent used on its cards and department header only. This keeps divisions identifiable without making the dashboard overly colorful.
+- **HR workflow:** Overview → People directory or Milestones → select division/employee → open a centered modal to edit permitted fields.
+- **Division Head workflow:** Overview → assigned department → employee card → KPI/Journey/Kit/other relevant modal. Department owners can edit only their designated demo inputs.
+- **Executive observer:** Read-only overview and report previews; demonstration roles are not secure login accounts.
+- **Keyboard access:** Visible focus indicators and a Skip to main content link. Theme switching does not re-render forms or discard open modal state.
+
+Appearance changes need no build process and no backend. All new styling lives in \`theme.css\`, layered after the original \`styles.css\` to keep future refinements separate.
 
 ## Simple user flow
 
@@ -76,6 +90,7 @@ Do not store real employee details, disciplinary actions, salaries, passwords, a
 ## Files
 
 - `index.html` — static entry point
-- `styles.css` — responsive screens and centered dialogs
+- `styles.css` — core responsive screens and centered dialogs
+- `theme.css` — Inter-based Nemesis design system and progressive Light / Dark themes
 - `data.js` — fictional 51-person dataset and initial milestone records
 - `app.js` — workflows, charts, edit dialogs, local storage and exports
