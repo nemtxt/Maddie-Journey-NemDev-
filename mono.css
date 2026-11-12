@@ -1946,3 +1946,14 @@ body .button .ui-icon{width:15px;height:15px}
     border-color:CanvasText!important
   }
 }
+
+
+/* Avoid metric-label and action-icon collisions on narrow two-column layouts. */
+body .overview-summary-grid button.overview-signal>span:first-child{
+  max-width:100%;padding-right:36px;overflow-wrap:break-word
+}
+@media(max-width:420px){
+  body .overview-summary-grid button.overview-signal>span:first-child{
+    padding-right:29px;line-height:1.35
+  }
+}
