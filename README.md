@@ -15,7 +15,7 @@ Maddie Journey is a **reader, organizer, summary dashboard, and monitoring track
 
 ## How to use
 
-1. Open the landing page and select **Enter dashboard**, or open any deep link such as `#overview\`, \`#employees\`, \`#journey\`, or \`#division/media\`. All fictional records are accessible immediately: **no login, role choice, or first-visit popup**.
+1. Open the landing page and select **Enter dashboard** or one of the direct feature cards, or open any deep link such as `#overview\`, \`#employees\`, \`#journey\`, or \`#division/media\`. All fictional records are accessible immediately: **no login, role choice, or first-visit popup**.
 2. The **left sidebar** contains five main areas: Dashboard, People, Journey, Performance, and Data & Sources. Select one to access its default screen.
 3. The **top contextual tabs** change to the relevant subpages, making secondary navigation predictable and reducing sidebar clutter.
 4. Use Search, division filters, Board/Table modes, employee modal previews, and Light/Dark theme to navigate without changing source data.
