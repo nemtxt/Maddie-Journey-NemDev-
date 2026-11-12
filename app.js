@@ -32,9 +32,6 @@
   const roleCanHead=function(e){const v=viewer();return !!(e&&(v.role==='head'||v.role==='corp')&&(v.divisions||[]).includes(e.division));};
   const isHR=function(){return viewer().role==='hr';};
   // No source editing, endorsements or employee data submission is permitted.
-  const canTrack=function(){return false;};
-  const canScore=function(){return false;};
-  const canReview=function(){return false;};
   const dateLabel=function(v){if(!v)return '—';const d=new Date(v+'T12:00:00');return isNaN(d.getTime())?safe(v):d.toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'});};
   const escVal=function(v){return safe(v);};
   function persist(){
@@ -55,10 +52,6 @@
   const avatar=function(str){return '<span class="avatar" aria-hidden="true">'+safe(initials(str))+'</span>';};
   const pill=function(status){const t=String(status||'Pending');const cls=['Approved','Endorsed','Complete','Verified','Excellent'].includes(t)?'ok':['Returned','Rejected','Unapproved'].includes(t)?'bad':['Pending','Draft'].includes(t)?'warn':'info';return '<span class="tag '+cls+'">'+safe(t)+'</span>';};
   const button=function(label,action,attributes,cls){return '<button type="button" class="button '+(cls||'')+'" data-action="'+action+'" '+(attributes||'')+'>'+label+'</button>';};
-  const input=function(key,value,opts){opts=opts||{};return '<input class="field" type="'+(opts.type||'text')+'" data-field="'+key+'" value="'+escVal(value)+'" '+(opts.min!==undefined?'min="'+opts.min+'" ':'')+(opts.max!==undefined?'max="'+opts.max+'" ':'')+(opts.step!==undefined?'step="'+opts.step+'" ':'')+(opts.disabled?'disabled ':'')+(opts.placeholder?'placeholder="'+safe(opts.placeholder)+'"':'')+'>';};
-  const textArea=function(key,value,disabled,placeholder){return '<textarea class="field textarea" data-field="'+key+'" '+(disabled?'disabled ':'')+'placeholder="'+safe(placeholder||'Add a note…')+'">'+safe(value||'')+'</textarea>';};
-  function opts(list,value){return list.map(function(x){return '<option value="'+safe(x.value)+'" '+(x.value===value?'selected':'')+'>'+safe(x.label)+'</option>';}).join('');}
-  function select(key,value,items,disabled){return '<select class="field" data-field="'+key+'" '+(disabled?'disabled':'')+'>'+opts(items,value)+'</select>';}
   function linkedEmployee(e){return '<button class="link-btn" data-action="open" data-id="'+safe(e.id)+'">'+safe(e.name)+'</button>';}
   function progress(val){return '<div class="progress"><span style="width:'+Math.max(0,Math.min(100,val))+'%"></span></div>';}
   function currentTheme(){return document.documentElement&&document.documentElement.dataset.theme==='light'?'light':'dark';}
@@ -566,7 +559,6 @@
       '<p class="muted micro tracker-footnote">Weights: Division 15% · Individual 45% · Values 15% · Behavior 25%. Demo scores only.</p>'+trackerRoster('kpi');
   }
   function reviewStatus(e,k){return e.review[k]&&e.review[k].status||'Pending';}
-  function reviewCanAct(e,k){if(k==='division')return roleCanHead(e);if(k==='corp')return canReview('corp')&&reviewStatus(e,'division')==='Endorsed';if(k==='cso')return canReview('cso')&&reviewStatus(e,'corp')==='Endorsed';if(k==='coo')return canReview('coo')&&reviewStatus(e,'cso')==='Endorsed';return false;}
   function compensation(e){const base=Number(e.currentBasic)||0,allow=Number(e.currentAllowances)||0,proposal=Number(e.proposedPct)||0,approved=Number(e.approvedPct)||0;return '<div class="money-grid"><div class="money-stat"><span>Current basic salary · demo</span><strong>'+money(base)+'</strong></div><div class="money-stat"><span>Current gross · demo</span><strong>'+money(base+allow)+'</strong></div><div class="money-stat"><span>Proposed increase</span><strong>'+money(base*proposal/100)+' ('+proposal+'%)</strong></div><div class="money-stat"><span>Proposed new gross</span><strong>'+money(base*(1+proposal/100)+allow)+'</strong></div><div class="money-stat"><span>Approved increase</span><strong>'+money(base*approved/100)+' ('+approved+'%)</strong></div><div class="money-stat"><span>Approved new basic</span><strong>'+money(base*(1+approved/100))+'</strong></div><div class="money-stat"><span>Approved new gross</span><strong>'+money(base*(1+approved/100)+allow)+'</strong></div><div class="money-stat"><span>Effectivity date</span><strong>'+dateLabel(e.effectiveDate)+'</strong></div></div>';}
   function reviewFlow(e){
     const steps=[['division','01','Division Head','KPI and initial review'],['corp','02','Corporate Operations','Organizational endorsement'],['cso','03','CSO','Strategic review'],['coo','04','COO','Final approval']];
@@ -883,143 +875,7 @@
     e.approvedPct=0;e.effectiveDate='';
     toast('Evaluation changed: previous review endorsements were reset.');
   }
-  function changeField(el){const e=emp(),field=el.dataset.field;if(!e||!field)return;const val=el.value;
-    if(field.indexOf('profile.')===0){if(!isHR())return;const k=field.slice(8);if(!['name','jobTitle','email','startDate','birthday','division'].includes(k))return;if((k==='name'||k==='jobTitle')&&!val.trim()){toast('This field cannot be empty.');render();return;}if(k==='division'&&!data.divisions.some(function(d){return d.id===val;}))return;e[k]=val.slice(0,150);
-      if(k==='division'){
-        // A transferred demo employee must not retain a reporting line to another department.
-        e.orgLevel=3;
-        const localLead=data.employees.find(function(p){return p.id!==e.id&&p.division===val&&p.orgLevel>3;});
-        e.reportsTo=localLead?localLead.id:null;
-        invalidateEvaluation(e);
-      }
-      audit(e,'Updated employee '+k);}
-    else if(field.indexOf('kpi.')===0){if(!roleCanHead(e))return;const parts=field.split('.'),i=Number(parts[1]),k=parts[2];if(!e.kpiItems[i]||!['target','actual'].includes(k))return;e.kpiItems[i][k]=val.slice(0,200);e.kpiItems[i].verified=false;e.kpiValidated=false;invalidateEvaluation(e);audit(e,'Updated demonstration KPI '+(i+1)+' '+k);}
-    else if(field==='kpiSource'){if(!isHR())return;e.kpiSource=val.slice(0,400);e.kpiValidated=false;invalidateEvaluation(e);audit(e,'Updated KPI source note');}
-    else if(field.indexOf('score.')===0){const k=field.split('.')[1];if(!canScore(e,k))return;const n=Number(val);if(val===''||!Number.isFinite(n)||n<0||n>100){toast('Scores must be between 0 and 100.');render();return;}e.scores[k]=Math.round(n*100)/100;invalidateEvaluation(e);audit(e,'Updated '+k+' evaluation score');}
-    else if(field.indexOf('kitnote.')===0){if(!canTrack(e))return;e.kitNotes[field.slice(8)]=val.slice(0,200);audit(e,'Updated kit issuance or access note');}
-    else if(field.indexOf('comment.')===0){const k=field.slice(8);const allowed=k==='hr'?isHR():k==='division'?roleCanHead(e):k==='employee'?isHR():canReview(k);if(!allowed)return;e.comments[k]=val.slice(0,1000);audit(e,'Updated '+k+' comment');}
-    else if(['currentBasic','currentAllowances','proposedPct','approvedPct','effectiveDate'].includes(field)){if(field==='approvedPct'||field==='effectiveDate'){return;}else if(!roleCanHead(e))return;
-      if(field==='effectiveDate'){if(val&&!/^\d{4}-\d{2}-\d{2}$/.test(val)){toast('Invalid date');return;}e[field]=val;}
-      else {const n=Number(val);if(val===''||!Number.isFinite(n)||n<0||(field.endsWith('Pct')&&n>100)){toast('Enter a valid, nonnegative amount (percentages up to 100).');render();return;}e[field]=Math.round(n*100)/100;}
-      invalidateEvaluation(e);
-      audit(e,'Updated sample compensation: '+field);
-    }else return;render();
-  }
-  function openMilestoneEditor(kind,employeeId,recordId){
-    const e=emp(employeeId),allowed=['promotion','perfect','discipline'].includes(kind);
-    const listName={promotion:'promotions',perfect:'attendanceAwards',discipline:'disciplinaryActions'}[kind];
-    if(!e||!allowed)return;
-    if(kind==='promotion'&&!(isHR()||roleCanHead(e))){toast('Only HR or the assigned evaluator can record promotions.');return;}
-    if(kind!=='promotion'&&!isHR()){toast('Only HR can maintain this type of milestone.');return;}
-    const list=e[listName],old=recordId?list.find(function(x){return x.id===recordId;}):null;
-    if(recordId&&!old){toast('Record not found.');return;}
-    if(kind==='promotion'&&old&&old.status==='Approved'&&!isHR()){toast('Only HR can edit approved promotion records.');return;}
-    const statusOptions=function(arr,selected){return opts(arr.map(function(x){return {label:x,value:x};}),selected);};
-    const modal=document.createElement('div');modal.id='milestone-edit-modal';modal.className='overlay center-overlay milestone-edit-overlay';modal.setAttribute('data-overlay','milestone-editor');
-    const field=function(name,label,value,type,required){return '<label><span class="field-label">'+label+'</span><input class="field" name="'+name+'" type="'+(type||'text')+'" value="'+safe(value||'')+'" '+(required?'required':'')+'></label>';};
-    let formFields='';
-    if(kind==='promotion'){
-      formFields=field('date','Effective date',old?old.date:now(),'date',true)+field('from','Previous position',old?old.from:e.jobTitle,'text',true)+field('to','New position',old?old.to:'','text',true)+
-        '<label><span class="field-label">Promotion status</span><select class="field" name="status">'+statusOptions(isHR()?['Proposed','Recommended','Approved']:['Proposed','Recommended'],old&&old.status)+'</select></label>';
-    }else if(kind==='perfect'){
-      formFields=field('period','Attendance period (month)',old?old.period:now().slice(0,7),'month',true)+
-        '<label><span class="field-label">Verification</span><select class="field" name="status">'+statusOptions(['Pending verification','HR confirmed'],old&&old.status)+'</select></label>'+
-        '<p class="muted micro">Do not award perfect attendance automatically from incomplete attendance entries.</p>';
-    }else{
-      formFields=field('date','Date recorded',old?old.date:now(),'date',true)+field('category','Policy category',old?old.category:'','text',true)+
-        '<label><span class="field-label">Action level</span><select class="field" name="severity">'+statusOptions(['Advisory','Written warning','Final warning','Suspension','Other'],old&&old.severity)+'</select></label>'+
-        '<label><span class="field-label">Case status</span><select class="field" name="status">'+statusOptions(['Under review','Active','Resolved'],old&&old.status)+'</select></label>';
-    }
-    const heading={promotion:'Promotion record',perfect:'Perfect-attendance recognition',discipline:'Disciplinary case'}[kind];
-    modal.innerHTML='<section class="workspace-modal milestone-editor-panel" role="dialog" aria-modal="true" aria-labelledby="milestone-editor-title" tabindex="-1">'+
-      '<div class="modal-fixed-head"><div><span class="eyebrow">SAMPLE RECORD · '+safe(e.id)+'</span><h2 id="milestone-editor-title">'+(old?'Edit ':'New ')+heading+'</h2><p>'+safe(e.name)+' · '+safe(div(e.division).name)+'</p></div><button type="button" class="modal-close" data-milestone-close="1" aria-label="Close form">×</button></div>'+
-      '<div class="workspace-modal-scroll"><form id="milestone-form" class="stack milestone-form">'+
-      (kind==='discipline'?'<div class="callout orange"><strong>Confidential demonstration:</strong> Do not enter real disciplinary or personal records on this public prototype.</div>':'')+
-      '<div class="form-grid">'+formFields+'</div>'+
-      '<label><span class="field-label">Record note (optional)</span><textarea class="field textarea" name="note" maxlength="500" placeholder="Sample note only — no real confidential information">'+safe(old?old.note:'')+'</textarea></label>'+
-      '<div class="milestone-form-actions">'+(old?'<button type="button" class="button danger" data-milestone-delete="1">Remove</button>':'')+
-      '<button type="button" class="button" data-milestone-close="1">Cancel</button><button type="submit" class="button primary">Save record</button></div>'+
-      '</form></div></section>';
-    document.body.appendChild(modal);
-    const close=function(){modal.remove();};
-    modal.querySelectorAll('[data-milestone-close]').forEach(function(el){el.addEventListener('click',close);});
-    modal.addEventListener('click',function(ev){if(ev.target===modal)close();});
-    modal.addEventListener('keydown',function(ev){if(ev.key==='Escape'){ev.preventDefault();ev.stopPropagation();close();}});
-    const deletion=modal.querySelector('[data-milestone-delete]');
-    if(deletion)deletion.addEventListener('click',function(){
-      if(!confirm('Remove this fictional milestone record?'))return;
-      const idx=list.findIndex(function(x){return x.id===recordId;});
-      if(idx!==-1)list.splice(idx,1);
-      audit(e,'Removed demo '+kind+' milestone');close();render();toast('Record removed from this browser.');
-    });
-    modal.querySelector('#milestone-form').addEventListener('submit',function(ev){
-      ev.preventDefault();if(!isHR()&&kind!=='promotion' || !isHR()&&kind==='promotion'&&!roleCanHead(e))return;
-      const f=new FormData(ev.currentTarget),val=function(key){return String(f.get(key)||'').trim().slice(0,500);};
-      const next={id:old?old.id:'mj-'+kind+'-'+e.id+'-'+Date.now(),note:val('note'),status:val('status')};
-      if(kind==='promotion'){
-        next.date=val('date');next.from=val('from');next.to=val('to');
-        if(!next.from||!next.to||!isValidDate(next.date)){toast('Enter a valid date and both job positions.');return;}
-        if(!isHR()&&!['Proposed','Recommended'].includes(next.status)){toast('Only HR can approve promotions.');return;}
-        if(!['Proposed','Recommended','Approved'].includes(next.status))return;
-      }else if(kind==='perfect'){
-        next.period=val('period');if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(next.period)||!['Pending verification','HR confirmed'].includes(next.status)){toast('Select a valid month and verification status.');return;}
-      }else{
-        next.date=val('date');next.category=val('category');next.severity=val('severity');
-        if(!isValidDate(next.date)||!next.category||!['Advisory','Written warning','Final warning','Suspension','Other'].includes(next.severity)||!['Under review','Active','Resolved'].includes(next.status)){toast('Complete all case details correctly.');return;}
-      }
-      if(old)Object.assign(old,next);else list.push(next);
-      audit(e,(old?'Updated':'Recorded')+' demo '+kind+' milestone');
-      close();render();toast('Milestone saved locally.');
-    });
-    const first=modal.querySelector('input');if(first&&typeof first.focus==='function')first.focus({preventScroll:true});
-  }
-  function isValidDate(value){
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(value||''))return false;
-    const d=new Date(value+'T00:00:00Z');return Number.isFinite(d.getTime())&&d.toISOString().slice(0,10)===value;
-  }
-  function openRecordEditor(id){
-    if(!isHR()){toast('Select an HR demo workspace to edit attendance.');return;}
-    const e=emp(),old=id?e.attendance.find(function(x){return x.id===id;}):null;
-    const entry={id:old?old.id:'a-'+Date.now(),date:old?old.date:now(),type:old?old.type:'Late',approval:old?old.approval:'Pending',reason:old?old.reason:'',remarks:old?old.remarks:'',verified:old?old.verified:false};
-    const existing=$('record-modal');if(existing)existing.remove();
-    const modal=document.createElement('div');
-    modal.className='overlay center-overlay record-overlay';modal.id='record-modal';
-    modal.setAttribute('data-overlay','record');
-    modal.innerHTML='<section class="workspace-modal attendance-edit-modal" role="dialog" aria-modal="true" aria-labelledby="record-modal-title" tabindex="-1">'+
-      '<div class="modal-fixed-head"><div><span class="eyebrow">ATTENDANCE · '+safe(e.id)+'</span><h2 id="record-modal-title">'+(old?'Edit attendance':'New attendance')+'</h2><p>'+safe(e.name)+' · Confirm verification before counting in analytics</p></div><button class="modal-close" type="button" data-record-close="1" aria-label="Close attendance form">×</button></div>'+
-      '<div class="workspace-modal-scroll"><form id="record-form" class="stack attendance-record-form">'+
-      '<div class="form-grid"><label><span class="field-label">Date</span><input class="field" name="date" type="date" required value="'+safe(entry.date)+'"></label>'+
-      '<label><span class="field-label">Record type</span><select class="field" name="type">'+opts(['Late','Absent','Leave'].map(function(x){return {label:x,value:x};}),entry.type)+'</select></label>'+
-      '<label class="span2"><span class="field-label">Approval / excuse status</span><select class="field" name="approval">'+opts(['Pending','Approved','Excused','Unapproved'].map(function(x){return {label:x,value:x};}),entry.approval)+'</select></label></div>'+
-      '<label><span class="field-label">Reason for leave, absence or lateness</span><textarea class="field textarea" required name="reason">'+safe(entry.reason)+'</textarea></label>'+
-      '<label><span class="field-label">Supervisor remarks</span><textarea class="field textarea" name="remarks">'+safe(entry.remarks)+'</textarea></label>'+
-      '<label class="check-row"><input type="checkbox" name="verified" '+(entry.verified?'checked':'')+'><span>HR verified — include in analytics</span></label>'+
-      '<div class="attendance-record-actions"><button type="button" class="button" data-record-close="1">Cancel</button><button class="button primary" type="submit">Save record</button></div>'+
-      '</form></div></section>';
-    document.body.appendChild(modal);
-    const close=function(){modal.remove();};
-    modal.querySelectorAll('[data-record-close]').forEach(function(el){el.addEventListener('click',close);});
-    modal.addEventListener('click',function(ev){if(ev.target===modal)close();});
-    modal.addEventListener('keydown',function(ev){if(ev.key==='Escape'){ev.preventDefault();ev.stopPropagation();close();}});
-    modal.querySelector('#record-form').addEventListener('submit',function(ev){
-      ev.preventDefault();const f=new FormData(ev.currentTarget);
-      const next={id:entry.id,date:String(f.get('date')||''),type:String(f.get('type')||''),approval:String(f.get('approval')||''),reason:String(f.get('reason')||'').trim().slice(0,500),remarks:String(f.get('remarks')||'').trim().slice(0,500),verified:f.has('verified')};
-      if(!next.date||!next.reason){toast('Date and reason are required.');return;}
-      if(old)Object.assign(old,next);else e.attendance.push(next);
-      audit(e,(old?'Edited':'Added')+' verified status and attendance record '+next.date);
-      close();render();toast('Attendance record saved locally.');
-    });
-    const focus=modal.querySelector('input[name="date"]');if(focus)focus.focus({preventScroll:true});
-  }
-  function reviewAction(step,decision){const e=emp();if(!reviewCanAct(e,step)){toast('This review step is not available to the selected evaluator.');return;}
-    if(step==='coo'&&decision==='Approved'&&(!e.effectiveDate||!e.comments.coo.trim())){toast('COO: enter the effectivity date and final remarks before approval.');return;}
-    if(step==='division'&&decision==='Endorsed'&&!e.comments.division.trim()){toast('Division Head: add a recommendation comment before endorsement.');return;}
-    if(step==='division'){e.review.corp={status:'Pending',comment:'',at:''};e.review.cso={status:'Pending',comment:'',at:''};e.review.coo={status:'Pending',comment:'',at:''};}
-    if(decision==='Returned'){const prior=step==='corp'?'division':step==='cso'?'corp':'cso';e.review[prior].status='Pending';}
-    e.review[step]={status:decision,comment:e.comments[step]||'',at:new Date().toISOString()};
-    if(step==='coo'&&decision==='Approved'&&e.approvedPct===0)toast('Approved with a 0% salary adjustment.');
-    audit(e,step+' review: '+decision);render();toast('Review status updated: '+decision+'.');
-  }
+  // All data-editing functions were removed: this frontend never mutates employee records.
   function toCSV(rows){return rows.map(function(row){return row.map(function(x){return '"'+String(x===null||x===undefined?'':x).replace(/"/g,'""')+'"';}).join(',');}).join('\r\n');}
   function download(filename,mime,text){const blob=new Blob([text],{type:mime});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},2500);}
   function action(name,button){const e=emp();if(name==='landing-role'){ui.chooserCategory=['hr','head','executive'].includes(button.dataset.role)?button.dataset.role:'all';navigate('overview');ui.roleModal=true;render();return;}if(name==='workspace-category'){ui.chooserCategory=['hr','head','executive'].includes(button.dataset.category)?button.dataset.category:'all';ui.roleModal=true;render();return;}if(name==='mobile'){ui.mobile=!ui.mobile;render();return;}
@@ -1037,8 +893,6 @@
     if(name==='milestone-more'){ui.milestoneShowAll=!ui.milestoneShowAll;render();return;}
     if(name==='milestone-division'){ui.divisionPickerMode='milestone';ui.divisionModal=true;ui.employeePicker=false;render();return;}
     if(name==='set-milestone-division'){const id=button.dataset.division;if(id!=='all'&&!data.divisions.some(function(d){return d.id===id;}))return;ui.milestoneDivision=id;ui.milestoneShowAll=false;ui.divisionModal=false;render();return;}
-    if(name==='choose-milestone-employee'){ui.milestonePicking=true;ui.employeePicker=true;ui.pickerDivision=ui.milestoneDivision==='all'?'rmd':ui.milestoneDivision;ui.employeeModalOpen=false;render();return;}
-    if(name==='milestone-edit'){openMilestoneEditor(button.dataset.kind,button.dataset.employee||ui.employee,button.dataset.id||'');return;}
     if(name==='choose-division'){ui.divisionPickerMode='view';ui.divisionModal=true;ui.roleModal=false;ui.employeePicker=false;ui.employeeModalOpen=false;render();return;}
     if(name==='choose-scope'){ui.divisionPickerMode='scope';ui.divisionModal=true;ui.roleModal=false;ui.employeePicker=false;ui.employeeModalOpen=false;render();return;}
     if(name==='set-scope'){const id=button.dataset.division;if(id!=='all'&&!data.divisions.some(function(d){return d.id===id;}))return;ui.scope=id;ui.divisionModal=false;ensureEmployeeScope();persist();if(ui.tab==='division'){if(id==='all')navigate('divisions');else openDivision(id);}else render();return;}
@@ -1050,21 +904,19 @@
     if(name==='open'){ui.employee=button.dataset.id||ui.employee;ui.detail=button.dataset.detail||'preview';ui.roleModal=false;ui.divisionModal=false;ui.employeeModalOpen=true;render();return;}
     if(name==='close'){if(!ui.workspaceChosen)return;ui.employeeModalOpen=false;ui.roleModal=false;ui.divisionModal=false;ui.employeePicker=false;ui.milestonePicking=false;render();return;}
     if(name==='detail'){ui.detail=button.dataset.tab;render();return;}
-    if(name==='new-record'){openRecordEditor();return;}
-    if(name==='edit-record'){openRecordEditor(button.dataset.id);return;}
-    if(name==='review'){reviewAction(button.dataset.step,button.dataset.decision);return;}
-    if(name==='export'){download('maddie-journey-demo-backup.json','application/json;charset=utf-8',JSON.stringify(data,null,2));toast('Backup downloaded.');return;}
     if(name==='export-csv'){const rows=[['Employee ID','Name','Division','Role','Start date','Journey %','Welcome kit %','KPI score %','Performance rating','Final approval']].concat(scopedEmployees().map(function(x){return [x.id,x.name,div(x.division).name,x.jobTitle,x.startDate,journeyPct(x),kitPct(x),score(x),rating(score(x)),x.review.coo.status];}));download('maddie-journey-51-employees.csv','text/csv;charset=utf-8',toCSV(rows));return;}
     if(name==='attendance-csv'){const rows=[['Employee ID','Employee','Division','Date','Type','Approval','Verified','Reason','Supervisor remarks']];scopedEmployees().forEach(function(x){x.attendance.forEach(function(r){rows.push([x.id,x.name,div(x.division).name,r.date,r.type,r.approval,r.verified?'Yes':'No',r.reason,r.remarks]);});});download('maddie-journey-attendance.csv','text/csv;charset=utf-8',toCSV(rows));return;}
-    if(name==='import'){$('import-file').click();return;}
-    if(name==='reset'){if(confirm('Restore all 51 fictional employees and erase locally saved changes on this browser?')){data=clone(seed);ui.employee=data.employees[0].id;persist();render();toast('Sample data restored.');}return;}
   }
   document.addEventListener('click',function(ev){const dept=ev.target.closest('[data-nav-division]');if(dept){ev.preventDefault();openDivision(dept.dataset.navDivision);return;}const nav=ev.target.closest('[data-nav]');if(nav){ev.preventDefault();navigate(nav.dataset.nav);return;}const act=ev.target.closest('[data-action]');if(act){ev.preventDefault();action(act.dataset.action,act);return;}if(['employee','role','division','picker'].includes(ev.target.dataset.overlay)){if(!ui.workspaceChosen)return;ui.employeeModalOpen=false;ui.roleModal=false;ui.divisionModal=false;ui.employeePicker=false;render();}});
-  document.addEventListener('change',function(ev){const el=ev.target;if(el.dataset.ui){if(el.dataset.ui==='viewer'){ui.viewer=el.value;persist();render();toast('Preview role: '+viewer().name);}else if(el.dataset.ui==='employee'){ui.employee=el.value;render();}else if(el.dataset.ui==='division'){ui.division=el.value;render();}else if(el.dataset.ui==='activeDivision'){openDivision(el.value);}else if(el.dataset.ui==='frequency'){ui.frequency=el.value;render();}else if(el.dataset.ui==='query'){ui.query=el.value;render();}return;}
-    if(el.dataset.stage!==undefined){const e=emp();if(!canTrack(e))return;const s=Number(el.dataset.stage),i=Number(el.dataset.item);if(!e.journey[s]||i>=e.journey[s].length)return;e.journey[s][i]=el.checked;audit(e,(el.checked?'Completed':'Reopened')+' Stage '+(s+1)+': '+data.stages[s].items[i]);render();return;}
-    if(el.dataset.kit!==undefined){const e=emp(),i=Number(el.dataset.kit);if(!canTrack(e)||i>=e.kit.length)return;e.kit[i]=el.checked;audit(e,(el.checked?'Completed':'Reopened')+' kit: '+data.kit[i].label);render();return;}
-    if(el.dataset.field){changeField(el);return;}
-    if(el.id==='import-file'&&el.files&&el.files[0]){const r=new FileReader();r.onload=function(){try{const value=JSON.parse(r.result);if(![3,4,5,6].includes(value.version)||!Array.isArray(value.employees)||value.employees.length!==51||!Array.isArray(value.divisions)){throw Error('This is not a compatible 51-employee backup.');}if(!confirm('Replace current browser data with this imported backup?'))return;data=upgradeData(value);data.viewers=clone(seed.viewers);data.divisions=clone(seed.divisions);data.stages=clone(seed.stages);data.kit=clone(seed.kit);ui.employee=data.employees[0].id;persist();render();toast('Backup imported successfully.');}catch(err){toast('Import failed: '+err.message);}};r.readAsText(el.files[0]);}
+  document.addEventListener('change',function(ev){
+    const el=ev.target;
+    if(!el.dataset.ui)return;
+    // The only selectable fields are presentation filters (not employee data).
+    if(el.dataset.ui==='employee'&&emp(el.value)){ui.employee=el.value;render();}
+    else if(el.dataset.ui==='division'&&(el.value==='all'||data.divisions.some(function(d){return d.id===el.value;}))){ui.division=el.value;render();}
+    else if(el.dataset.ui==='activeDivision'){openDivision(el.value);}
+    else if(el.dataset.ui==='frequency'){ui.frequency=el.value;render();}
+    else if(el.dataset.ui==='query'){ui.query=el.value;render();}
   });
   document.addEventListener('input',function(ev){const el=ev.target;if(el.dataset.ui==='query'){const p=el.selectionStart;ui.query=el.value;const focus=document.activeElement;const list=filtered();const table=$('app').querySelector('.panel.no-pad');if(table){const existing=table.querySelector('.table-wrap, .empty');if(existing)existing.outerHTML=employeesTable(list);const count=table.querySelector('.filters .muted.micro');if(count)count.textContent=list.length+' employees';}if(focus!==el){el.focus();try{el.setSelectionRange(p,p);}catch(err){}}}});
   document.addEventListener('keydown',function(ev){
