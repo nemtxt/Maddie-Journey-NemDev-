@@ -148,11 +148,10 @@
       group.tabs.map(function(t){const selected=current===t[0];return '<a href="#'+t[0]+'" data-nav="'+t[0]+'"'+(selected?' aria-current="page"':'')+' class="'+(selected?'active':'')+'">'+safe(t[1])+'</a>';}).join('')+
       '</div></nav>';
   }
-  const items=[['overview','◫','Overview'],['divisions','▦','Divisions'],['employees','◎','Employees'],['milestones','✦','Milestones'],['calendar','▦','Calendar'],['journey','◷','Journey board'],['kit','▣','Welcome Kit'],['files201','□','201 Files'],['attendance','◩','Attendance'],['kpi','◈','KPI scorecards'],['approvals','✓','Reviews'],['sources','↗','Data sources'],['audit','≡','About data']];
   function sidebar(){
     const active=activeNavGroup().id;
     return '<aside class="sidebar workspace-sidebar"'+(ui.mobile?' role="dialog" aria-modal="true" aria-label="Workspace navigation"':' aria-label="Main navigation"')+'><div class="workspace-sidepanel">'+
-  '<button type="button" class="mobile-drawer-close" data-action="mobile" aria-label="Close navigation menu">Close menu <span aria-hidden="true">×</span></button>'+
+  '<button type="button" class="mobile-drawer-close" data-action="mobile" aria-label="Close navigation menu">Close menu <span aria-hidden="true">'+landingIcon('x')+'</span></button>'+
       '<a href="#welcome" data-nav="welcome" class="brand brand-official-link" aria-label="Maddie Journey landing" title="Maddie Journey landing">'+
       '<span class="sidebar-brand-mini" aria-hidden="true">M</span>'+
       '<span class="brand-product-name">Maddie Journey<small class="brand-product-subtitle">MONITORING</small></span></a>'+
@@ -161,7 +160,7 @@
         return '<a href="#'+g.defaultTab+'" data-nav="'+g.defaultTab+'" aria-label="'+safe(g.label)+'" title="'+safe(g.label)+'" class="workspace-mainnav-item '+(g.id===active?'active':'')+'"'+
         (g.id===active?' aria-current="location"':'')+'><span class="nav-icon" aria-hidden="true">'+landingIcon(g.icon)+'</span>'+
         '<span class="workspace-mainnav-label">'+safe(g.label)+'</span>'+
-        '<span class="workspace-mainnav-chevron" aria-hidden="true">›</span></a>';
+        '<span class="workspace-mainnav-chevron" aria-hidden="true">'+landingIcon('chevron-right')+'</span></a>';
       }).join('')+'</nav>'+
       '<div class="sidebar-bottom"><div class="reader-sidebar-status"><span class="data-provenance-dot"></span>'+
       '<div><strong>Sample workspace</strong><small>51 people · 8 divisions</small></div></div>'+
@@ -172,7 +171,7 @@
 
   /* Summaries use the same calculated sample records displayed in each screen. */
   function meanOf(list,calculate){return list.length?Math.round(list.reduce(function(n,e){return n+calculate(e);},0)/list.length):0;}
-  function metricCard(label,value,note){return '<div class="metric"><div class="metric-label">'+safe(label)+'<span class="metric-icon">◇</span></div><strong>'+safe(value)+'</strong><div class="metric-sub">'+safe(note)+'</div></div>';}
+  function metricCard(label,value,note){return '<div class="metric"><div class="metric-label">'+safe(label)+'<span class="metric-icon" aria-hidden="true">'+landingIcon('activity')+'</span></div><strong>'+safe(value)+'</strong><div class="metric-sub">'+safe(note)+'</div></div>';}
   function screenSummary(){
     const all=ui.tab==='milestones'?filteredMilestoneTeam():ui.tab==='divisions'?data.employees:scopedEmployees();
     const team=ui.tab==='division'?data.employees.filter(function(e){return e.division===ui.activeDivision;}):all;
@@ -470,7 +469,7 @@
         '<span class="monitor-division-cell monitor-division-kpi" data-label="KPI avg"><b>'+kpi+'%</b></span>'+
         '<span class="monitor-division-cell monitor-division-reviews" data-label="Reviews open"><b>'+reviews+' / '+team.length+'</b></span>'+
         '<span class="monitor-division-cell monitor-division-concerns" data-label="People w/ concerns"><b>'+concerns+' / '+team.length+'</b></span>'+
-        '<span class="monitor-division-arrow" aria-hidden="true">↗</span></button>';
+        '<span class="monitor-division-arrow" aria-hidden="true">'+landingIcon('arrow-up-right')+'</span></button>';
     });
     return '<section class="overview-spotlight monitor-division-section"><div class="overview-section-heading">'+
       '<div><h2>Division comparison</h2><p>Eight divisions · arithmetic means and per-division people counts</p></div></div>'+
@@ -549,7 +548,7 @@
       '<div class="monitor-focus-grid">'+items.map(function(x){
         return '<button type="button" class="monitor-focus-item" data-action="nav" data-tab="'+
           safe(x.id)+'" aria-label="'+safe(x.aria)+'">'+
-          '<span class="monitor-focus-topline">'+safe(x.label)+' <span aria-hidden="true">↗</span></span>'+
+          '<span class="monitor-focus-topline">'+safe(x.label)+' <span aria-hidden="true">'+landingIcon(x.id==='files201'?'file':x.id==='calendar'?'calendar':'clock')+'</span></span>'+
           '<span class="monitor-focus-value">'+
           (x.id==='attendance'?'<span class="monitor-pulse-primary-count">'+affected+'</span> / '+staff.length:
             safe(x.value))+'</span>'+
@@ -564,10 +563,10 @@
     const unvalidated=staff.filter(function(e){return !e.kpiValidated;}).length;
     const journeyAverage=meanOf(staff,journeyPct);
     const cards=[
-      ['Employees',staff.length,'Across all eight divisions','pink','employees'],
-      ['Journey progress',journeyAverage+'%','Average onboarding completion','blue','journey'],
-      ['Kits pending',kitPending,'Employees with open requirements','yellow','kit'],
-      ['KPI to verify',unvalidated,'Sample records without validation','violet','kpi']
+      ['Employees',staff.length,'Across all eight divisions','pink','employees','users'],
+      ['Journey progress',journeyAverage+'%','Average onboarding completion','blue','journey','checklist'],
+      ['Kits pending',kitPending,'Employees with open requirements','yellow','kit','briefcase'],
+      ['KPI to verify',unvalidated,'Sample records without validation','violet','kpi','chart']
     ];
     return header('PEOPLE MONITORING / DEMO SNAPSHOT','Organization overview',
       '51 fictional people across eight divisions. Open signals to inspect the recorded details; this is not live data.',
@@ -576,7 +575,7 @@
         return '<button type="button" class="overview-summary-tile tone-'+card[3]+' overview-signal"'+
           ' data-action="nav" data-tab="'+card[4]+'"'+
           ' aria-label="'+safe(card[0])+': '+safe(card[1])+'. Open '+safe(card[4])+' monitoring">'+
-          '<span>'+safe(card[0])+'</span><strong>'+safe(card[1])+'</strong>'+
+          '<span>'+safe(card[0])+'</span><span class="overview-signal-icon" aria-hidden="true">'+landingIcon(card[5])+'</span><strong>'+safe(card[1])+'</strong>'+
           '<small>'+safe(card[2])+'</small></button>';
       }).join('')+'</section>'+
       monitorPulse(staff)+
@@ -589,7 +588,7 @@
       ' attendance concerns in verified sample entries. No integrations or editable records.</p>';
   }
   function overview(){return roleHome();}
-  function employeesTable(list,mode){if(!list.length)return '<div class="empty"><span class="big">⌕</span>No employees match these filters.</div>';
+  function employeesTable(list,mode){if(!list.length)return '<div class="empty"><span class="big" aria-hidden="true">'+landingIcon('search')+'</span>No employees match these filters.</div>';
     return '<div class="table-wrap"><table class="table"><thead><tr><th>Employee</th><th>Division</th><th>Journey</th><th>Kit issued</th><th>KPI score</th><th>Actions</th></tr></thead><tbody>'+list.map(function(e){return '<tr><td><div class="name-cell">'+avatar(e.name)+'<div><strong>'+safe(e.name)+'</strong><small>'+safe(e.id)+' · '+safe(e.jobTitle)+'</small></div></div></td><td>'+safe(div(e.division).short)+'</td><td><div class="progress-wrapper">'+progress(journeyPct(e))+'<span>'+journeyPct(e)+'%</span></div></td><td>'+kitPct(e)+'%</td><td><strong>'+score(e).toFixed(1)+'%</strong><small>'+rating(score(e))+'</small></td><td>'+button('Preview','open','data-id="'+e.id+'" data-detail="'+(mode||'preview')+'"','small')+'</td></tr>';}).join('')+'</tbody></table></div>';}
   function filtered(){
     const term=ui.query.trim().toLocaleLowerCase();
@@ -612,7 +611,7 @@
     return '<div class="filters directory-filters"><label class="directory-search-label">'+
       '<span class="sr-only">Search employee name, ID, job title, email or division</span>'+
       '<input type="search" class="search" aria-label="Search employees" data-ui="query" placeholder="Search people or departments" value="'+safe(ui.query)+'"></label>'+
-      button(ui.scope==='all'?'All divisions ▾':div(ui.scope).short+' ▾','choose-scope','','small')+
+      button((ui.scope==='all'?'All divisions':div(ui.scope).short)+' '+landingIcon('chevron-down'),'choose-scope','','small')+
       '<label class="directory-sort-label"><span>Sort</span><select data-ui="employeeSort" aria-label="Sort employees" class="field directory-sort">'+opts(sorts,ui.employeeSort)+'</select></label>'+
       '<span class="directory-clear-slot">'+(ui.query?button('Clear search','clear-search','','small'):'')+'</span>'+
       '<span class="directory-results-count" aria-live="polite">'+filtered().length+' of '+scopedEmployees().length+' employees</span></div>';
@@ -647,13 +646,13 @@
         '<span class="tag '+(done===total?'ok':'warn')+'">'+done+'/'+total+'</span></div>'+
         progress(Math.round(done/total*100))+'<div class="reader-checklist">'+stage.items.map(function(item,ii){
           const completed=!!e.journey[si][ii];
-          return '<div class="reader-check'+(completed?' is-complete':'')+'"><span class="reader-check-icon" aria-hidden="true">'+(completed?'✓':'–')+'</span>'+
+          return '<div class="reader-check'+(completed?' is-complete':'')+'"><span class="reader-check-icon" aria-hidden="true">'+landingIcon(completed?'check':'minus')+'</span>'+
           '<span>'+safe(item)+'</span><small>'+(completed?'Complete':'Pending')+'</small></div>';
         }).join('')+'</div></section>';
     }).join('')+'</div>';
   }
 
-  function employeeSelector(){ensureEmployeeScope();const e=emp();return '<label class="field-label">Selected employee</label><button type="button" class="employee-picker-trigger" data-action="choose-employee" aria-haspopup="dialog" aria-label="Choose an employee">'+avatar(e.name)+'<span><b>'+safe(e.name)+'</b><small>'+safe(div(e.division).short)+' · '+safe(e.id)+'</small></span><strong>Change member ↗</strong></button>';}
+  function employeeSelector(){ensureEmployeeScope();const e=emp();return '<label class="field-label">Selected employee</label><button type="button" class="employee-picker-trigger" data-action="choose-employee" aria-haspopup="dialog" aria-label="Choose an employee">'+avatar(e.name)+'<span><b>'+safe(e.name)+'</b><small>'+safe(div(e.division).short)+' · '+safe(e.id)+'</small></span><strong>Change member '+landingIcon('arrow-up-right')+'</strong></button>';}
   function journeyStage(e){
     const stage=e.journey.findIndex(function(items){return !items.every(Boolean);});
     return stage<0?7:stage;
@@ -736,7 +735,7 @@
     const avg=meanOf(team,journeyPct);
     return header('ONBOARDING MONITORING','Journey board',
       'See all seven stages in one view. People are grouped by their first incomplete stage; nothing can be edited here.',
-      button(scopeLabel()+' ▾','choose-scope','','small'))+
+      button(scopeLabel()+' '+landingIcon('chevron-down'),'choose-scope','','small'))+
       '<div class="journey-board-toolbar"><div><h2>Journey stages</h2><p>'+team.length+' employees · '+avg+'% average journey completion · '+stageCounts[7]+' completed</p></div>'+
       '<div class="workspace-view-switch" role="group" aria-label="Journey presentation">'+
       ['board','table'].map(function(mode){return '<button type="button" data-action="journey-view" data-mode="'+mode+'" class="'+(ui.journeyView===mode?'active':'')+'" aria-pressed="'+(ui.journeyView===mode)+'">'+
@@ -748,7 +747,7 @@
   function kitSection(e){
     return '<div class="kit-grid">'+data.kit.map(function(k,i){
       const note=e.kitNotes[k.id]||'',ready=!!e.kit[i];
-      return '<article class="kit-item reader-kit-item"><div class="reader-kit-title"><span class="reader-check-icon'+(ready?' is-complete':'')+'" aria-hidden="true">'+(ready?'✓':'–')+'</span><strong>'+safe(k.label)+'</strong>'+
+      return '<article class="kit-item reader-kit-item"><div class="reader-kit-title"><span class="reader-check-icon'+(ready?' is-complete':'')+'" aria-hidden="true">'+landingIcon(ready?'check':'minus')+'</span><strong>'+safe(k.label)+'</strong>'+
         pill(ready?'Complete':'Pending')+'</div><p class="reader-kit-type">'+(k.type==='equipment'?'Issuance details':'Access reference')+'</p>'+
         '<p class="reader-kit-note">'+safe(note||'No additional source details in sample')+'</p></article>';
     }).join('')+'</div>';
@@ -1056,7 +1055,7 @@
         button('View','open','data-id="'+safe(row.e.id)+'" data-detail="milestones"','small')+'</div>';
       }).join(''):'<div class="empty">No sample records in this category for the selected department.</div>');
     return header('PEOPLE MOMENTS','Employee milestones','One category at a time. Browse birthdays, service history, recognitions and HR records.',button('Employee directory','nav','data-tab="employees"','small'))+
-      '<div class="milestone-toolbar"><div><h2>Choose a category</h2><p class="muted micro">Select what you need to review today.</p></div><button class="button" type="button" data-action="milestone-division">'+safe(ui.milestoneDivision==='all'?'All 8 divisions':div(ui.milestoneDivision).short)+' <span aria-hidden="true">⌄</span></button></div>'+
+      '<div class="milestone-toolbar"><div><h2>Choose a category</h2><p class="muted micro">Select what you need to review today.</p></div><button class="button" type="button" data-action="milestone-division">'+safe(ui.milestoneDivision==='all'?'All 8 divisions':div(ui.milestoneDivision).short)+' <span aria-hidden="true">'+landingIcon('chevron-down')+'</span></button></div>'+
       '<div class="milestone-tabs" role="group" aria-label="Milestone categories">'+milestoneKinds.map(function(k){
         return '<button type="button" class="milestone-tab '+(k.id===kind.id?'active':'')+'" data-action="milestone-category" data-kind="'+k.id+'" aria-pressed="'+(k.id===kind.id)+'">'+safe(k.name)+'</button>';
       }).join('')+'</div>'+
@@ -1153,40 +1152,22 @@
     return '<div class="overlay center-overlay employee-overlay" data-overlay="employee">'+
     '<section class="employee-modal" role="dialog" aria-modal="true" aria-labelledby="employee-modal-title" aria-describedby="employee-context-description" tabindex="-1">'+
     '<div class="employee-modal-top"><div class="profile">'+avatar(e.name)+'<div><span class="eyebrow">EMPLOYEE · '+safe(e.id)+'</span><h2 id="employee-modal-title">'+safe(e.name)+'</h2><p class="muted micro">'+safe(e.jobTitle)+' · '+safe(div(e.division).name)+'</p></div></div>'+
-    '<button class="modal-close" data-action="close" aria-label="Close employee preview" type="button">×</button></div>'+
+    '<button class="modal-close" data-action="close" aria-label="Close employee preview" type="button">'+landingIcon('x')+'</button></div>'+
     '<div class="employee-context-bar"><p id="employee-context-description" class="employee-context-origin">'+safe(ui.viewerOrigin||'Monitoring')+
       '<span aria-hidden="true"> / </span>'+safe(div(e.division).short)+
       '<strong>'+(position>=0?position+1:1)+' of '+count+'</strong></p>'+
       '<div class="employee-context-actions">'+
-        '<button type="button" class="employee-context-division" data-action="viewer-division" data-division="'+safe(e.division)+'" aria-label="Open '+safe(div(e.division).name)+' employee list">View division <span aria-hidden="true">↗</span></button>'+
+        '<button type="button" class="employee-context-division" data-action="viewer-division" data-division="'+safe(e.division)+'" aria-label="Open '+safe(div(e.division).name)+' employee list">View division <span aria-hidden="true">'+landingIcon('arrow-up-right')+'</span></button>'+
         '<div class="employee-context-pager" role="group" aria-label="Browse employees in this view">'+
-        '<button type="button" data-action="viewer-prev" aria-label="'+(prev?'Previous employee: '+safe(prev.name):'No previous employee')+'"'+(prev?'':' disabled')+'>← <span>Previous</span></button>'+
-        '<button type="button" data-action="viewer-next" aria-label="'+(next?'Next employee: '+safe(next.name):'No next employee')+'"'+(next?'':' disabled')+'><span>Next</span> →</button>'+
+        '<button type="button" data-action="viewer-prev" aria-label="'+(prev?'Previous employee: '+safe(prev.name):'No previous employee')+'"'+(prev?'':' disabled')+'>'+landingIcon('arrow-left')+' <span>Previous</span></button>'+
+        '<button type="button" data-action="viewer-next" aria-label="'+(next?'Next employee: '+safe(next.name):'No next employee')+'"'+(next?'':' disabled')+'><span>Next</span> '+landingIcon('arrow-right')+'</button>'+
         '</div></div></div>'+
     '<nav class="employee-modal-tabs" aria-label="Employee sections">'+tabs.map(function(a){return '<button type="button" class="employee-tab '+(t===a[0]?'active':'')+'" data-action="detail" data-tab="'+a[0]+'" aria-current="'+(t===a[0]?'page':'false')+'">'+a[1]+'</button>';}).join('')+'</nav>'+
     '<div class="employee-modal-body">'+(t==='preview'?'':employeeMini(e))+
     (t==='info'?'<div class="panel" style="margin-bottom:15px"><div class="form-grid"><div><span class="field-label">Start date</span><strong>'+dateLabel(e.startDate)+'</strong></div><div><span class="field-label">Employee ID</span><strong>'+safe(e.id)+'</strong></div><div><span class="field-label">Org level (sample)</span><strong>Level '+safe(e.orgLevel||'—')+'</strong></div><div><span class="field-label">Reports to (sample)</span><strong>'+safe((data.employees.find(function(p){return p.id===e.reportsTo;})||{}).name||'Department lead')+'</strong></div></div></div>':'')+
     detailContent(e,t)+'</div></section></div>';
   }
-  function landingIcon(name){
-    const drawings={
-      sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
-      moon:'<path d="M20.5 14A8.5 8.5 0 0 1 10 3.5 8.5 8.5 0 1 0 20.5 14Z"/>',
-      panel:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/>',
-      menu:'<path d="M4 6h16M4 12h16M4 18h16"/>',
-      people:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
-      hierarchy:'<rect x="9" y="2" width="6" height="5" rx="1"/><rect x="2" y="17" width="6" height="5" rx="1"/><rect x="16" y="17" width="6" height="5" rx="1"/><path d="M12 7v5M5 17v-5h14v5"/>',
-      crown:'<path d="M2 8 7 12 12 3 17 12 22 8 20 20H4L2 8Z"/><path d="M4 16h16"/>',
-      chart:'<path d="M4 20v-6M10 20V9M16 20V4M22 20v-10"/>',
-      users:'<circle cx="9" cy="7" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M16 6a3 3 0 1 1 0 6M22 20v-2a6 6 0 0 0-4-5.66"/>',
-      database:'<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/>',
-      home:'<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>',
-      grid:'<rect x="3" y="3" width="7" height="7" rx="1.3"/><rect x="14" y="3" width="7" height="7" rx="1.3"/><rect x="3" y="14" width="7" height="7" rx="1.3"/><rect x="14" y="14" width="7" height="7" rx="1.3"/>',
-      search:'<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/>',
-      list:'<path d="M9 6h12M9 12h12M9 18h12"/><path d="M4 6h.01M4 12h.01M4 18h.01" stroke-width="3"/>'
-    };
-    return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+(drawings[name]||drawings.chart)+'</svg>';
-  }
+  function landingIcon(name){return window.MJ_ICONS.svg(name);}
   function landingView(){
     return '<div class="landing-shell">'+
       '<main id="main-content" class="landing-main" tabindex="-1">'+
@@ -1198,7 +1179,7 @@
       '<h1 id="landing-title">Clarity across<br>every journey.</h1>'+
       '<p class="landing-hero-lead">See what needs attention.</p>'+
       '<p class="landing-hero-copy">One read-only view of people, onboarding, performance and milestones.</p>'+
-      '<div class="landing-hero-actions"><a href="#overview" data-nav="overview" class="landing-primary-cta">Enter workspace <span aria-hidden="true">→</span></a></div></div></section>'+
+      '<div class="landing-hero-actions"><a href="#overview" data-nav="overview" class="landing-primary-cta">Enter workspace <span aria-hidden="true">'+landingIcon('arrow-right')+'</span></a></div></div></section>'+
       '<footer class="landing-footer"><span>MADHOUSE DESIGN STUDIO</span>'+
       '<span>Fictional data · Demonstration only</span></footer></main></div>';
   }
@@ -1236,7 +1217,7 @@
       if(motion&&typeof motion[method]==='function')motion[method](kind);
     }catch(err){/* Decorative motion never blocks navigation. */}
   }
-  function render(){if(ui.tab==='welcome'){$('app').innerHTML=landingView();document.title='Maddie Journey · Madhouse Design Studio';optionalMotion('refresh','welcome');return;}const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,milestones:milestonesView,calendar:calendarView,journey:journey,kit:kitView,files201:files201View,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,sources:sourcesView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open ':'')+(ui.sidebarCollapsed?'sidebar-collapsed':'')+'">'+sidebar()+'<button type="button" class="workspace-scrim" aria-label="Close navigation" tabindex="-1" aria-hidden="true" data-action="mobile"></button><main id="main-content" class="main" tabindex="-1"'+(ui.mobile?' inert':'')+'>'+topnav()+(views[ui.tab]||overview)()+'<footer class="footer"><span>Maddie Journey · Prototype v3.4.1</span><span>Fictional snapshot · No connected sources</span></footer></main></div>'+(ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.employeeModalOpen?employeeModal():'');document.title=title(ui.tab)+' · Maddie Journey';enhanceScrollableTables();optionalMotion('refresh',ui.tab);if(ui.employeeModalOpen||ui.divisionModal||ui.employeePicker){const modal=$('app').querySelector('[role="dialog"]');if(modal&&typeof modal.focus==='function')modal.focus({preventScroll:true});}}
+  function render(){if(ui.tab==='welcome'){$('app').innerHTML=landingView();document.title='Maddie Journey · Madhouse Design Studio';optionalMotion('refresh','welcome');return;}const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,milestones:milestonesView,calendar:calendarView,journey:journey,kit:kitView,files201:files201View,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,sources:sourcesView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open ':'')+(ui.sidebarCollapsed?'sidebar-collapsed':'')+'">'+sidebar()+'<button type="button" class="workspace-scrim" aria-label="Close navigation" tabindex="-1" aria-hidden="true" data-action="mobile"></button><main id="main-content" class="main" tabindex="-1"'+(ui.mobile?' inert':'')+'>'+topnav()+(views[ui.tab]||overview)()+'<footer class="footer"><span>Maddie Journey · Prototype v3.4.2</span><span>Fictional snapshot · No connected sources</span></footer></main></div>'+(ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.employeeModalOpen?employeeModal():'');document.title=title(ui.tab)+' · Maddie Journey';enhanceScrollableTables();optionalMotion('refresh',ui.tab);if(ui.employeeModalOpen||ui.divisionModal||ui.employeePicker){const modal=$('app').querySelector('[role="dialog"]');if(modal&&typeof modal.focus==='function')modal.focus({preventScroll:true});}}
   function openDivision(id,view,focusId){
     if(!data.divisions.some(function(d){return d.id===id;}))return;
     ui.scope=id;ui.activeDivision=id;
