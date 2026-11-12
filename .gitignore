@@ -1,0 +1,7 @@
+# Private service secrets and local caches — never commit
+.env
+*.env
+!server/.env.example
+server/.cache/
+*.snapshot.json
+node_modules/
