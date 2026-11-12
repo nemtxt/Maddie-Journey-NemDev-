@@ -323,3 +323,24 @@ html[data-theme="dark"]{
   .source-quality-stats strong{font-size:20px}
   .source-quality-stats small{font-size:10px}
 }
+
+
+/* Read-only attendance drill-down; collapsed until the reader needs period detail. */
+.attendance-breakdown{margin:15px 0 17px;padding:15px 18px}
+.attendance-breakdown>summary{
+  font-size:12px;font-weight:710;color:var(--ink);
+  cursor:pointer;min-height:24px;line-height:1.65
+}
+.attendance-breakdown>summary:focus-visible{outline:2px solid var(--nem-focus);outline-offset:4px}
+.attendance-breakdown>.panel{
+  margin:13px 0 0!important;padding:14px 0 0;border:0;
+  background:transparent;box-shadow:none;border-top:1px solid var(--nem-border);
+  border-radius:0
+}
+.attendance-breakdown .panel-head{margin-bottom:12px}
+.attendance-breakdown .panel-head h2{font-size:14px}
+@media(max-width:760px){
+  .attendance-breakdown{padding:13px}
+  .attendance-breakdown>.panel{padding-top:12px}
+  .attendance-breakdown .panel-head{flex-wrap:wrap;gap:12px}
+}
