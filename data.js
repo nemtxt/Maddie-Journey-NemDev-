@@ -4,6 +4,7 @@
   const divisions = [
     { id:'rmd', name:'Revenue Management Division', short:'RMD', evaluators:['trizia'] },
     { id:'design', name:'Design Division', short:'Design', evaluators:['aj'] },
+    { id:'designops', name:'Design Operations', short:'Design Ops', evaluators:['aj'] },
     { id:'corp', name:'Corporate Operations', short:'Corp Ops', evaluators:['renato','zsarina'] },
     { id:'media', name:'Media', short:'Media', evaluators:['michelle'] },
     { id:'it', name:'IT', short:'IT', evaluators:['inigo-evaluator'] },
@@ -14,7 +15,7 @@
     {id:'giezelle',name:'GIEZELLE',title:'People & Culture · HR',role:'hr'},
     {id:'kurt',name:'KURT',title:'People & Culture · HR',role:'hr'},
     {id:'trizia',name:'TRIZIA BALDOVI',title:'Chief Experience Officer · RMD',role:'head',divisions:['rmd']},
-    {id:'aj',name:'AR. AJ TRABADO',title:'Design Operations Manager · Design',role:'head',divisions:['design']},
+    {id:'aj',name:'AR. AJ TRABADO',title:'Design Operations Manager · Design & Design Ops',role:'head',divisions:['design','designops']},
     {id:'renato',name:'RENATO RENDON',title:'Corporate Operations Head',role:'corp',divisions:['corp']},
     {id:'zsarina',name:'ZSARINA MAE LACUMBA',title:'Corporate Operations Head',role:'corp',divisions:['corp']},
     {id:'michelle',name:'MICHELLE OROCIO',title:'Media Manager',role:'head',divisions:['media']},
@@ -91,5 +92,5 @@
     }
     if(stage==='coo'){e.approvedPct=e.proposedPct;e.effectiveDate='2026-12-01';}
   });
-  window.MJ_SEED={version:3,divisions:divisions,viewers:viewers,stages:stages,kit:kit,employees:employees};
+  window.MJ_SEED={version:4,divisions:divisions,viewers:viewers,stages:stages,kit:kit,employees:employees};
 })();
