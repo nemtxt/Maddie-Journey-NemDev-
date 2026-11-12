@@ -6,7 +6,7 @@ A lightweight, button-first People & Culture prototype built using **HTML, CSS a
 
 ## Open and deploy
 
-Open \`index.html\` in a modern browser for a local test.
+Open `index.html` in a modern browser for a local test.
 
 To deploy, open **GitHub repository → Settings → Pages → Deploy from a branch → main / (root) → Save**. After GitHub reports a successful publication, the expected URL is:
 
@@ -75,7 +75,7 @@ Do not store real employee details, disciplinary actions, salaries, passwords, a
 
 ## Files
 
-- \`index.html\` — static entry point
-- \`styles.css\` — responsive screens and centered dialogs
-- \`data.js\` — fictional 51-person dataset and initial milestone records
-- \`app.js\` — workflows, charts, edit dialogs, local storage and exports
+- `index.html` — static entry point
+- `styles.css` — responsive screens and centered dialogs
+- `data.js` — fictional 51-person dataset and initial milestone records
+- `app.js` — workflows, charts, edit dialogs, local storage and exports
