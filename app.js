@@ -463,8 +463,37 @@
       trackerRoster('attendance')+
       '<details class="panel compact-details"><summary>See late and absence rankings</summary><div class="grid subgrid" style="margin-top:18px"><div><h3>Late arrivals</h3>'+rankRows('lates')+'</div><div><h3>Absences</h3>'+rankRows('absences')+'</div></div></details>';
   }
-  function scoresPanel(e){const categories=[['division','I. Division objectives',15,'Division Head'],['individual','II. Individual objectives',45,'Division Head'],['values','III. Values alignment',15,'HR / P&C'],['behavior','IV. Job behavior',25,'HR / P&C']];return '<div class="score-weights">'+categories.map(function(cat){const can=canScore(e,cat[0]);return '<div class="score-block '+(can?'':'locked')+'"><div class="heading-line"><span class="muted micro">'+cat[2]+'% weight</span>'+pill(can?'Editable':'View only')+'</div><h3>'+cat[1]+'</h3><p class="muted micro" style="margin:5px 0 12px">'+cat[3]+'</p><label class="field-label">Score (0–100)</label>'+input('score.'+cat[0],e.scores[cat[0]],{type:'number',min:0,max:100,step:0.1,disabled:!can})+'<p class="muted micro" style="margin-top:9px">Weighted: '+(e.scores[cat[0]]*cat[2]/100).toFixed(2)+' points</p></div>';}).join('')+'</div>';}
-  function kpiDetail(e){const s=score(e),can=roleCanHead(e);return '<div class="grid dashboard-grid"><section class="panel"><div class="panel-head"><div><h2>Weighted evaluation</h2><p>15% + 45% + 15% + 25% = 100%</p></div>'+pill(rating(s))+'</div><div class="big-score">'+s.toFixed(2)+'%</div><div class="score-meter" aria-label="Category weights 15 45 15 25"><span></span><span></span><span></span><span></span></div><p class="muted micro" style="margin-top:11px">Demonstration scoring; no official 2026 KPI sheets are imported.</p></section><section class="panel"><h2>Official KPI source</h2><div class="hr"></div>'+pill(e.kpiValidated?'Validated':'Needs validation')+'<p class="muted micro" style="margin-top:12px">'+input('kpiSource',e.kpiSource,{disabled:!isHR()})+'</p><div class="callout orange" style="margin-top:14px">Placeholder targets and accomplishments are sample data, not verified employee goals. Validate against each official KPI sheet before real use.</div></section></div>'+scoresPanel(e)+'<section class="panel" style="margin-top:16px"><div class="panel-head"><div><h2>Employee objectives & accomplishments</h2><p>Editable placeholders for demonstration; official source remains unverified</p></div></div><div class="table-wrap"><table class="table"><thead><tr><th>Objective</th><th>Target</th><th>Actual</th><th>Validation</th></tr></thead><tbody>'+e.kpiItems.map(function(k,i){return '<tr><td>'+safe(k.title)+'</td><td>'+input('kpi.'+i+'.target',k.target,{disabled:!can})+'</td><td>'+input('kpi.'+i+'.actual',k.actual,{disabled:!can})+'</td><td>'+pill(k.verified?'Verified':'Sample')+'</td></tr>';}).join('')+'</tbody></table></div><div class="hr"></div><div class="form-grid"><div><label class="field-label">Division Head comments</label>'+textArea('comment.division',e.comments.division,!can)+'</div><div><label class="field-label">HR assessment</label>'+textArea('comment.hr',e.comments.hr,!isHR())+'</div></div></section>';}
+  function scoresPanel(e){
+    const categories=[['division','Division objectives',15],['individual','Individual objectives',45],['values','Values alignment',15],['behavior','Job behavior',25]];
+    return '<section class="reader-score-panel" aria-label="Category score preview">'+categories.map(function(cat){
+      const val=e.scores[cat[0]],weight=cat[2];
+      return '<div class="reader-score-card"><span class="muted micro">'+weight+'% weight</span><h3>'+cat[1]+'</h3>'+
+        '<strong>'+Number(val).toFixed(1)+'%</strong>'+progress(val)+
+        '<small>Weighted contribution '+(val*weight/100).toFixed(2)+' points</small></div>';
+    }).join('')+'</section>';
+  }
+
+  function kpiDetail(e){
+    const s=score(e);
+    return '<div class="grid dashboard-grid"><section class="panel"><div class="panel-head"><div><h2>Weighted evaluation</h2>'+
+      '<p>Division 15% · Individual 45% · Values 15% · Behavior 25%</p></div>'+pill(rating(s))+'</div>'+
+      '<div class="big-score">'+s.toFixed(2)+'%</div>'+
+      '<div class="score-meter" aria-label="Weight proportions: 15, 45, 15, 25"><span></span><span></span><span></span><span></span></div>'+
+      '<p class="muted micro">Fictional sample scores, not verified KPI reports.</p></section>'+
+      '<section class="panel"><h2>KPI source</h2><div class="hr"></div>'+
+      pill(e.kpiValidated?'Sample validation recorded':'Not verified')+
+      '<p class="reader-source-value">'+safe(e.kpiSource||'No source reference provided in the sample dataset')+'</p>'+
+      '<p class="muted micro">Official Google Sheets and Airtable integrations are not connected.</p></section></div>'+
+      scoresPanel(e)+
+      '<section class="panel" style="margin-top:16px"><div class="panel-head"><div><h2>Objectives and accomplishments</h2>'+
+      '<p>Read-only sample placeholders, not imported official targets</p></div></div>'+
+      '<div class="table-wrap"><table class="table"><thead><tr><th>Objective</th><th>Target</th><th>Actual</th><th>Verification</th></tr></thead><tbody>'+
+      e.kpiItems.map(function(k){return '<tr><td>'+safe(k.title)+'</td><td>'+safe(k.target)+'</td><td>'+safe(k.actual)+'</td><td>'+
+        pill(k.verified?'Sample verified':'Sample')+'</td></tr>';}).join('')+'</tbody></table></div>'+
+      '<div class="reader-comments"><div><span class="field-label">Division Head notes</span><p>'+safe(e.comments.division||'No sample notes')+'</p></div>'+
+      '<div><span class="field-label">HR assessment notes</span><p>'+safe(e.comments.hr||'No sample notes')+'</p></div></div></section>';
+  }
+
   function kpiView(){
     return header('PERFORMANCE','KPI scorecards','Choose a department, then open an employee for the weighted evaluation form.',button('Browse divisions','nav','data-tab="divisions"','small'))+
       '<p class="muted micro tracker-footnote">Weights: Division 15% · Individual 45% · Values 15% · Behavior 25%. Demo scores only.</p>'+trackerRoster('kpi');
@@ -472,8 +501,30 @@
   function reviewStatus(e,k){return e.review[k]&&e.review[k].status||'Pending';}
   function reviewCanAct(e,k){if(k==='division')return roleCanHead(e);if(k==='corp')return canReview('corp')&&reviewStatus(e,'division')==='Endorsed';if(k==='cso')return canReview('cso')&&reviewStatus(e,'corp')==='Endorsed';if(k==='coo')return canReview('coo')&&reviewStatus(e,'cso')==='Endorsed';return false;}
   function compensation(e){const base=Number(e.currentBasic)||0,allow=Number(e.currentAllowances)||0,proposal=Number(e.proposedPct)||0,approved=Number(e.approvedPct)||0;return '<div class="money-grid"><div class="money-stat"><span>Current basic salary · demo</span><strong>'+money(base)+'</strong></div><div class="money-stat"><span>Current gross · demo</span><strong>'+money(base+allow)+'</strong></div><div class="money-stat"><span>Proposed increase</span><strong>'+money(base*proposal/100)+' ('+proposal+'%)</strong></div><div class="money-stat"><span>Proposed new gross</span><strong>'+money(base*(1+proposal/100)+allow)+'</strong></div><div class="money-stat"><span>Approved increase</span><strong>'+money(base*approved/100)+' ('+approved+'%)</strong></div><div class="money-stat"><span>Approved new basic</span><strong>'+money(base*(1+approved/100))+'</strong></div><div class="money-stat"><span>Approved new gross</span><strong>'+money(base*(1+approved/100)+allow)+'</strong></div><div class="money-stat"><span>Effectivity date</span><strong>'+dateLabel(e.effectiveDate)+'</strong></div></div>';}
-  function reviewFlow(e){const steps=[['division','01','Division Head · Initial evaluation','Division objectives, KPI scoring and salary proposal'],['corp','02','Corporate Operations · Endorsement','Validate the recommendation and organizational contribution'],['cso','03','CSO · Strategic review','Alignment with strategy and contribution'],['coo','04','COO · Final approval','Confirm increase, final amount and effectivity']];return '<div class="review-steps">'+steps.map(function(s){const key=s[0],status=reviewStatus(e,key),can=reviewCanAct(e,key);return '<div class="review-step '+(status==='Approved'||status==='Endorsed'?'complete':'')+'"><div class="step-bubble">'+s[1]+'</div><div><h3>'+safe(s[2])+'</h3><p class="note">'+safe(s[3])+'</p>'+pill(status)+'<p class="muted micro" style="margin-top:7px">'+safe(e.review[key].comment||'No review note yet.')+'</p>'+(e.review[key].at?'<p class="muted micro">Updated '+safe(dateLabel(e.review[key].at.slice(0,10)))+'</p>':'')+'</div><div class="actions">'+(can?button(key==='coo'?'Approve':'Endorse','review','data-step="'+key+'" data-decision="'+(key==='coo'?'Approved':'Endorsed')+'"','small primary')+(key==='division'?'':button('Return','review','data-step="'+key+'" data-decision="Returned"','small')):'')+'</div></div>';}).join('')+'</div>';}
-  function approvalsDetail(e){const canHead=roleCanHead(e),canCoo=false;return '<section class="panel" style="margin-bottom:16px"><div class="panel-head"><div><h2>Compensation proposal and approval</h2><p>All currency figures below are fictional demonstration values.</p></div>'+pill(reviewStatus(e,'coo'))+'</div>'+compensation(e)+'<div class="hr"></div><div class="form-grid"><div><label class="field-label">Current basic salary (₱)</label>'+input('currentBasic',e.currentBasic,{type:'number',min:0,step:1,disabled:!canHead})+'</div><div><label class="field-label">Allowances (₱)</label>'+input('currentAllowances',e.currentAllowances,{type:'number',min:0,step:1,disabled:!canHead})+'</div><div><label class="field-label">Division Head proposed increase (%)</label>'+input('proposedPct',e.proposedPct,{type:'number',min:0,max:100,step:0.01,disabled:!canHead})+'</div><div><label class="field-label">COO approved increase (%)</label>'+input('approvedPct',e.approvedPct,{type:'number',min:0,max:100,step:0.01,disabled:!canCoo})+'</div><div><label class="field-label">Effectivity date</label>'+input('effectiveDate',e.effectiveDate,{type:'date',disabled:!canCoo})+'</div><div><label class="field-label">Employee acknowledgment</label>'+input('comment.employee',e.comments.employee,{disabled:!isHR(),placeholder:'Recorded by HR after acknowledgment'})+'</div></div></section><section class="panel"><div class="panel-head"><div><h2>Executive approval workflow</h2><p>Each step requires the preceding endorsement</p></div></div>'+reviewFlow(e)+'<div class="hr"></div><div class="form-grid"><div><label class="field-label">Corporate Operations comments</label>'+textArea('comment.corp',e.comments.corp,viewer().role!=='corp')+'</div><div><label class="field-label">CSO comments</label>'+textArea('comment.cso',e.comments.cso,true)+'</div><div><label class="field-label">COO final remarks</label>'+textArea('comment.coo',e.comments.coo,!canCoo)+'</div><div><label class="field-label">Division Head recommendation</label>'+textArea('comment.division',e.comments.division,!canHead)+'</div></div></section>';}
+  function reviewFlow(e){
+    const steps=[['division','01','Division Head','KPI and initial review'],['corp','02','Corporate Operations','Organizational endorsement'],['cso','03','CSO','Strategic review'],['coo','04','COO','Final approval']];
+    return '<div class="review-steps">'+steps.map(function(s){
+      const key=s[0],status=reviewStatus(e,key);
+      return '<div class="review-step '+(['Approved','Endorsed'].includes(status)?'complete':'')+'">'+
+        '<div class="step-bubble">'+s[1]+'</div><div><h3>'+safe(s[2])+'</h3><p class="note">'+safe(s[3])+'</p>'+pill(status)+
+        '<p class="muted micro">'+safe(e.review[key].comment||'No sample review note')+'</p>'+
+        (e.review[key].at?'<p class="muted micro">Updated '+safe(dateLabel(e.review[key].at.slice(0,10)))+'</p>':'')+
+        '</div></div>';
+    }).join('')+'</div>';
+  }
+
+  function approvalsDetail(e){
+    return '<section class="panel reader-review-panel"><div class="panel-head"><div><h2>Review and approval snapshot</h2>'+
+      '<p>Sample review history · No approval actions are available here</p></div>'+pill(reviewStatus(e,'coo'))+'</div>'+
+      '<p class="muted micro">The original source is responsible for review decisions. The amounts below are fictional.</p>'+
+      compensation(e)+'</section>'+
+      '<section class="panel"><div class="panel-head"><div><h2>Review timeline</h2><p>Division Head → Corporate Operations → CSO → COO</p></div></div>'+
+      reviewFlow(e)+'<div class="reader-comments"><div><span class="field-label">Corporate Operations notes</span><p>'+safe(e.comments.corp||'No sample notes')+'</p></div>'+
+      '<div><span class="field-label">CSO notes</span><p>'+safe(e.comments.cso||'No sample notes')+'</p></div>'+
+      '<div><span class="field-label">COO remarks</span><p>'+safe(e.comments.coo||'No sample notes')+'</p></div>'+
+      '<div><span class="field-label">Division Head recommendation</span><p>'+safe(e.comments.division||'No sample notes')+'</p></div></div></section>';
+  }
+
   function approvalsTable(){return '<section class="panel" style="margin-top:18px"><div class="panel-head"><div><h2>Company-wide review queue</h2><p>Employees in '+safe(scopeLabel())+' and current approval milestones</p></div></div><div class="table-wrap"><table class="table"><thead><tr><th>Employee</th><th>Division</th><th>Division Head</th><th>Corporate Ops</th><th>CSO</th><th>COO</th><th></th></tr></thead><tbody>'+scopedEmployees().map(function(e){return '<tr><td>'+linkedEmployee(e)+'</td><td>'+safe(div(e.division).short)+'</td><td>'+pill(reviewStatus(e,'division'))+'</td><td>'+pill(reviewStatus(e,'corp'))+'</td><td>'+pill(reviewStatus(e,'cso'))+'</td><td>'+pill(reviewStatus(e,'coo'))+'</td><td>'+button('Review','open','data-id="'+e.id+'" data-detail="approvals"','small')+'</td></tr>';}).join('')+'</tbody></table></div></section>';}
   function approvalsView(){
     return header('PERFORMANCE','Reviews','Monitor endorsement stages by division. Open an employee for the detailed evaluation and approval history.',button('Browse divisions','nav','data-tab="divisions"','small'))+
