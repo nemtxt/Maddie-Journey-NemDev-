@@ -1,8 +1,8 @@
 # Maddie Journey — Prototype Acceptance Checklist
 
-Release: **v2.3**. Scope: **HTML/CSS/vanilla JavaScript + fictional fixture only**.
+Release: **v2.4**. Scope: **HTML/CSS/vanilla JavaScript + fictional fixture only**.
 
-This document distinguishes code-level verification from human visual acceptance. The 26 automated smoke checks confirm the named routing and data contracts but cannot prove pixel-level accuracy on physical Windows, macOS, Android or iOS devices.
+This document distinguishes code-level verification from human visual acceptance. The 29 automated smoke checks confirm the named routing and data contracts but cannot prove pixel-level accuracy on physical Windows, macOS, Android or iOS devices.
 
 ## Product boundaries
 
@@ -34,7 +34,7 @@ Run from the repository root:
     node tests/smoke.js
 
 The smoke suite covers:
-- Correct static asset references and module/script order.
+- Correct static asset references and module/script order, including canonical monochrome CSS and the optional Anime.js script.
 - Read-only data adapter, 51 distinct sample IDs, eight divisions, source status and quality.
 - Functional landing and all 11 main routes, deep links and contextual top navigation.
 - All eight division boards, lists and org chart panels.
@@ -43,6 +43,9 @@ The smoke suite covers:
 - Directory search/sort/filter/clear behavior, visible-only CSV and formula-like text protection.
 - Weekly/monthly attendance reporting.
 - Keyboard search shortcuts and mobile drawer close.
+- Desktop icon-only sidebar toggle, local display preference and accessible navigation labels.
+- No unwanted landing-card strips or percentage widgets; one Inter font and one pink accent.
+- Motion enhancement, graceful missing-CDN fallback and reduced-motion preference.
 - Invalid fixture recovery and zero writes to fictional source records.
 - Rendered HTML action names against implemented action handlers.
 
@@ -50,14 +53,16 @@ The smoke suite covers:
 
 Open the GitHub Pages website on desktop and mobile, then inspect:
 
-1. **Desktop (~1440px and 1280px):** sidebar width, active item visibility, top tabs, metric alignment, table density, no clipped dialogs or oversize cards.
+1. **Desktop (~1440px and 1280px):** sidebar expands/collapses with icon button, active navigation remains usable, top tabs and metric cards align, no clipped dialogs or oversize cards. Refresh the page to confirm sidebar preference persists.
 2. **Tablet (~768px):** responsive sidebar and top navigation, horizontal scrolling in the Journey board, no overlap between floating UI and content.
-3. **Mobile (~390px and 320px):** menu opens/closes, header and theme remain usable, modal tabs scroll, charts and tables stay readable without layout breaking.
-4. **Dark mode:** legible typography and chart/card labels, visible focus indicators, no white-on-white or low-contrast text.
+3. **Mobile (~390px and 320px):** collapsed desktop preference must not hide mobile menu labels; menu opens/closes, header and theme remain usable, modal tabs scroll, charts and tables stay readable without layout breaking.
+4. **Black/white Light and Dark modes:** all backgrounds remain neutral with pink as the sole accent. Verify legible text, table headings, chart bars and progress indicators; no pastel card fills, purple background gradients or low-contrast text.
 5. **Keyboard:** tab through primary links, activate a modal, close it with Escape, use / or Ctrl/Command+K to locate the employee search.
 6. **Data flow:** change division scope, inspect a specific employee across all eight modal sections, clear search, export only matching rows.
 7. **Data integrity:** confirm the source page always reports mock integration state as disconnected; no fabricated real sync timestamps.
-8. **Brand assets:** official PNG Madhouse logo and original JPEG team photograph; do not replace with WebP or invented logos.
+8. **Brand assets:** official PNG Madhouse logo and original JPEG team photograph; do not replace with WebP or invented logos. Landing must show only the header, one photo hero, two CTA links and footer.
+9. **Typography:** verify Inter appears consistently on Windows, macOS, Android and iOS, including in tables, controls, modals and employee previews; a system sans fallback is allowed only if the font CDN is unreachable.
+10. **Motion:** test the short Anime.js fade/slide once per screen change, without bouncing or looping. Disable system animation/reduced-motion and verify everything remains instantly visible. With the animation CDN blocked, the full interface must still work.
 
 Automated tests cannot replace these checks; log any remaining visual issue before labeling the presentation as visually accepted.
 
