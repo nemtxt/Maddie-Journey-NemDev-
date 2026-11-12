@@ -1169,7 +1169,12 @@
     const target=root.querySelector(opened?'.workspace-sidebar .mobile-drawer-close':'.mobile-top [data-action="mobile"]');
     if(target&&typeof target.focus==='function')target.focus({preventScroll:true});
   }
-  function render(){if(ui.tab==='welcome'){$('app').innerHTML=landingView();document.title='Maddie Journey · Madhouse Design Studio';if(window.MJ_MOTION)window.MJ_MOTION.refresh('welcome');return;}const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,milestones:milestonesView,journey:journey,kit:kitView,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,sources:sourcesView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open ':'')+(ui.sidebarCollapsed?'sidebar-collapsed':'')+'">'+sidebar()+'<button type="button" class="workspace-scrim" aria-label="Close navigation" tabindex="-1" aria-hidden="true" data-action="mobile"></button><main id="main-content" class="main" tabindex="-1"'+(ui.mobile?' inert':'')+'>'+topnav()+(views[ui.tab]||overview)()+'<footer class="footer"><span>Maddie Journey · Prototype v3.2</span><span>Fictional snapshot · No connected sources</span></footer></main></div>'+(ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.employeeModalOpen?employeeModal():'');document.title=title(ui.tab)+' · Maddie Journey';enhanceScrollableTables();if(window.MJ_MOTION)window.MJ_MOTION.refresh(ui.tab);if(ui.employeeModalOpen||ui.divisionModal||ui.employeePicker){const modal=$('app').querySelector('[role="dialog"]');if(modal&&typeof modal.focus==='function')modal.focus({preventScroll:true});}}
+  function optionalMotion(method,kind){
+    try{const motion=window.MJ_MOTION;
+      if(motion&&typeof motion[method]==='function')motion[method](kind);
+    }catch(err){/* Decorative motion never blocks navigation. */}
+  }
+  function render(){if(ui.tab==='welcome'){$('app').innerHTML=landingView();document.title='Maddie Journey · Madhouse Design Studio';optionalMotion('refresh','welcome');return;}const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,milestones:milestonesView,journey:journey,kit:kitView,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,sources:sourcesView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open ':'')+(ui.sidebarCollapsed?'sidebar-collapsed':'')+'">'+sidebar()+'<button type="button" class="workspace-scrim" aria-label="Close navigation" tabindex="-1" aria-hidden="true" data-action="mobile"></button><main id="main-content" class="main" tabindex="-1"'+(ui.mobile?' inert':'')+'>'+topnav()+(views[ui.tab]||overview)()+'<footer class="footer"><span>Maddie Journey · Prototype v3.3</span><span>Fictional snapshot · No connected sources</span></footer></main></div>'+(ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.employeeModalOpen?employeeModal():'');document.title=title(ui.tab)+' · Maddie Journey';enhanceScrollableTables();optionalMotion('refresh',ui.tab);if(ui.employeeModalOpen||ui.divisionModal||ui.employeePicker){const modal=$('app').querySelector('[role="dialog"]');if(modal&&typeof modal.focus==='function')modal.focus({preventScroll:true});}}
   function openDivision(id,view,focusId){
     if(!data.divisions.some(function(d){return d.id===id;}))return;
     ui.scope=id;ui.activeDivision=id;
@@ -1211,19 +1216,39 @@
     if(name==='set-theme'){setTheme(button.dataset.themeValue);return;}
     if(name==='quick-search'){navigate('employees');const search=$('app')&&$('app').querySelector('[data-ui="query"]');if(search&&typeof search.focus==='function')search.focus();return;}
     if(name==='clear-search'){ui.query='';render();const search=$('app')&&$('app').querySelector('[data-ui="query"]');if(search&&typeof search.focus==='function')search.focus();return;}
-    if(name==='work-view'){ui.workView=button.dataset.mode==='board'?'board':'list';try{sessionStorage.setItem('maddie-journey-workview',ui.workView);}catch(err){}render();focusActionAfterRender(button);return;}
-    if(name==='journey-view'){ui.journeyView=button.dataset.mode==='table'?'table':'board';render();focusActionAfterRender(button);return;}
-    if(name==='attention-filter'){ui.attentionFilter=['all','attendance','kpi','onboarding','reviews'].includes(button.dataset.kind)?button.dataset.kind:'all';ui.attentionShowAll=false;render();focusActionAfterRender(button);return;}
-    if(name==='attention-more'){ui.attentionShowAll=!ui.attentionShowAll;render();focusActionAfterRender(button);return;}
+    if(name==='work-view'){
+      const next=button.dataset.mode==='board'?'board':'list';
+      if(ui.workView===next)return;
+      ui.workView=next;try{sessionStorage.setItem('maddie-journey-workview',next);}catch(err){}
+      render();focusActionAfterRender(button);optionalMotion('feedback','attention');return;
+    }
+    if(name==='journey-view'){
+      const next=button.dataset.mode==='table'?'table':'board';
+      if(ui.journeyView===next)return;
+      ui.journeyView=next;render();focusActionAfterRender(button);optionalMotion('feedback','journey');return;
+    }
+    if(name==='attention-filter'){
+      const next=['all','attendance','kpi','onboarding','reviews'].includes(button.dataset.kind)?button.dataset.kind:'all';
+      if(ui.attentionFilter===next&&!ui.attentionShowAll)return;
+      ui.attentionFilter=next;ui.attentionShowAll=false;
+      render();focusActionAfterRender(button);optionalMotion('feedback','attention');return;
+    }
+    if(name==='attention-more'){ui.attentionShowAll=!ui.attentionShowAll;render();focusActionAfterRender(button);optionalMotion('feedback','attention');return;}
     if(name==='division-tab'){
-      ui.divisionTab=['summary','board','list','chart'].includes(button.dataset.tab)?button.dataset.tab:'summary';
-      const route='#division/'+ui.activeDivision+(ui.divisionTab==='summary'?'':'/'+ui.divisionTab);
-      if(ui.tab==='division'&&location.hash!==route)location.hash=route;
-      render();focusActionAfterRender(button);return;
+      const next=['summary','board','list','chart'].includes(button.dataset.tab)?button.dataset.tab:'summary';
+      const route='#division/'+ui.activeDivision+(next==='summary'?'':'/'+next);
+      if(ui.tab==='division'&&ui.divisionTab===next&&location.hash===route)return;
+      ui.divisionTab=next;if(ui.tab==='division'&&location.hash!==route)location.hash=route;
+      render();focusActionAfterRender(button);optionalMotion('feedback','division');return;
     }
     if(name==='open-org'){openDivision(button.dataset.division,'chart');return;}
-    if(name==='milestone-category'){if(!milestoneKinds.some(function(k){return k.id===button.dataset.kind;}))return;ui.milestoneCategory=button.dataset.kind;ui.milestoneShowAll=false;render();focusActionAfterRender(button);return;}
-    if(name==='milestone-more'){ui.milestoneShowAll=!ui.milestoneShowAll;render();focusActionAfterRender(button);return;}
+    if(name==='milestone-category'){
+      if(!milestoneKinds.some(function(k){return k.id===button.dataset.kind;}))return;
+      if(ui.milestoneCategory===button.dataset.kind&&!ui.milestoneShowAll)return;
+      ui.milestoneCategory=button.dataset.kind;ui.milestoneShowAll=false;
+      render();focusActionAfterRender(button);optionalMotion('feedback','milestone');return;
+    }
+    if(name==='milestone-more'){ui.milestoneShowAll=!ui.milestoneShowAll;render();focusActionAfterRender(button);optionalMotion('feedback','milestone');return;}
     if(name==='milestone-division'){ui.divisionPickerMode='milestone';ui.divisionModal=true;ui.employeePicker=false;render();return;}
     if(name==='set-milestone-division'){const id=button.dataset.division;if(id!=='all'&&!data.divisions.some(function(d){return d.id===id;}))return;ui.milestoneDivision=id;ui.milestoneShowAll=false;ui.divisionModal=false;render();return;}
     if(name==='choose-division'){ui.divisionPickerMode='view';ui.divisionModal=true;ui.employeePicker=false;ui.employeeModalOpen=false;render();return;}
@@ -1271,11 +1296,23 @@
     if(el.dataset.ui==='employee'&&emp(el.value)){ui.employee=el.value;render();}
     else if(el.dataset.ui==='division'&&(el.value==='all'||data.divisions.some(function(d){return d.id===el.value;}))){ui.division=el.value;render();}
     else if(el.dataset.ui==='activeDivision'){openDivision(el.value);}
-    else if(el.dataset.ui==='frequency'){ui.frequency=el.value;render();const input=$('app').querySelector('[data-ui="frequency"]');if(input&&typeof input.focus==='function')input.focus({preventScroll:true});}
-    else if(el.dataset.ui==='employeeSort'&&['name','division','journey','kit','kpi'].includes(el.value)){ui.employeeSort=el.value;render();const input=$('app').querySelector('[data-ui="employeeSort"]');if(input&&typeof input.focus==='function')input.focus({preventScroll:true});}
+    else if(el.dataset.ui==='frequency'){
+      if(ui.frequency===el.value)return;
+      ui.frequency=el.value;render();
+      const control=$('app').querySelector('[data-ui="frequency"]');
+      if(control&&typeof control.focus==='function')control.focus({preventScroll:true});
+      optionalMotion('feedback','attendance');
+    }
+    else if(el.dataset.ui==='employeeSort'&&['name','division','journey','kit','kpi'].includes(el.value)){
+      if(ui.employeeSort===el.value)return;
+      ui.employeeSort=el.value;render();
+      const control=$('app').querySelector('[data-ui="employeeSort"]');
+      if(control&&typeof control.focus==='function')control.focus({preventScroll:true});
+      optionalMotion('feedback','directory');
+    }
     else if(el.dataset.ui==='query'){ui.query=el.value;render();}
   });
-  document.addEventListener('input',function(ev){const el=ev.target;if(el.dataset.ui==='query'){const p=el.selectionStart;ui.query=el.value;const focus=document.activeElement;const list=filtered();const table=$('app').querySelector('.panel.no-pad');if(table){const existing=table.querySelector('.table-wrap, .empty');if(existing)existing.outerHTML=employeesTable(list);const count=table.querySelector('.directory-results-count');if(count)count.textContent=list.length+' of '+scopedEmployees().length+' employees';const clearSlot=table.querySelector('.directory-clear-slot');if(clearSlot){const hasClear=!!clearSlot.querySelector('[data-action="clear-search"]');if(ui.query&&!hasClear)clearSlot.innerHTML=button('Clear search','clear-search','','small');else if(!ui.query&&hasClear)clearSlot.innerHTML='';}}if(focus!==el){el.focus();try{el.setSelectionRange(p,p);}catch(err){}}}});
+  document.addEventListener('input',function(ev){const el=ev.target;if(el.dataset.ui==='query'){const p=el.selectionStart;ui.query=el.value;const focus=document.activeElement;const list=filtered();const table=$('app').querySelector('.panel.no-pad');if(table){const existing=table.querySelector('.table-wrap, .empty');if(existing)existing.outerHTML=employeesTable(list);const count=table.querySelector('.directory-results-count');if(count)count.textContent=list.length+' of '+scopedEmployees().length+' employees';const clearSlot=table.querySelector('.directory-clear-slot');if(clearSlot){const hasClear=!!clearSlot.querySelector('[data-action="clear-search"]');if(ui.query&&!hasClear)clearSlot.innerHTML=button('Clear search','clear-search','','small');else if(!ui.query&&hasClear)clearSlot.innerHTML='';}enhanceScrollableTables();}if(focus!==el){el.focus();try{el.setSelectionRange(p,p);}catch(err){}}}});
   window.addEventListener('resize',enhanceScrollableTables);
   document.addEventListener('toggle',enhanceScrollableTables,true);
   document.addEventListener('keydown',function(ev){
