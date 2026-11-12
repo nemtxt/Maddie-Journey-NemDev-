@@ -131,6 +131,10 @@ html[data-theme="dark"] .landing-header .theme-choice.active{background:rgba(255
 .landing-audience-card:hover,.landing-shortcut:hover{transform:translateY(-2px);border-color:rgba(243,125,178,.68)}
 .landing-audience-icon,
 .landing-shortcut-icon{display:grid;place-items:center;flex-shrink:0;width:55px;height:55px;border-radius:14px;font-size:27px;font-weight:500}
+.landing-audience-icon svg{width:28px;height:28px;display:block}
+.landing-shortcut-icon svg{width:24px;height:24px;display:block}
+html[data-theme="dark"] .landing-official-logo{background:rgba(255,255,255,.94);padding:4px 7px;border-radius:8px}
+.sidebar-official-logo,.mobile-official-logo{background:rgba(255,255,255,.96);border-radius:7px;padding:4px 5px;box-sizing:border-box}
 .tone-pink{background:#ffcae0;color:#d52773}
 .tone-yellow{background:#fff0ba;color:#aa741a}
 .tone-blue{background:#cbe7ff;color:#1268bd}
@@ -225,6 +229,10 @@ html[data-theme="dark"] .landing-header .theme-choice.active{background:rgba(255
   .landing-official-logo{width:132px}
   .landing-hero-actions{flex-direction:column;align-items:stretch}
   .landing-hero-actions a{width:100%}
+}
+@media(max-width:640px){
+  .landing-audience-icon svg{width:25px;height:25px}
+  .landing-shortcut-icon svg{width:21px;height:21px}
 }
 @media(prefers-reduced-motion:reduce){
   .landing-shell *, .landing-shell *::before,.landing-shell *::after{transition:none!important;animation:none!important}
