@@ -1,4 +1,4 @@
-# Maddie Journey · Prototype v1.8
+# Maddie Journey · Prototype v1.9
 
 A lightweight, button-first People & Culture prototype built using **HTML, CSS and vanilla JavaScript only**. No build tools, paid subscriptions, login, Airtable or cloud service are needed for demonstration.
 
@@ -13,6 +13,23 @@ To deploy with the included test-and-deploy workflow: open **GitHub repository �
 https://nemtxt.github.io/Maddie-Journey-NemDev-/
 
 The URL is not assumed live until Pages publication is verified. GitHub Pages must be enabled for this repository; committing the workflow alone does not prove that deployment succeeded.
+
+## v1.9 — Professional task-management-style monitoring workspace
+
+The UI now follows the **structure and usability** of the two user-supplied white admin/task-manager references, not their third-party names or logos.
+
+- **Two-level navigation:** compact left icon rail for primary destinations and a restrained grouped sidebar for HR, Division Head and executive workflows. The official Madhouse logo remains the only logo used.
+- **Clean header:** contextual location, fast navigation to Overview, Divisions, People and Milestones, working Search people shortcut, and persistent Light/Dark controls.
+- **Board / List in the overview:** switch the same real sample follow-ups between an aligned list and a four-lane Kanban display (Attendance, Onboarding, KPI, Reviews). These are **categories**, not fabricated due dates or workflow stages.
+- **Board / List in every division:** department members are grouped by derived onboarding/review stage (To do, In progress, Ready for review, Completed), or displayed in a compact employee comparison table. Summary and Org chart views remain available.
+- **Read-first, drill-down-second:** tables, boards and charts open the existing centered employee preview and relevant tracker details. No new forms are put on the overview page.
+- **Subtle pastel palette:** neutral white surfaces and light dividers predominate; pink is an action accent, with pastel yellow/blue/lavender reserved for supporting status and category details. \`workspace.css\` is loaded last so the same rules apply to all dashboard pages and to the landing page.
+- **Responsive:** desktop uses the icon rail plus sidebar; tablets adapt the header; mobile uses an accessible slide-out navigation with a backdrop and compact row/board layouts. Data tables/boards scroll where necessary without collapsing the content into unreadably small text.
+- **Persistence:** board/list preference is retained for the browser session; theme preference remains saved separately and longer-term. Sample employee edits, scores, hierarchy and milestones are unaffected.
+- **Scope:** still exactly 51 fictional employees across eight divisions. Sources remain disconnected. UI demo workspaces are not real accounts, authentication, or authorization.
+- **Verification:** \`node tests/smoke.js\` now covers board/list transitions, department boards and tables, navigation, search, mobile drawer, employee role rules and legacy data migrations. Visual device/browser review remains a separate acceptance step.
+
+**Files changed:** \`app.js\`, \`index.html\`, \`workspace.css\` (new), \`tests/smoke.js\`, and this README. Original Madhouse logo PNG and Madhalloween photograph JPEG remain unchanged.
 
 ## v1.8 — Original artwork and unified pastel operations interface
 
@@ -48,7 +65,7 @@ Appearance changes need no build process and no backend. All new styling lives i
 The root URL (no hash, or `#welcome`) now opens a lightweight, responsive landing screen before the dashboard.
 
 - **Authentic branding only:** the provided Madhouse Design Studio logo is used in the landing header, dashboard sidebar and mobile header. The invented pink “M” symbol from the earlier illustration is intentionally not part of the project.
-- **Real supplied photo:** the Madhalloween team photograph is the landing hero background, preserved as the original upload `assets/madhalloween.jpg`. The original source was supplied for this prototype; the optimized image does not contain baked-in text or fabricated branding.
+- **Real supplied photo:** the Madhalloween team photograph is the landing hero background, preserved as the original upload `assets/madhalloween.jpg`. The original source was supplied for this prototype; the source photograph already contains its original event lettering, which is preserved rather than recreated.
 - **Pastel interface:** pink, white, soft yellow and blue, with the existing persistent Light / Dark control. Light is the initial appearance for new browsers; previously saved choices remain unchanged.
 - **Direct navigation:** Open dashboard, View divisions, and links to Org charts, Employees and Data sources. The HR, Division Heads and Executive overview cards set a fictional demo workspace and open the overview; these are not login or authorization controls.
 - **Preserved routes:** `#overview`, `#divisions`, `#division/rmd`, and all other direct dashboard links still work. A new `#welcome` destination returns to the landing screen.
