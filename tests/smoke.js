@@ -1601,4 +1601,36 @@ check('Phase 8 compact tables preserve mobile touch targets and keyboard overflo
   assert(ctx.html().includes('class="table-wrap"'));
   assert(src['app.js'].includes('enhanceScrollableTables();'));
 });
+check('Phase 8 report captions give screen-reader users scoped denominators',()=>{
+  const ctx=boot({},'#employees'),person=ctx.win.MJ_SEED.employees[0];
+  let h=ctx.html();
+  assert(h.includes('Employee directory: 51 of 51 selected fictional employees'));
+  ctx.navigate('journey');h=ctx.html();
+  assert(h.includes('Eight mutually exclusive Journey stage groups for 51 selected fictional people'));
+  ctx.click('journey-view',{mode:'table'});h=ctx.html();
+  assert(h.includes('Journey checklist: 51 fictional employees'));
+  ctx.navigate('attendance');h=ctx.html();
+  assert(h.includes('Monthly attendance summary: '));
+  ctx.navigate('employees');ctx.click('open',{id:person.id,detail:'kpi'});
+  h=ctx.html();assert(h.includes('Four weighted fictional KPI categories; total weight 100%'));
+  ctx.click('detail',{tab:'approvals'});h=ctx.html();
+  assert(h.includes('Four review steps and their fictional recorded statuses for '+person.name));
+  ctx.click('close');
+  ctx.navigate('approvals');h=ctx.html();
+  assert(h.includes('Review queue for 51 selected fictional employees'));
+  ctx.navigate('files201');h=ctx.html();
+  assert(h.includes('201 Files checklist: '));
+});
+check('Phase 8 compact preference never modifies full-screen non-scrolling landing',()=>{
+  const ctx=boot({'maddie-journey-density':'compact'},'#employees');
+  const before=JSON.stringify(ctx.win.MJ_SEED.employees);
+  assert(ctx.html().includes('layout density-compact'));
+  ctx.navigate('welcome');
+  const h=ctx.html();
+  assert(h.includes('class="landing-shell"'));
+  assert(!h.includes('density-compact'));
+  assert(h.includes('landing-hero-inner'));
+  assert(!h.includes('data-action="toggle-density"'));
+  assert.equal(JSON.stringify(ctx.win.MJ_SEED.employees),before);
+});
 console.log('\n'+results.length+' smoke tests passed. Physical-device visual QA is separate.');
