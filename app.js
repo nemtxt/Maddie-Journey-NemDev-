@@ -137,7 +137,8 @@
   const items=[['overview','◫','Overview'],['divisions','▦','Divisions'],['employees','◎','Employees'],['milestones','✦','Milestones'],['journey','◷','Journey board'],['kit','▣','Welcome Kit'],['attendance','◩','Attendance'],['kpi','◈','KPI scorecards'],['approvals','✓','Reviews'],['sources','↗','Data sources'],['audit','≡','About data']];
   function sidebar(){
     const active=activeNavGroup().id;
-    return '<aside class="sidebar workspace-sidebar" aria-label="Main navigation"><div class="workspace-sidepanel">'+
+    return '<aside class="sidebar workspace-sidebar"'+(ui.mobile?' role="dialog" aria-modal="true" aria-label="Workspace navigation"':' aria-label="Main navigation"')+'><div class="workspace-sidepanel">'+
+  '<button type="button" class="mobile-drawer-close" data-action="mobile" aria-label="Close navigation menu">Close menu <span aria-hidden="true">×</span></button>'+
       '<a href="#welcome" data-nav="welcome" class="brand brand-official-link" aria-label="Maddie Journey landing" title="Maddie Journey landing">'+
       '<span class="sidebar-brand-mini" aria-hidden="true">M</span>'+
       '<span class="brand-product-name">Maddie Journey<small class="brand-product-subtitle">MONITORING</small></span></a>'+
@@ -1111,8 +1112,8 @@
     return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+(drawings[name]||drawings.chart)+'</svg>';
   }
   function landingView(){
-    return '<div class="landing-shell" id="main-content" tabindex="-1">'+
-      '<main class="landing-main">'+
+    return '<div class="landing-shell">'+
+      '<main id="main-content" class="landing-main" tabindex="-1">'+
       '<header class="landing-header"><a class="landing-brand" href="#welcome" data-nav="welcome" aria-label="Maddie Journey home">'+
       '<strong class="landing-brand-title">Maddie Journey</strong></a>'+
       '<div class="landing-header-actions">'+themeControl()+'</div></header>'+
@@ -1125,7 +1126,36 @@
       '<footer class="landing-footer"><span>MADHOUSE DESIGN STUDIO</span>'+
       '<span>Fictional data · Demonstration only</span></footer></main></div>';
   }
-  function render(){if(ui.tab==='welcome'){$('app').innerHTML=landingView();document.title='Maddie Journey · Madhouse Design Studio';if(window.MJ_MOTION)window.MJ_MOTION.refresh('welcome');return;}const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,milestones:milestonesView,journey:journey,kit:kitView,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,sources:sourcesView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open ':'')+(ui.sidebarCollapsed?'sidebar-collapsed':'')+'">'+sidebar()+'<button type="button" class="workspace-scrim" aria-label="Close navigation" data-action="mobile"></button><main id="main-content" class="main" tabindex="-1">'+topnav()+(views[ui.tab]||overview)()+'<footer class="footer"><span>Maddie Journey · Prototype v3.1</span><span>Fictional snapshot · No connected sources</span></footer></main></div>'+(ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.employeeModalOpen?employeeModal():'');document.title=title(ui.tab)+' · Maddie Journey';if(window.MJ_MOTION)window.MJ_MOTION.refresh(ui.tab);if(ui.employeeModalOpen||ui.divisionModal||ui.employeePicker){const modal=$('app').querySelector('[role="dialog"]');if(modal&&typeof modal.focus==='function')modal.focus({preventScroll:true});}}
+  function enhanceScrollableTables(){
+    const root=$('app');if(!root||typeof root.querySelectorAll!=='function')return;
+    Array.from(root.querySelectorAll('.table-wrap')).forEach(function(wrap){
+      if(wrap.scrollWidth>wrap.clientWidth+2){
+        const section=typeof wrap.closest==='function'?wrap.closest('section'):null;
+        const h=section&&typeof section.querySelector==='function'?section.querySelector('h2,h3'):null;
+        wrap.setAttribute('tabindex','0');wrap.setAttribute('role','region');
+        wrap.setAttribute('aria-label',((h&&h.textContent)||'Monitoring data')+' table, scroll horizontally for more columns');
+        wrap.dataset.overflow='true';
+      }else if(wrap.dataset&&wrap.dataset.overflow==='true'){
+        wrap.removeAttribute('tabindex');wrap.removeAttribute('role');
+        wrap.removeAttribute('aria-label');delete wrap.dataset.overflow;
+      }
+    });
+  }
+  function focusWorkspaceHeading(){
+    const root=$('app');if(!root||typeof root.querySelector!=='function')return;
+    const heading=root.querySelector('#main-content h1, #landing-title');
+    const target=heading||root.querySelector('#main-content');
+    if(target&&typeof target.focus==='function'){
+      if(heading&&typeof heading.setAttribute==='function')heading.setAttribute('tabindex','-1');
+      target.focus({preventScroll:true});
+    }
+  }
+  function focusMobileMenu(opened){
+    const root=$('app');if(!root||typeof root.querySelector!=='function')return;
+    const target=root.querySelector(opened?'.workspace-sidebar .mobile-drawer-close':'.mobile-top [data-action="mobile"]');
+    if(target&&typeof target.focus==='function')target.focus({preventScroll:true});
+  }
+  function render(){if(ui.tab==='welcome'){$('app').innerHTML=landingView();document.title='Maddie Journey · Madhouse Design Studio';if(window.MJ_MOTION)window.MJ_MOTION.refresh('welcome');return;}const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,milestones:milestonesView,journey:journey,kit:kitView,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,sources:sourcesView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open ':'')+(ui.sidebarCollapsed?'sidebar-collapsed':'')+'">'+sidebar()+'<button type="button" class="workspace-scrim" aria-label="Close navigation" tabindex="-1" aria-hidden="true" data-action="mobile"></button><main id="main-content" class="main" tabindex="-1"'+(ui.mobile?' inert':'')+'>'+topnav()+(views[ui.tab]||overview)()+'<footer class="footer"><span>Maddie Journey · Prototype v3.2</span><span>Fictional snapshot · No connected sources</span></footer></main></div>'+(ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.employeeModalOpen?employeeModal():'');document.title=title(ui.tab)+' · Maddie Journey';enhanceScrollableTables();if(window.MJ_MOTION)window.MJ_MOTION.refresh(ui.tab);if(ui.employeeModalOpen||ui.divisionModal||ui.employeePicker){const modal=$('app').querySelector('[role="dialog"]');if(modal&&typeof modal.focus==='function')modal.focus({preventScroll:true});}}
   function openDivision(id,view,focusId){
     if(!data.divisions.some(function(d){return d.id===id;}))return;
     ui.scope=id;ui.activeDivision=id;
@@ -1136,9 +1166,9 @@
     ui.mobile=false;ui.query='';ui.division='all';
     const route='#division/'+id+(ui.divisionTab==='summary'?'':'/'+ui.divisionTab);
     if(location.hash!==route)location.hash=route;
-    window.scrollTo({top:0,behavior:'instant'});render();
+    window.scrollTo({top:0,behavior:'instant'});render();focusWorkspaceHeading();
   }
-  function navigate(tab){modalOrigin=null;if(tab==='division'){openDivision(ui.activeDivision,ui.divisionTab);return;}ui.highlightMember='';ui.viewerIds=[];ui.viewerOrigin='';ui.scope='all';ensureEmployeeScope();ui.tab=tab;ui.employeeModalOpen=false;ui.divisionModal=false;ui.employeePicker=false;ui.mobile=false;ui.query='';ui.division='all';if(location.hash!=='#'+tab)location.hash='#'+tab;window.scrollTo({top:0,behavior:'instant'});render();}
+  function navigate(tab){modalOrigin=null;if(tab==='division'){openDivision(ui.activeDivision,ui.divisionTab);return;}ui.highlightMember='';ui.viewerIds=[];ui.viewerOrigin='';ui.scope='all';ensureEmployeeScope();ui.tab=tab;ui.employeeModalOpen=false;ui.divisionModal=false;ui.employeePicker=false;ui.mobile=false;ui.query='';ui.division='all';if(location.hash!=='#'+tab)location.hash='#'+tab;window.scrollTo({top:0,behavior:'instant'});render();focusWorkspaceHeading();}
   // All data-editing functions were removed: this frontend never mutates employee records.
   function toCSV(rows){
     return rows.map(function(row){return row.map(function(value){
@@ -1161,7 +1191,7 @@
     if(next&&typeof next.focus==='function')next.focus({preventScroll:true});
   }
   function action(name,button){
-    if(name==='mobile'){ui.mobile=!ui.mobile;render();focusActionAfterRender(button);return;}
+    if(name==='mobile'){ui.mobile=!ui.mobile;const opened=ui.mobile;render();focusMobileMenu(opened);return;}
     if(name==='toggle-sidebar'){ui.sidebarCollapsed=!ui.sidebarCollapsed;try{localStorage.setItem('maddie-journey-sidebar-collapsed',String(ui.sidebarCollapsed));}catch(err){}render();focusActionAfterRender(button);return;}
     if(name==='nav'){navigate(button.dataset.tab);return;}
     if(name==='set-theme'){setTheme(button.dataset.themeValue);return;}
@@ -1227,21 +1257,51 @@
     if(el.dataset.ui==='employee'&&emp(el.value)){ui.employee=el.value;render();}
     else if(el.dataset.ui==='division'&&(el.value==='all'||data.divisions.some(function(d){return d.id===el.value;}))){ui.division=el.value;render();}
     else if(el.dataset.ui==='activeDivision'){openDivision(el.value);}
-    else if(el.dataset.ui==='frequency'){ui.frequency=el.value;render();}
-    else if(el.dataset.ui==='employeeSort'&&['name','division','journey','kit','kpi'].includes(el.value)){ui.employeeSort=el.value;render();}
+    else if(el.dataset.ui==='frequency'){ui.frequency=el.value;render();const input=$('app').querySelector('[data-ui="frequency"]');if(input&&typeof input.focus==='function')input.focus({preventScroll:true});}
+    else if(el.dataset.ui==='employeeSort'&&['name','division','journey','kit','kpi'].includes(el.value)){ui.employeeSort=el.value;render();const input=$('app').querySelector('[data-ui="employeeSort"]');if(input&&typeof input.focus==='function')input.focus({preventScroll:true});}
     else if(el.dataset.ui==='query'){ui.query=el.value;render();}
   });
   document.addEventListener('input',function(ev){const el=ev.target;if(el.dataset.ui==='query'){const p=el.selectionStart;ui.query=el.value;const focus=document.activeElement;const list=filtered();const table=$('app').querySelector('.panel.no-pad');if(table){const existing=table.querySelector('.table-wrap, .empty');if(existing)existing.outerHTML=employeesTable(list);const count=table.querySelector('.directory-results-count');if(count)count.textContent=list.length+' of '+scopedEmployees().length+' employees';const clearSlot=table.querySelector('.directory-clear-slot');if(clearSlot){const hasClear=!!clearSlot.querySelector('[data-action="clear-search"]');if(ui.query&&!hasClear)clearSlot.innerHTML=button('Clear search','clear-search','','small');else if(!ui.query&&hasClear)clearSlot.innerHTML='';}}if(focus!==el){el.focus();try{el.setSelectionRange(p,p);}catch(err){}}}});
+  window.addEventListener('resize',enhanceScrollableTables);
+  document.addEventListener('toggle',enhanceScrollableTables,true);
   document.addEventListener('keydown',function(ev){
     const anyOpen=ui.employeeModalOpen||ui.divisionModal||ui.employeePicker;
     const typing=!!(ev.target&&((/^(INPUT|TEXTAREA|SELECT)$/.test(ev.target.tagName||''))||ev.target.isContentEditable));
-    if(!anyOpen&&((ev.key==='/'&&!typing)||((ev.ctrlKey||ev.metaKey)&&String(ev.key).toLowerCase()==='k'))){
+    if(!anyOpen&&!ui.mobile&&((ev.key==='/'&&!typing)||((ev.ctrlKey||ev.metaKey)&&String(ev.key).toLowerCase()==='k'))){
       ev.preventDefault();
       action('quick-search',{dataset:{}});
       return;
     }
     if(ev.key==='Escape'&&ui.mobile){
-      ui.mobile=false;render();return;
+      ev.preventDefault();ui.mobile=false;render();focusMobileMenu(false);return;
+    }
+    if(ev.key==='Tab'&&ui.mobile){
+      const drawer=$('app').querySelector('.workspace-sidebar');
+      if(drawer&&typeof drawer.querySelectorAll==='function'){
+        const elements=Array.from(drawer.querySelectorAll('a[href],button:not([disabled]),[tabindex]:not([tabindex="-1"])'));
+        if(elements.length){
+          const first=elements[0],last=elements[elements.length-1];
+          if(!elements.includes(document.activeElement)||
+             (ev.shiftKey&&document.activeElement===first)||
+             (!ev.shiftKey&&document.activeElement===last)){
+            ev.preventDefault();(ev.shiftKey?last:first).focus();
+          }
+        }
+      }return;
+    }
+    if(ev.key==='ArrowLeft'||ev.key==='ArrowRight'){
+      const group=ev.target&&typeof ev.target.closest==='function'?
+        ev.target.closest('.employee-modal-tabs, .division-tabs'):null;
+      if(group&&typeof group.querySelectorAll==='function'){
+        const buttons=Array.from(group.querySelectorAll('button:not([disabled])'));
+        const index=buttons.indexOf(ev.target);
+        if(index>=0&&buttons.length>1){
+          ev.preventDefault();const step=ev.key==='ArrowRight'?1:-1;
+          const target=buttons[(index+step+buttons.length)%buttons.length];
+          if(target&&target.dataset)action(target.dataset.action,target);
+          return;
+        }
+      }
     }
     if(!anyOpen)return;
     if(ev.key==='Escape'){
@@ -1254,6 +1314,9 @@
     const focusables=Array.from(modal.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'));
     if(!focusables.length){ev.preventDefault();modal.focus();return;}
     const first=focusables[0],last=focusables[focusables.length-1];
+    if(typeof modal.contains==='function'&&!modal.contains(document.activeElement)){
+      ev.preventDefault();first.focus();return;
+    }
     if(ev.shiftKey&&document.activeElement===first){ev.preventDefault();last.focus();}
     else if(!ev.shiftKey&&document.activeElement===last){ev.preventDefault();first.focus();}
   });
