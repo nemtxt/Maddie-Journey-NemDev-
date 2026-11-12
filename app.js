@@ -9,7 +9,7 @@
   let data;
   try {const raw=JSON.parse(localStorage.getItem(KEY));data=(raw&&raw.version===seed.version&&Array.isArray(raw.employees)&&raw.employees.length===51)?raw:clone(seed);}catch(err){data=clone(seed);}
   data.viewers=clone(seed.viewers); data.divisions=clone(seed.divisions); data.stages=clone(seed.stages); data.kit=clone(seed.kit);
-  let ui={tab:'overview',viewer:'giezelle',division:'all',activeDivision:'rmd',query:'',employee:data.employees[0].id,detail:'journey',drawer:false,frequency:'monthly',mobile:false};
+  let ui={tab:'overview',viewer:'giezelle',division:'all',activeDivision:'rmd',query:'',employee:data.employees[0].id,detail:'preview',drawer:false,roleModal:false,divisionModal:false,frequency:'monthly',mobile:false};
   try {const saved=JSON.parse(sessionStorage.getItem('maddie-journey-ui')||'null');if(saved&&saved.viewer)ui.viewer=saved.viewer;}catch(err){}
   const now=function(){return new Date().toISOString().slice(0,10);};
   const safe=function(v){return String(v===undefined||v===null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
@@ -45,12 +45,24 @@
   function select(key,value,items,disabled){return '<select class="field" data-field="'+key+'" '+(disabled?'disabled':'')+'>'+opts(items,value)+'</select>';}
   function linkedEmployee(e){return '<button class="link-btn" data-action="open" data-id="'+safe(e.id)+'">'+safe(e.name)+'</button>';}
   function progress(val){return '<div class="progress"><span style="width:'+Math.max(0,Math.min(100,val))+'%"></span></div>';}
-  function topnav(){const v=viewer();return '<div class="mobile-top"><div class="brand"><span class="logo">m.</span><b>Maddie Journey</b></div>'+button('☰','mobile','','small')+'</div><div class="topbar"><div class="breadcrumb">MADHOUSE / PEOPLE & CULTURE <strong>'+safe(title(ui.tab))+'</strong></div><div class="top-actions"><span class="tag '+(v.role==='ceo'||v.role==='cso'||v.role==='coo'?'info':'ok')+' role-chip">'+(v.role==='ceo'||v.role==='cso'||v.role==='coo'?'Observer · read only':v.role==='hr'?'HR · editor':'Division editor')+'</span><span class="tag warn">SAMPLE DATA</span><label class="visually-hidden" for="viewer-select">Preview an evaluator role</label><select id="viewer-select" class="preview-select" data-ui="viewer">'+opts(data.viewers.map(function(p){return {value:p.id,label:p.name+' · '+p.title.split(' · ')[0]};}),v.id)+'</select></div></div>';}
+  function topnav(){
+    const v=viewer(),isObserver=['ceo','cso','coo'].includes(v.role);
+    return '<div class="mobile-top"><div class="brand"><span class="logo">m.</span><b>Maddie Journey</b></div>'+button('☰','mobile','','small')+'</div>'+
+    '<div class="topbar"><div class="breadcrumb">MADHOUSE / PEOPLE & CULTURE <strong>'+safe(title(ui.tab))+'</strong></div>'+
+    '<div class="top-actions"><span class="tag warn demo-marker">DEMO DATA</span>'+
+    '<button class="workspace-trigger" type="button" data-action="choose-workspace" aria-haspopup="dialog" aria-label="Switch workspace, currently '+safe(v.name)+'">'+
+    avatar(v.name)+'<span class="workspace-trigger-copy"><b>'+safe(v.name)+'</b><small>'+(isObserver?'Observer · View only':isHR()?'HR · Editor':'Division · Editor')+'</small></span><span class="workspace-chevron" aria-hidden="true">⌄</span></button></div></div>';
+  }
   const items=[['overview','◫','Overview'],['divisions','▦','Divisions'],['employees','◎','Employees'],['journey','◷','Journey stages'],['kit','▣','Welcome Maddie Kit'],['attendance','◩','Attendance'],['kpi','◈','KPI scorecards'],['approvals','✓','Approvals'],['audit','≡','Activity & data']];
   function sidebar(){
-    const own=assignedDivisionIds();
-    const deptLinks=own.length?'<div class="sidebar-label division-side-label">My departments</div><nav class="nav division-shortcuts" aria-label="Assigned departments">'+own.map(function(id){const d=div(id);return '<a href="#division/'+safe(id)+'" data-nav-division="'+safe(id)+'" class="'+(ui.tab==='division'&&ui.activeDivision===id?'active':'')+'"><span class="nav-icon">◈</span>'+safe(d.short)+'</a>';}).join('')+'</nav>':'';
-    return '<aside class="sidebar"><div class="brand"><span class="logo">m.</span><span><b>Maddie Journey</b><small>People & Culture Workspace</small></span></div><div class="sidebar-label">Workspace</div><nav class="nav" aria-label="Main navigation">'+items.map(function(i){return '<a href="#'+i[0]+'" data-nav="'+i[0]+'" class="'+(ui.tab===i[0]||(i[0]==='divisions'&&ui.tab==='division')?'active':'')+'"><span class="nav-icon">'+i[1]+'</span>'+i[2]+'</a>';}).join('')+'</nav>'+deptLinks+'<div class="sidebar-bottom"><div class="demo">PROTOTYPE · Demo mode only<br>Local changes stay on this device.</div><div class="sidebar-user">'+avatar(viewer().name)+'<span><b>'+safe(viewer().name)+'</b><small>'+safe(viewer().title)+'</small></span></div></div></aside>';
+    const v=viewer(),own=assignedDivisionIds(),observer=['ceo','cso','coo'].includes(v.role);
+    const visible=isHR()?['overview','divisions','employees','journey','kit','attendance','kpi','audit']
+     :observer?['overview','divisions','employees','attendance','kpi','approvals']
+     :['overview','divisions','employees','kpi','approvals'];
+    const deptLinks=own.length?'<div class="sidebar-label division-side-label">My departments</div><nav class="nav division-shortcuts" aria-label="My departments">'+own.map(function(id){const d=div(id);return '<a href="#division/'+safe(id)+'" data-nav-division="'+safe(id)+'" class="'+(ui.tab==='division'&&ui.activeDivision===id?'active':'')+'"><span class="nav-icon">◈</span>'+safe(d.short)+'</a>';}).join('')+'</nav>':'';
+    return '<aside class="sidebar"><div class="brand"><span class="logo">m.</span><span><b>Maddie Journey</b><small>People & Culture Workspace</small></span></div>'+
+    '<div class="sidebar-label">My workspace</div><nav class="nav" aria-label="Main navigation">'+items.filter(function(i){return visible.includes(i[0]);}).map(function(i){return '<a href="#'+i[0]+'" data-nav="'+i[0]+'" class="'+(ui.tab===i[0]||(i[0]==='divisions'&&ui.tab==='division')?'active':'')+'"><span class="nav-icon">'+i[1]+'</span>'+safe(i[2])+'</a>';}).join('')+'</nav>'+
+    deptLinks+'<div class="sidebar-bottom"><div class="demo">PROTOTYPE · Demo mode only<br>Edits stay on this device.</div><div class="sidebar-user">'+avatar(v.name)+'<span><b>'+safe(v.name)+'</b><small>'+safe(v.title)+'</small></span></div><button class="sidebar-switch" data-action="choose-workspace" type="button">Switch workspace ↗</button></div></aside>';
   }
   function title(t){if(t==='division')return div(ui.activeDivision).name+' · Evaluation';return {divisions:'Divisions',overview:'Overview',employees:'People directory',journey:'Employee journey',kit:'Welcome Maddie Kit',attendance:'Attendance analytics',kpi:'2026 KPI evaluations',approvals:'Executive approvals',audit:'Activity & data'}[t]||'Overview';}
   function header(eyebrow,heading,description,actions){return '<div class="page-header"><div><div class="eyebrow">'+safe(eyebrow)+'</div><h1>'+safe(heading)+'</h1><p>'+safe(description)+'</p></div><div class="actions">'+(actions||'')+'</div></div>'+(ui.tab==='overview'?'':screenSummary());}
