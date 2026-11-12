@@ -1,4 +1,4 @@
-# Maddie Journey — Read-only Prototype v3.4.1
+# Maddie Journey — Read-only Prototype v3.4.2
 
 **Madhouse Design Studio · People & Culture**
 
@@ -27,6 +27,16 @@ The responsive frontend uses HTML, CSS and vanilla JavaScript, with a text-only 
 | Data & Sources | Data Sources · About the Prototype |
 
 All 13 screens are available to anyone using the fictional sample prototype. On desktop, the primary sidebar collapses to icon navigation and remembers the display preference locally; on mobile it remains a full-width accessible drawer. A division also offers its own Summary, Board, List and Org Chart tabs. Employee cards open centered view-only previews.
+
+### v3.4.2 — Consistent SVG icons (no decorative emoji)
+
+- **One icon system:** The new `icons.js` supplies a 39-icon self-hosted, inline SVG vocabulary using a single 24px viewBox, 1.8px outline stroke, and shared responsive CSS. No emoji, symbol fonts, icon-library CDN or remote icon images are required.
+- **Unified visual elements:** Dashboard metrics, five sidebar groups, drawer and dialog close controls, 201 Files document groups and statuses, Calendar controls/events, employee Previous/Next, selection menus, checklist markers, empty states and landing entry now use matching SVG icons.
+- **Semantic and accessible:** SVGs are decorative (`aria-hidden` and `focusable=false`) alongside visible text or existing accessible button labels. No icon alone determines status, data provenance or action meaning.
+- **Resilience:** A missing local icon script cannot block the functional monitoring interface; visual icons are omitted safely while labels, links and controls remain. No data, backend or authentication behavior was changed.
+- **Responsive:** Consistent 13–20px rendered icon sizes, balanced spacing and narrow-phone metric-title collision prevention. Existing pastel hues, mouse hover, focus indicators, forced-color mode and reduced-motion behavior remain intact.
+- **Validation:** **94 dependency-free smoke checks pass**, including icon markup, removal of decorative pictograms, cross-screen coverage, keyboard-safe controls, deep-link continuity and failure fallback. Manual rendered-device visual QA remains separate.
+- [Icon system usage and acceptance guide](docs/ICON_SYSTEM.md)
 
 ### v3.4.1 — Soft pastel categorization and desktop hover
 
@@ -168,8 +178,9 @@ The script loading order is:
 
 1. data.js — fictional fixture
 2. data-adapter.js — read-only snapshot, versioned validation and provider status
-3. monitoring.js — pure, read-only 201 Files and three-month Calendar presentation
-4. app.js — routing, rendering, shared metrics and employee previews
+3. icons.js — self-hosted accessible SVG icon vocabulary
+4. monitoring.js — read-only 201 Files and Calendar presentation
+5. app.js — routing, rendering, shared metrics and employee previews
 
 data-adapter.js (contract version 2) exposes getSnapshot(), getSources(), getProvenance(), getQualityReport() and validateSnapshot(snapshot). Its required 201-document catalog and explicit per-employee status map are sample-only. It currently returns a defensive copy of the fictional fixture and marks all five planned providers **Not connected**. There are **no network calls or provider tokens**.
 
@@ -182,7 +193,7 @@ The later connected-account phase can implement source normalization against the
 - Open index.html in a modern browser or use VS Code Live Server.
 - Run: node tests/smoke.js
 - On main, the custom GitHub Actions validation workflow runs the regression tests. Anime.js and the Inter web font are optional third-party CDN resources; UI navigation and sample data do not depend on their availability. GitHub Pages uses its separate publishing workflow.
-- Confirm both test and Pages workflow statuses under GitHub Actions. The automated suite currently includes 88 cases; physical Windows/macOS/Android/iOS visual acceptance remains separate.
+- Confirm both test and Pages workflow statuses under GitHub Actions. The automated suite currently includes 94 cases; physical Windows/macOS/Android/iOS visual acceptance remains separate.
 
 ## Source files
 
@@ -191,6 +202,7 @@ The later connected-account phase can implement source normalization against the
 | index.html | Entry point and ordered CSS/JS assets |
 | data.js | 51 fictional employee records and complete 8-division fixtures |
 | data-adapter.js | Read-only source boundary, provider status and snapshot validation |
+| icons.js | Shared self-hosted SVG icon vocabulary, decorative markup and safe fallback |
 | monitoring.js | Pure read-only 201 Files and three-month Calendar views; no connector calls or writes |
 | app.js | Single-page routing, division overview, shared metrics and previews |
 | styles.css / theme.css | Base and theme styles |

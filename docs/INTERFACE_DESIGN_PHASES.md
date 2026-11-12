@@ -1,7 +1,7 @@
 # Maddie Journey — Interface Improvement Roadmap
 
 **Goal:** Keep the monitoring workspace professional, calm, fast and immediately legible, rather than adding generic administrative pages or data-entry capabilities.  
-**Baseline:** v3.4.1 · 51 fictional employees · eight divisions · 13 read-only screens · five main navigation groups.  
+**Baseline:** v3.4.2 · 51 fictional employees · eight divisions · 13 read-only screens · five main navigation groups.  
 **Source boundary:** All data comes from local sample fixtures; any future Claude/Drive/Airtable connectors require a secure private integration layer.
 
 ## Phase 7 — Cross-workflow monitoring clarity (v3.4)
@@ -15,6 +15,10 @@ Completion: counts reconcile to source records; routes and document previews wor
 ### v3.4.1 visual refinement — completed
 
 Subtle pastel categorization added for the monitoring summary tiles, operational-focus strip, document groups, review/attention categories and Calendar event keys. Hover responses now favor fine-pointer devices only, with keyboard focus and reduced-motion support. The original one-font, neutral-first, read-only contract remains unchanged. Automated regression checks: **88 passed**. Physical visual inspection remains outstanding.
+
+### v3.4.2 icon refinement — completed
+
+All UI symbols in navigation, buttons, checklists, Calendar and document monitoring were replaced with one locally defined 39-icon SVG set. Consistent 24px coordinate grid, outline stroke, responsive sizing, accessible control labels, local-script failure fallback and no decorative emojis. Automated suite: **94 checks passed**. Browser/device visual confirmation remains open.
 
 ## Phase 8 — Information density and reporting rhythm (proposed v3.5)
 

@@ -1,6 +1,6 @@
 # Maddie Journey — Prototype Acceptance Checklist
 
-Release: **v3.4.1**. Scope: **HTML/CSS/vanilla JavaScript + fictional fixture only**.
+Release: **v3.4.2**. Scope: **HTML/CSS/vanilla JavaScript + fictional fixture only**.
 
 This document distinguishes code-level verification from human visual acceptance. The automated smoke checks confirm the named routing and data contracts but cannot prove pixel-level accuracy on physical Windows, macOS, Android or iOS devices.
 
@@ -137,3 +137,12 @@ For the intended integration boundary, see [Claude Connector Handoff](CLAUDE_CON
 - **Accessible interaction:** Keyboard focus always shows a strong outline. Hover is scoped to mouse/trackpad pointers; reduced-motion mode disables new transitions and transforms; high-contrast Windows mode retains readable system borders and text.
 - **Data integrity:** All 51 fictional employee records, eight divisions, 201 status counts, calendar date calculations and 13 reader routes remain unmodified.
 - **Verification:** 88 smoke tests pass, including light/dark contrast arithmetic, semantic DOM attributes, pointer-only hover and preference fallbacks. Physical hover/touch/keyboard visual QA is not represented by these source tests.
+
+## v3.4.2 — Icon standardization and decorative-symbol removal
+
+- **Single source:** All app decorative/action icons originate from local `icons.js`. SVG assets use a 24×24 viewBox, uniform 1.8 outline stroke and `currentColor`; no emoji images, platform glyphs, third-party icon fonts or remote icon-CDN assets.
+- **Navigation and controls:** Verify five sidebar groups, topbar/drawer, landing entry, dropdown menus, modal Close and Previous/Next, Journey and Welcome Kit checklist markers, and empty-search state render matching SVGs.
+- **201 Files / Calendar:** Verify category icons and 201 status icons are rendered next to explanatory text; the exact fictional document states and dated event labels must remain visible and unchanged. Calendar previous/next buttons must remain readable at 320px.
+- **Accessibility:** Decorative SVGs have `aria-hidden="true"` and `focusable="false"`; controls retain meaningful visible text or `aria-label`. Existing keyboard focus, forced-colors support, ≥44px mobile hit targets and reduced-motion settings remain applicable.
+- **Fallback:** When `icons.js` cannot load, no functional navigation or read-only monitoring view should fail. Test direct links, modal previews and calendar filters with the icon module deliberately absent.
+- **Validation:** 94 automated smoke tests passed. Physical Chrome/Edge/Safari mobile rendering, actual accessible-name auditing and 200% zoom remain to be checked manually.
