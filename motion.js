@@ -32,7 +32,7 @@
     if(page!==previousScreen&&typeof doc.querySelectorAll==='function'){
       const targets=page==='welcome'?
         doc.querySelectorAll('.landing-header,.landing-hero-inner'):
-        doc.querySelectorAll('.page-header,.overview-summary-grid,.overview-spotlight,.overview-insight-grid,.screen-summary');
+        doc.querySelectorAll('.page-header,.overview-summary-grid,.overview-monitor-grid,.overview-spotlight,.screen-summary');
       Array.from(targets).slice(0,4).forEach(function(el,index){
         animateSafely(el,{opacity:{from:.9,to:1},y:{from:6,to:0},
           duration:240,delay:index*30,ease:'out(3)'});

@@ -1,4 +1,4 @@
-# Maddie Journey — Read-only Prototype v2.5
+# Maddie Journey — Read-only Prototype v2.6
 
 **Madhouse Design Studio · People & Culture**
 
@@ -14,7 +14,7 @@ The intended external data sources for the **later Claude-connected development 
 
 ## Interface
 
-The responsive frontend uses HTML, CSS and vanilla JavaScript, with the original Madhouse Design Studio PNG logo and the original Madhalloween JPEG event photograph. The user-provided white dashboard reference informs the composition, with white/black neutral surfaces, one consistent Inter font, and pink used only as an accent.
+The responsive frontend uses HTML, CSS and vanilla JavaScript, with a text-only identity and the original Madhalloween JPEG event photograph. The user-provided white dashboard reference informs the composition, with white/black neutral surfaces, one consistent Inter font, and pink used only as an accent.
 
 ### Navigation
 
@@ -51,7 +51,7 @@ All 11 screens are available to anyone using the fictional sample prototype. On 
 
 ### v2.4 visual consistency and motion
 
-- **Minimal landing:** Removed both rows of audience/shortcut cards and any landing progress badge. The landing contains the official Madhouse PNG logo, original event photograph, short introduction, two clear buttons and a quiet footer.
+- **Minimal landing:** Removed both rows of audience/shortcut cards and any landing progress badge. The landing now contains a full-bleed original photograph, one workspace entry, a typographic identity and a quiet footer.
 - **Black and white workspace:** White surfaces in Light mode, near-black surfaces in Dark mode, neutral status backgrounds, one pink accent for active navigation, focus rings and essential actions. Decorative pastel panel fills and purple gradients are no longer part of the displayed system.
 - **One typeface:** Inter for the entire site; the font is loaded as a free web font, with a sans-serif fallback only when the font request fails. Navigation and appearance icons are consistent inline SVG rather than platform-dependent symbols.
 - **Sidebar control:** Collapse or expand the main desktop sidebar from the top header. The collapsed state retains all five destination icons, accessible labels and tooltips and is stored as a UI preference only. Mobile uses its separate Menu drawer.
@@ -67,6 +67,14 @@ The final design tokens and overrides are in **mono.css**. New features should u
 - **Search stays responsive:** The visible directory count, matching table and clear-search control react as the user types, without changing or persisting employee data.
 - **Keyboard continuity:** Closing an employee or division dialog restores keyboard focus to its originating action when available. Invalid employee identifiers cannot open a broken dialog.
 - **Gentle Anime.js motion:** Small screen and modal entrances plus a mobile drawer entrance, all optional, non-looping and disabled for reduced-motion users. Sidebar size and hover transitions remain CSS-only.
+
+### v2.6 monitoring redesign
+
+- The Madhouse image logo no longer appears on the landing, desktop sidebar or mobile header. A consistent Inter text identity replaces it.
+- The landing is one **full-viewport, full-bleed photo screen** with no page scroll, one dashboard entry, a subtle theme control and adaptive type for small/short screens.
+- The overview is a **monitoring console**: connected signal metrics, first-position attention queue, stacked Journey and milestone insights, followed by a non-carousel eight-division matrix.
+- The 51-person fictional sample remains read-only, with no login or input/edit forms. External source connectors remain disconnected.
+- Black/white theme, restrained pink accent, and optional reduced-motion-aware Anime.js remain.
 
 ### Seven-stage Journey
 
@@ -91,7 +99,7 @@ The later connected-account phase can implement source normalization against the
 - Open index.html in a modern browser or use VS Code Live Server.
 - Run: node tests/smoke.js
 - On main, the custom GitHub Actions validation workflow runs the regression tests. Anime.js and the Inter web font are optional third-party CDN resources; UI navigation and sample data do not depend on their availability. GitHub Pages uses its separate publishing workflow.
-- Confirm both test and Pages workflow statuses under GitHub Actions. The automated suite currently includes 32 cases; physical Windows/macOS/Android/iOS visual acceptance remains separate.
+- Confirm both test and Pages workflow statuses under GitHub Actions. The automated suite currently includes 33 cases; physical Windows/macOS/Android/iOS visual acceptance remains separate.
 
 ## Source files
 
@@ -111,7 +119,6 @@ The later connected-account phase can implement source normalization against the
 | tests/smoke.js | Regression tests for navigation, adapters, fixtures and read-only operation |
 | docs/CLAUDE_CONNECTORS_HANDOFF.md | Future connector development instructions |
 | docs/PROTOTYPE_ACCEPTANCE.md | Complete screen/navigation matrix and physical-device acceptance checklist |
-| assets/madhouse-logo.png | Original user-supplied PNG |
 | assets/madhalloween.jpg | Original user-supplied JPEG |
 
 ## Remaining phase

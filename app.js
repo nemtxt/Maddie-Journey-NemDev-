@@ -107,7 +107,7 @@
   function topnav(){
     const group=activeNavGroup(),current=ui.tab==='division'?'divisions':ui.tab;
     return '<div class="mobile-top"><a href="#welcome" data-nav="welcome" class="brand mobile-brand" aria-label="Maddie Journey landing">'+
-      '<img src="./assets/madhouse-logo.png" alt="Madhouse Design Studio" class="mobile-official-logo"><b>Maddie Journey</b></a>'+
+      '<span class="mobile-wordmark"><span class="wordmark-monogram" aria-hidden="true">M</span><b>Maddie Journey</b></span></a>'+
       '<button type="button" class="button small" data-action="mobile" aria-label="'+(ui.mobile?'Close':'Open')+' navigation" aria-expanded="'+ui.mobile+'">'+landingIcon('menu')+'<span>'+(ui.mobile?'Close':'Menu')+'</span></button></div>'+
       '<header class="topbar workspace-topbar">'+
       '<button type="button" class="sidebar-toggle" data-action="toggle-sidebar" aria-controls="primary-navigation" aria-label="'+(ui.sidebarCollapsed?'Expand':'Collapse')+' sidebar" title="'+(ui.sidebarCollapsed?'Expand':'Collapse')+' sidebar" aria-expanded="'+(!ui.sidebarCollapsed)+'">'+landingIcon('panel')+'</button>'+
@@ -127,9 +127,8 @@
     const active=activeNavGroup().id;
     return '<aside class="sidebar workspace-sidebar" aria-label="Main navigation"><div class="workspace-sidepanel">'+
       '<a href="#welcome" data-nav="welcome" class="brand brand-official-link" aria-label="Maddie Journey landing" title="Maddie Journey landing">'+
-      '<img class="sidebar-official-logo" src="./assets/madhouse-logo.png" alt="Madhouse Design Studio">'+
-      '<span class="sidebar-brand-mini" aria-hidden="true">'+landingIcon('home')+'</span>'+
-      '<span class="brand-product-name">Maddie Journey</span></a>'+
+      '<span class="sidebar-brand-mini" aria-hidden="true">M</span>'+
+      '<span class="brand-product-name">Maddie Journey<small class="brand-product-subtitle">MONITORING</small></span></a>'+
       '<p class="workspace-sidebar-caption">PEOPLE MONITORING</p>'+
       '<nav id="primary-navigation" class="nav workspace-mainnav" aria-label="Workspace sections">'+navGroups.map(function(g){
         return '<a href="#'+g.defaultTab+'" data-nav="'+g.defaultTab+'" aria-label="'+safe(g.label)+'" title="'+safe(g.label)+'" class="workspace-mainnav-item '+(g.id===active?'active':'')+'"'+
@@ -435,18 +434,20 @@
       ['Kits pending',kitPending,'Employees with open requirements','yellow'],
       ['KPI to verify',unvalidated,'Fictional records without source validation','violet']
     ];
-    return header('PEOPLE MONITORING','Organization overview',
-      'A simple overview of the 51 fictional employee records. All source integrations are still disconnected.',
-      button('Browse directory','nav','data-tab="employees"','small'))+
+    return header('MONITORING / SAMPLE DATA','Organization overview',
+      'What is progressing, what needs review, and where to look next. Figures are fictional, not live.',
+      button('People directory','nav','data-tab="employees"','small'))+
       '<section class="overview-summary-grid" aria-label="Summary metrics">'+cards.map(function(card){
         return '<div class="overview-summary-tile tone-'+card[3]+'"><span>'+safe(card[0])+'</span>'+
           '<strong>'+safe(card[1])+'</strong><small>'+safe(card[2])+'</small></div>';
       }).join('')+'</section>'+
+      '<div class="overview-monitor-grid" aria-label="Monitoring priorities">'+
+        '<div class="overview-followups">'+attentionPanel(staff)+'</div>'+
+        '<div class="overview-insight-grid">'+overviewStagePanel()+overviewMilestonesPanel()+'</div>'+
+      '</div>'+
       overviewDivisionRail()+
-      '<div class="overview-insight-grid">'+overviewStagePanel()+overviewMilestonesPanel()+'</div>'+
-      '<div class="overview-followups">'+attentionPanel(staff)+'</div>'+
-      '<p class="overview-snapshot-note">Snapshot information is generated from fictional local records. Attendance concerns: '+
-       concerns+'. No employee record can be edited, submitted or approved in this interface.</p>';
+      '<p class="overview-snapshot-note">Demo only · '+concerns+
+      ' attendance concerns in verified sample entries. No integrations or editable records.</p>';
   }
   function overview(){return roleHome();}
   function employeesTable(list,mode){if(!list.length)return '<div class="empty"><span class="big">⌕</span>No employees match these filters.</div>';
@@ -886,20 +887,18 @@
     return '<div class="landing-shell" id="main-content" tabindex="-1">'+
       '<main class="landing-main">'+
       '<header class="landing-header"><a class="landing-brand" href="#welcome" data-nav="welcome" aria-label="Maddie Journey home">'+
-      '<img src="./assets/madhouse-logo.png" alt="Madhouse Design Studio" class="landing-official-logo" width="720" height="117">'+
-      '<span class="landing-brand-separator" aria-hidden="true"></span><strong class="landing-brand-title">Maddie Journey</strong></a>'+
+      '<strong class="landing-brand-title">Maddie Journey</strong></a>'+
       '<div class="landing-header-actions">'+themeControl()+'</div></header>'+
       '<section class="landing-hero" aria-labelledby="landing-title"><div class="landing-hero-inner">'+
-      '<span class="landing-kicker"><span class="landing-kicker-line"></span>MADHOUSE DESIGN STUDIO · PEOPLE MONITORING</span>'+
-      '<h1 id="landing-title">Maddie Journey</h1>'+
-      '<p class="landing-hero-lead">Your people. One clear overview.</p>'+
-      '<p class="landing-hero-copy">Explore employee journeys, division performance and milestones in a focused, read-only workspace.</p>'+
-      '<div class="landing-hero-actions"><a href="#overview" data-nav="overview" class="landing-primary-cta">Open dashboard <span aria-hidden="true">→</span></a>'+
-      '<a href="#divisions" data-nav="divisions" class="landing-secondary-cta">Browse divisions <span aria-hidden="true">→</span></a></div></div></section>'+
-      '<footer class="landing-footer"><span>© Madhouse Design Studio · Maddie Journey</span>'+
-      '<span>Prototype · Fictional data only</span></footer></main></div>';
+      '<span class="landing-kicker"><span class="landing-kicker-line"></span>PEOPLE &amp; CULTURE / MONITORING</span>'+
+      '<h1 id="landing-title">Clarity across<br>every journey.</h1>'+
+      '<p class="landing-hero-lead">See what needs attention.</p>'+
+      '<p class="landing-hero-copy">One read-only view of people, onboarding, performance and milestones.</p>'+
+      '<div class="landing-hero-actions"><a href="#overview" data-nav="overview" class="landing-primary-cta">Enter workspace <span aria-hidden="true">→</span></a></div></div></section>'+
+      '<footer class="landing-footer"><span>MADHOUSE DESIGN STUDIO</span>'+
+      '<span>Fictional data · Demonstration only</span></footer></main></div>';
   }
-  function render(){if(ui.tab==='welcome'){$('app').innerHTML=landingView();document.title='Maddie Journey · Madhouse Design Studio';if(window.MJ_MOTION)window.MJ_MOTION.refresh('welcome');return;}const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,milestones:milestonesView,journey:journey,kit:kitView,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,sources:sourcesView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open ':'')+(ui.sidebarCollapsed?'sidebar-collapsed':'')+'">'+sidebar()+'<button type="button" class="workspace-scrim" aria-label="Close navigation" data-action="mobile"></button><main id="main-content" class="main" tabindex="-1">'+topnav()+(views[ui.tab]||overview)()+'<footer class="footer"><span>Maddie Journey · Prototype v2.5</span><span>51 fictional employees · Read-only preview · No live integrations</span></footer></main></div>'+(ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.employeeModalOpen?employeeModal():'');document.title=title(ui.tab)+' · Maddie Journey';if(window.MJ_MOTION)window.MJ_MOTION.refresh(ui.tab);if(ui.employeeModalOpen||ui.divisionModal||ui.employeePicker){const modal=$('app').querySelector('[role="dialog"]');if(modal&&typeof modal.focus==='function')modal.focus({preventScroll:true});}}
+  function render(){if(ui.tab==='welcome'){$('app').innerHTML=landingView();document.title='Maddie Journey · Madhouse Design Studio';if(window.MJ_MOTION)window.MJ_MOTION.refresh('welcome');return;}const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,milestones:milestonesView,journey:journey,kit:kitView,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,sources:sourcesView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open ':'')+(ui.sidebarCollapsed?'sidebar-collapsed':'')+'">'+sidebar()+'<button type="button" class="workspace-scrim" aria-label="Close navigation" data-action="mobile"></button><main id="main-content" class="main" tabindex="-1">'+topnav()+(views[ui.tab]||overview)()+'<footer class="footer"><span>Maddie Journey · Prototype v2.6</span><span>51 fictional employees · Read-only preview · No live integrations</span></footer></main></div>'+(ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.employeeModalOpen?employeeModal():'');document.title=title(ui.tab)+' · Maddie Journey';if(window.MJ_MOTION)window.MJ_MOTION.refresh(ui.tab);if(ui.employeeModalOpen||ui.divisionModal||ui.employeePicker){const modal=$('app').querySelector('[role="dialog"]');if(modal&&typeof modal.focus==='function')modal.focus({preventScroll:true});}}
   function openDivision(id){if(!data.divisions.some(function(d){return d.id===id;}))return;ui.scope=id;ui.activeDivision=id;ui.divisionTab='summary';ensureEmployeeScope();ui.tab='division';ui.employeeModalOpen=false;ui.divisionModal=false;ui.employeePicker=false;ui.mobile=false;ui.query='';ui.division='all';if(location.hash!=='#division/'+id)location.hash='#division/'+id;window.scrollTo({top:0,behavior:'instant'});render();}
   function navigate(tab){modalOrigin=null;if(tab==='division'){openDivision(ui.activeDivision);return;}ui.scope='all';ensureEmployeeScope();ui.tab=tab;ui.employeeModalOpen=false;ui.divisionModal=false;ui.employeePicker=false;ui.mobile=false;ui.query='';ui.division='all';if(location.hash!=='#'+tab)location.hash='#'+tab;window.scrollTo({top:0,behavior:'instant'});render();}
   // All data-editing functions were removed: this frontend never mutates employee records.

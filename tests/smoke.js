@@ -1,4 +1,4 @@
-/* Maddie Journey v2.5 — dependency-free read-only smoke checks.
+/* Maddie Journey v2.6 — dependency-free read-only smoke checks.
    Run from repository root: node tests/smoke.js
    Simulated interactions; browser/device visual QA is separate. */
 'use strict';
@@ -64,7 +64,8 @@ check('Files parse; reader CSS is last and PNG/JPEG media are preserved',()=>{
   new Function(src['data.js']);new Function(src['data-adapter.js']);new Function(src['app.js']);new Function(src['motion.js']);
   assert(src['index.html'].indexOf('reader.css')>src['index.html'].indexOf('workspace.css'));
   assert(src['landing.css'].includes('assets/madhalloween.jpg'));
-  assert(src['app.js'].includes('assets/madhouse-logo.png'));
+  assert(!src['app.js'].includes('assets/madhouse-logo.png'));
+  assert(!src['index.html'].includes('assets/madhouse-logo.png'));
   assert(!src['index.html'].includes('.webp'));
 });
 
@@ -110,9 +111,9 @@ check('Landing is a single focused hero without card strips or percentage badges
   user.navigate('welcome');
   const html=user.html();
   assert(html.includes('landing-hero'));
-  assert(html.includes('assets/madhouse-logo.png'));
+  assert(!html.includes('assets/madhouse-logo.png'));
   assert(html.includes('data-nav="overview"'));
-  assert(html.includes('data-nav="divisions"'));
+  assert(!html.includes('data-nav="divisions"'));
   for(const forbidden of ['landing-audiences','landing-shortcuts','landing-audience-card','landing-shortcut','Who is using the dashboard?','89%']){
     assert(!html.includes(forbidden),'Unexpected landing element: '+forbidden);
   }
@@ -440,12 +441,12 @@ check('Every rendered screen uses handled action names',()=>{
   }
 });
 
-check('Navigation has fewer duplicates while preserving the two landing destinations',()=>{
+check('Navigation stays focused with one landing destination',()=>{
   user.navigate('welcome');
   const landing=user.html();
   assert(!landing.includes('landing-header-cta'));
   assert.equal((landing.match(/data-nav="overview"/g)||[]).length,1);
-  assert(landing.includes('data-nav="divisions"'));
+  assert(!landing.includes('data-nav="divisions"'));
   user.navigate('overview');
   assert(!user.html().includes('workspace-subnav-caption'));
   assert(!user.html().includes('sidebar-return-link'));
@@ -477,5 +478,19 @@ check('The optional mobile drawer animates only on entrance',()=>{
   assert.equal(made[0].el,drawer);
   win.MJ_MOTION.refresh('overview');
   assert.equal(made.length,1);
+});
+check('Logo-free landing and attention-first dashboard are structurally sound',()=>{
+  user.navigate('welcome');
+  assert(!user.html().includes('<img'));
+  assert(user.html().includes('Clarity across'));
+  assert(user.html().includes('Enter workspace'));
+  assert(src['mono.css'].includes('height:100dvh'));
+  assert(src['mono.css'].includes('body:has(.landing-shell)'));
+  assert(src['mono.css'].includes('background-size:cover!important'));
+  user.navigate('overview');
+  assert(user.html().includes('overview-monitor-grid'));
+  assert(user.html().indexOf('overview-followups')<user.html().indexOf('overview-division-rail'));
+  assert(!user.html().includes('sidebar-official-logo'));
+  assert(user.html().includes('brand-product-name'));
 });
 console.log('\n'+results.length+' smoke tests passed. Physical-device visual QA is separate.');

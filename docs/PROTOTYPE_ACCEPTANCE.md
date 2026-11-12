@@ -1,6 +1,6 @@
 # Maddie Journey — Prototype Acceptance Checklist
 
-Release: **v2.5**. Scope: **HTML/CSS/vanilla JavaScript + fictional fixture only**.
+Release: **v2.6**. Scope: **HTML/CSS/vanilla JavaScript + fictional fixture only**.
 
 This document distinguishes code-level verification from human visual acceptance. The automated smoke checks confirm the named routing and data contracts but cannot prove pixel-level accuracy on physical Windows, macOS, Android or iOS devices.
 
@@ -17,7 +17,7 @@ This document distinguishes code-level verification from human visual acceptance
 
 | Parent menu | Top tabs | Checks |
 | --- | --- | --- |
-| Dashboard | Overview, Divisions | Metric cards, eight division cards, stage breakdown, upcoming milestones, follow-up Board/List, department comparison |
+| Dashboard | Overview, Divisions | One continuous metric strip, attention-first queue, eight-division matrix, Journey distribution, milestones and follow-up Board/List |
 | People | Directory, Milestones | Search, sorting, division filters, visible-only CSV, centered employee modal, milestone categories |
 | Journey | Journey board, Welcome Kit, Attendance | Eight Kanban columns (seven stages + Completed), Table view, division scope, Kit summary, attendance chart and weekly/monthly breakdown |
 | Performance | KPI scorecards, Reviews | Read-only weighted KPI previews, source/validation flags, review timeline, final status summaries |
@@ -61,7 +61,7 @@ Open the GitHub Pages website on desktop and mobile, then inspect:
 5. **Keyboard:** tab through primary links, activate a modal, close it with Escape, use / or Ctrl/Command+K to locate the employee search.
 6. **Data flow:** change division scope, inspect a specific employee across all eight modal sections, clear search, export only matching rows.
 7. **Data integrity:** confirm the source page always reports mock integration state as disconnected; no fabricated real sync timestamps.
-8. **Brand assets:** official PNG Madhouse logo and original JPEG team photograph; do not replace with WebP or invented logos. Landing must show only the header, one photo hero, two CTA links and footer.
+8. **Brand and landing:** no image logo in landing, desktop or mobile navigation. Keep the original JPEG photograph edge-to-edge, with a readable dark gradient and text-only product identity. Confirm one entry CTA and no scrolling or clipped actions in desktop, tablet, phone portrait and short landscape viewports.
 9. **Typography:** verify Inter appears consistently on Windows, macOS, Android and iOS, including in tables, controls, modals and employee previews; a system sans fallback is allowed only if the font CDN is unreachable.
 10. **Motion:** test the short Anime.js fade/slide once per screen change, without bouncing or looping. Disable system animation/reduced-motion and verify everything remains instantly visible. With the animation CDN blocked, the full interface must still work.
 
