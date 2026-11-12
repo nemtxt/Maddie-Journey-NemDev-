@@ -1,7 +1,7 @@
 # Maddie Journey — Interface Improvement Roadmap
 
 **Goal:** Keep the monitoring workspace professional, calm, fast and immediately legible, rather than adding generic administrative pages or data-entry capabilities.  
-**Baseline:** v3.5 · 51 fictional employees · eight divisions · 13 read-only screens · five main navigation groups.  
+**Baseline:** v3.6 · 51 fictional employees · eight divisions · 13 read-only screens · five main navigation groups.  
 **Source boundary:** All data comes from local sample fixtures; any future Claude/Drive/Airtable connectors require a secure private integration layer.
 
 ## Phase 7 — Cross-workflow monitoring clarity (v3.4)
@@ -28,11 +28,13 @@ Introduced a locally persisted, read-only Compact rows preference, shared typogr
 
 Completion verified at the source/interaction-test level: directory, Journey, attendance, KPI, review and 201 document tables display the same underlying calculations with a coherent information order. Manual viewport and screen-reader checks remain open; see [Phase 8 QA](PHASE8_REPORTING_QA.md).
 
-## Phase 9 — Contextual employee-reader continuity (proposed v3.6)
+## Phase 9 — Contextual employee-reader continuity (v3.6)
 
-Enhancement: strengthen the visual relationship between a source screen (calendar day, file gap, attention row, division list) and its employee preview. Improve dialog title/context labels, detail tabs, previous/next navigation, and returning focus to the origin. Surface source limitations precisely where users evaluate a status.
+**Status: Implemented; 113 automated regression tests passed. Rendered browser/assistive-technology acceptance pending.**
 
-Completion: every read-only drill-down preserves origin context and keyboard navigation and cannot accidentally submit, update, or infer a source record.
+The employee preview now shows a compact source-specific origin and Back action. Previous/Next is bounded to the current visible filtered roster from Directory, 201 Files, Calendar events and attention categories; division browsing remains within its team. Current-person record cues and section-specific demo provenance are recalculated on every preview. All closing methods restore source route/filter state and attempt exact keyboard focus and scroll recovery; employee tabs use semantic tablist relationships and arrow-key navigation.
+
+Completion verified at the source/interaction-test level only. Manual test device rendering, screen-reader names and actual scroll restoration across browsers using [Phase 9 QA](PHASE9_READER_QA.md).
 
 ## Phase 10 — Real-device accessibility and responsive acceptance (proposed v3.7)
 

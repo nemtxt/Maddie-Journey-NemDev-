@@ -1,4 +1,4 @@
-# Maddie Journey — Read-only Prototype v3.5
+# Maddie Journey — Read-only Prototype v3.6
 
 **Madhouse Design Studio · People & Culture**
 
@@ -27,6 +27,17 @@ The responsive frontend uses HTML, CSS and vanilla JavaScript, with a text-only 
 | Data & Sources | Data Sources · About the Prototype |
 
 All 13 screens are available to anyone using the fictional sample prototype. On desktop, the primary sidebar collapses to icon navigation and remembers the display preference locally; on mobile it remains a full-width accessible drawer. A division also offers its own Summary, Board, List and Org Chart tabs. Employee cards open centered view-only previews.
+
+### Phase 9 — v3.6 contextual employee preview and workflow continuity
+
+- **Source-aware employee reader:** A compact origin header now identifies the screen and selected filter/date that opened the employee, shows the visible roster position, and offers an explicit **Back to [source]** action. The opener's precise action, employee ID, detail type, date and attention category are recorded as *temporary UI context*, not saved employee data.
+- **Filter-scoped Previous / Next:** The 201 Files reader browses only people visible in the selected Missing / Not checked / Complete / All group, respecting Show all. Calendar previews stay with the clicked sample event date and currently visible date/category results. Attention-queue readers browse people within the displayed follow-up category rather than unrelated employees. Directory search/sort and division roster scopes remain preserved.
+- **Reliable return:** Closing via Back, Close, Escape, or overlay reconstructs the original action control and restores keyboard focus and the prior page/horizontal-table scroll when the source route still matches. Changing to a division deliberately navigates to that destination.
+- **Contextual evidence:** Source-specific cues follow the *currently displayed* employee while browsing: exact missing document labels, sample dated events, or recorded attention signals. Every employee detail tab includes a concise note disclosing what is fictional and why it does not constitute external verification, approval, a confirmed appointment, or a delivered file.
+- **Accessible tabs:** The nine existing employee sections now have an actual tablist/tab/tabpanel relationship, `aria-selected`, one keyboard-tab-stop active tab, and arrow-key navigation. Employee records and button purposes remain text-labelled and all icons stay local SVG.
+- **Presentation:** One Inter font, existing neutral + pastel palette, responsive context toolbar, and touch-appropriate Back/Previous/Next controls. No new data entry, permissions, login or external connection.
+- **Verification:** **113 regression tests passed**, including filtered roster boundaries, dated source context, exact focus and scroll restoration, tab semantics, non-mutation, and provenance notes. Real-device rendered layout/screen-reader QA remains open.
+- [Phase 9 QA checklist](docs/PHASE9_READER_QA.md)
 
 ### Phase 8 — v3.5 information density and reporting rhythm
 
@@ -204,7 +215,7 @@ The later connected-account phase can implement source normalization against the
 - Open index.html in a modern browser or use VS Code Live Server.
 - Run: node tests/smoke.js
 - On main, the custom GitHub Actions validation workflow runs the regression tests. Anime.js and the Inter web font are optional third-party CDN resources; UI navigation and sample data do not depend on their availability. GitHub Pages uses its separate publishing workflow.
-- Confirm both test and Pages workflow statuses under GitHub Actions. The automated suite currently includes 104 cases; physical Windows/macOS/Android/iOS visual acceptance remains separate.
+- Confirm both test and Pages workflow statuses under GitHub Actions. The automated suite currently includes 113 cases; physical Windows/macOS/Android/iOS visual acceptance remains separate.
 
 ## Source files
 

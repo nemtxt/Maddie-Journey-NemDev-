@@ -1,6 +1,6 @@
 # Maddie Journey — Prototype Acceptance Checklist
 
-Release: **v3.5**. Scope: **HTML/CSS/vanilla JavaScript + fictional fixture only**.
+Release: **v3.6**. Scope: **HTML/CSS/vanilla JavaScript + fictional fixture only**.
 
 This document distinguishes code-level verification from human visual acceptance. The automated smoke checks confirm the named routing and data contracts but cannot prove pixel-level accuracy on physical Windows, macOS, Android or iOS devices.
 
@@ -156,3 +156,13 @@ For the intended integration boundary, see [Claude Connector Handoff](CLAUDE_CON
 - **No-evidence states:** Zero directory results are a *filter mismatch*, not a data-source outage. An employee with zero attendance entries must not be represented as perfectly present. 201 File status categories and shown/filtered totals must reconcile exactly to the fixture.
 - **Responsive layout:** Compact mode may reduce table and list spacing but must not reduce mobile action targets below 44px, introduce page-wide horizontal scrolling or affect the non-scrolling landing. The existing keyboard-scrollable table regions remain functional.
 - **QA:** 104 dependency-free regression checks pass. Actual 320px–1920px rendered layout, 200% zoom, keyboard focus and screen-reader name testing remain mandatory manual acceptance steps. See [Phase 8 QA](PHASE8_REPORTING_QA.md).
+
+## Phase 9 — Contextual employee preview (v3.6)
+
+- **Entry context:** Every employee preview must identify the originating monitoring screen and show the selected document filter, calendar date, attention category or directory/division context. Source metadata is display-only and must not be treated as new employee data.
+- **Scoped browsing:** Previous/Next must remain within visible 201 Files results (including Show all), the relevant sample Calendar date or visible attention category, filtered directory records, or division members. Their boundary buttons are disabled when no neighbor is present.
+- **Source-specific cue:** For each browsed employee, document labels, example dates or recorded signals must be recalculated from that employee’s fixture; the cue must never misleadingly remain tied to the first employee.
+- **Return:** Back to source, Close, Escape and overlay dismissal should close the reader while keeping route, filters, density and data intact. If the originating control still exists, focus returns to that exact action; original page/table scroll should be restored. A deliberate View division action navigates to its division list instead.
+- **Tabs:** Nine employee tabs expose role tablist/tab, selected state, roving tabindex, and a labelled tabpanel. Arrow navigation and native dialog Tab trapping must continue functioning.
+- **Evidence:** Section-specific text explicitly identifies fictional sample data, pending/unverified records, computed but unbooked dates and disconnected external providers. No invented provider verification, meeting booking or approval chronology.
+- **Verification:** 113 automated regression tests pass. Physical browser/assistive technology, 320px–1920px and 200% zoom inspection remain unverified and require manual acceptance. See [Phase 9 QA](PHASE9_READER_QA.md).
