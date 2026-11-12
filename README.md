@@ -1,4 +1,4 @@
-# Maddie Journey — Read-only Prototype v3.3.1
+# Maddie Journey — Read-only Prototype v3.4
 
 **Madhouse Design Studio · People & Culture**
 
@@ -21,12 +21,21 @@ The responsive frontend uses HTML, CSS and vanilla JavaScript, with a text-only 
 | Left sidebar | Contextual top navigation |
 | --- | --- |
 | Dashboard | Overview · Divisions |
-| People | Directory · Milestones |
-| Journey | Journey Board · Welcome Kit · Attendance |
+| People | Directory · Milestones · Calendar |
+| Journey | Journey Board · Welcome Kit · 201 Files · Attendance |
 | Performance | KPI Scorecards · Reviews |
 | Data & Sources | Data Sources · About the Prototype |
 
 All 13 screens are available to anyone using the fictional sample prototype. On desktop, the primary sidebar collapses to icon navigation and remembers the display preference locally; on mobile it remains a full-width accessible drawer. A division also offers its own Summary, Board, List and Org Chart tabs. Employee cards open centered view-only previews.
+
+### Phase 7 — v3.4 connected monitoring experience
+
+- **Operational focus:** A compact, three-column (responsive) dashboard strip connects verified attendance concerns, sample 201-file missing-document counts and the remaining fictional dates in the three-month Calendar. All counts are calculated from the same read-only sample snapshot as the destination screens.
+- **One-step follow-ups:** The existing "Needs attention" tracker now includes a **201 Files** category with an explicit named document gap or unchecked-item signal. Its employee link opens the existing nine-requirement read-only 201 Files preview.
+- **Presentation:** The new strip is intentionally dense and neutral, avoiding another oversized dashboard card collection or duplicated KPI charts. At medium widths the strip reflows; at phone widths it stacks. Focus indicators, reduced motion and forced-color presentation remain supported.
+- **No new data collection:** No forms, editing, source connections, official verification, calendar booking or access checks. Existing navigation, 51 fictional employees and eight divisions are preserved.
+- **Verification:** **84 source-level regression tests** cover all prior workflows plus the cross-workflow denominators, 201 Files queue, employee drill-down and no-write behavior. **Pixel-level browser and device QA is still outstanding.**
+- [Design improvement roadmap: Phases 7–11](docs/INTERFACE_DESIGN_PHASES.md)
 
 ### v2.2 overview improvements
 
@@ -163,7 +172,7 @@ The later connected-account phase can implement source normalization against the
 - Open index.html in a modern browser or use VS Code Live Server.
 - Run: node tests/smoke.js
 - On main, the custom GitHub Actions validation workflow runs the regression tests. Anime.js and the Inter web font are optional third-party CDN resources; UI navigation and sample data do not depend on their availability. GitHub Pages uses its separate publishing workflow.
-- Confirm both test and Pages workflow statuses under GitHub Actions. The automated suite currently includes 79 cases; physical Windows/macOS/Android/iOS visual acceptance remains separate.
+- Confirm both test and Pages workflow statuses under GitHub Actions. The automated suite currently includes 84 cases; physical Windows/macOS/Android/iOS visual acceptance remains separate.
 
 ## Source files
 

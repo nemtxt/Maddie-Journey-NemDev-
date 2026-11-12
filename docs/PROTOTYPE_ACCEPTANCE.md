@@ -1,6 +1,6 @@
 # Maddie Journey — Prototype Acceptance Checklist
 
-Release: **v3.3.1**. Scope: **HTML/CSS/vanilla JavaScript + fictional fixture only**.
+Release: **v3.4**. Scope: **HTML/CSS/vanilla JavaScript + fictional fixture only**.
 
 This document distinguishes code-level verification from human visual acceptance. The automated smoke checks confirm the named routing and data contracts but cannot prove pixel-level accuracy on physical Windows, macOS, Android or iOS devices.
 
@@ -119,3 +119,12 @@ For the intended integration boundary, see [Claude Connector Handoff](CLAUDE_CON
 - **Calendar source fidelity:** Only computed milestones from fictional start/birthday dates and explicitly recorded example promotions appear. No real meetings, PIP/LIP records, live invitations or synchronized Google Calendar/Drive statuses should be displayed or implied.
 - **Navigation:** 13 read-only screens across five existing main menu groups. Direct `#files201` and `#calendar` routes should work on reload. No role chooser or editor appears.
 - **Browser QA:** Visually inspect 320px, 375px, 768px, 1024px, 1440px and 1920px widths, light/dark themes, tab keyboard focus, internal data-table scrolling and calendar accessibility. The smoke suite is source-level and does not prove visual non-clipping.
+
+## Phase 7 — Connected monitoring interface (v3.4)
+
+- **Operational focus strip:** Attendance concerns count unique people with verified, unexcused/unapproved entries; the pending-verification subline counts entries. The 201 Files count counts unique employees with at least one explicit Missing sample document and keeps Not checked separate. Calendar counts only dates from today onward within the current three-month Asia/Manila window.
+- **Cross-screen integrity:** The counts in the overview must exactly match the attendance, 201 Files and Calendar views for the same demo snapshot. No official source verification or sync status may be implied.
+- **201 Files follow-ups:** The dashboard attention category `documents` shows every person with a Missing or Not checked fictional document, once per employee. The Inspect/Open action navigates to that employee’s read-only 201 Files tab.
+- **Responsive visual:** The operational strip is three columns on wide desktop, two with one full-width at medium desktop and one column on phones. No page-wide horizontal overflow at 320px, and all focus styles remain visible. This requires real browser QA.
+- **Read-only:** 51 synthetic employees, eight divisions, 13 monitoring routes, five parent navigation groups. All filters and drill-downs only change client presentation. No provider, write, login or role-gate introduced.
+- **Tests:** 84 source-level smoke checks passed. Manual screen-reader, keyboard, 200% zoom and physical-device visual acceptance is still pending.

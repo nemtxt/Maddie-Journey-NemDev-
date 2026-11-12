@@ -1,0 +1,47 @@
+# Maddie Journey — Interface Improvement Roadmap
+
+**Goal:** Keep the monitoring workspace professional, calm, fast and immediately legible, rather than adding generic administrative pages or data-entry capabilities.  
+**Baseline:** v3.4 · 51 fictional employees · eight divisions · 13 read-only screens · five main navigation groups.  
+**Source boundary:** All data comes from local sample fixtures; any future Claude/Drive/Airtable connectors require a secure private integration layer.
+
+## Phase 7 — Cross-workflow monitoring clarity (v3.4)
+
+**Status: Implemented and automated checks passed.**
+
+Enhancement: consolidate attendance, 201 Files gaps and upcoming fictional Calendar dates into one compact operational-focus strip on Overview. Add a separate 201 Files filter to the attention queue, deep-linking to the existing employee document reader. Retain the established neutral palette, Inter font and one restrained pink accent.
+
+Completion: counts reconcile to source records; routes and document previews work; 84 regression tests pass; no data is modified. Physical visual QA remains open.
+
+## Phase 8 — Information density and reporting rhythm (proposed v3.5)
+
+Enhancement: standardize table headers, compact numerical typography, group labels, dense/comfortable spacing, hierarchy between primary and supplementary details, filter counts and clear empty/no-evidence states. Prioritize information that helps an operator understand what is missing and why rather than decorative charts.
+
+Completion: employees, Journey, attendance, KPI, reviews and document tables share predictable information order. All denominators and status labels remain unchanged and correct, keyboard scrolling still works, no new input fields are introduced.
+
+## Phase 9 — Contextual employee-reader continuity (proposed v3.6)
+
+Enhancement: strengthen the visual relationship between a source screen (calendar day, file gap, attention row, division list) and its employee preview. Improve dialog title/context labels, detail tabs, previous/next navigation, and returning focus to the origin. Surface source limitations precisely where users evaluate a status.
+
+Completion: every read-only drill-down preserves origin context and keyboard navigation and cannot accidentally submit, update, or infer a source record.
+
+## Phase 10 — Real-device accessibility and responsive acceptance (proposed v3.7)
+
+Enhancement: validate 320px/375px/430px phones, 768px and 1024px tablets, 1440px and 1920px desktops, 200% zoom, screen reader labels, keyboard-only use, high contrast and reduced motion. Fix actual clipping and measured responsiveness problems rather than speculative decorative styling.
+
+Completion: complete documented *rendered* manual viewport checks on real browsers and devices, with severity-ranked issues, screenshots and verified remediation. Passing source-level tests alone is insufficient.
+
+## Phase 11 — Source-state UX and secure integration readiness (proposed v3.8)
+
+Enhancement: consistent read-only visual representations for Not connected, Demo, Empty, Partially available, Verified-by-source (only when verifiable), Error, and permission-limited states, with explicit ownership and last-sync provenance where genuinely supplied. Prepare display adapters for future secure integrations without placing tokens or connected HR data in the public frontend.
+
+Completion: simulated connector-failure and partial-data states remain usable; no invented sync timestamps or official approvals appear; source-adapter contracts and accessible error recovery pass regression checks. Live integration occurs only through a separately authorized, private architecture.
+
+## Non-negotiable interface contract
+
+- One Inter typeface, neutral black/white surfaces and one restrained pink accent.
+- No authentication gate, editor, upload, form submission, or write workflow in the public monitoring prototype.
+- Full-screen non-scrolling photographic landing; data-rich monitoring screens scroll naturally.
+- Collapse/expand navigation, mobile drawer, employee previews, tables and date filters remain accessible.
+- Animate only small, optional details using Anime.js; reduced-motion and offline-CDN support remain mandatory.
+- Never import counts from screenshot examples as if they were verified data.
+- Validate calculations from the 51-person fixture before publishing every incremental phase.
