@@ -1,8 +1,10 @@
-# Maddie Journey — Read-only Prototype v3.7
+# Maddie Journey — Read-only Monitoring v3.8
 
 **Madhouse Design Studio · People & Culture**
 
-[Open prototype](https://nemtxt.github.io/Maddie-Journey-NemDev-/) · [GitHub repository](https://github.com/nemtxt/Maddie-Journey-NemDev-) · [Claude connector handoff](docs/CLAUDE_CONNECTORS_HANDOFF.md) · [Prototype acceptance checklist](docs/PROTOTYPE_ACCEPTANCE.md)
+[Open prototype](https://nemtxt.github.io/Maddie-Journey-NemDev-/) · [GitHub repository](https://github.com/nemtxt/Maddie-Journey-NemDev-) · [Claude connector handoff](docs/CLAUDE_CONNECTORS_HANDOFF.md) · [Prototype acceptance checklist](docs/PROTOTYPE_ACCEPTANCE.md) · [Phase 11 source inventory](docs/PHASE11_SOURCE_INVENTORY.md) · [Phase 11 secure architecture](docs/PHASE11_SECURE_ARCHITECTURE.md)
+
+> **v3.8 (Phase 11):** the public site is unchanged and still fictional. A separate, authenticated private service (`server/`) can read the real People & Culture roster from Airtable (plus Sheets and Calendar) **read-only**, once credentials are issued. Screens without a verified source show what is missing instead of figures. See the architecture document for what is connected, what is blocked and why.
 
 ## Project goal
 
@@ -214,7 +216,7 @@ The script loading order is:
 4. monitoring.js — read-only 201 Files and Calendar presentation
 5. app.js — routing, rendering, shared metrics and employee previews
 
-data-adapter.js (contract version 2) exposes getSnapshot(), getSources(), getProvenance(), getQualityReport() and validateSnapshot(snapshot). Its required 201-document catalog and explicit per-employee status map are sample-only. It currently returns a defensive copy of the fictional fixture and marks all five planned providers **Not connected**. There are **no network calls or provider tokens**.
+data-adapter.js (contract version 2 in sample mode, 3 in connected mode) exposes getSnapshot(), getSources(), getProvenance(), getQualityReport() and validateSnapshot(snapshot). Its required 201-document catalog and explicit per-employee status map are sample-only. On GitHub Pages it returns a defensive copy of the fictional fixture and marks all five planned providers **Not connected**. There are **no network calls or provider tokens**. In the private deployment only, it reads `window.MJ_CONNECTED_PAYLOAD` from the authenticated server and adds getReconciliation(), getCoverage() and screenAvailability(). The two modes are never mixed.
 
 The later connected-account phase can implement source normalization against the same frontend view model, but the private data delivery mechanism must be authenticated and controlled. Read the [Claude connector handoff](docs/CLAUDE_CONNECTORS_HANDOFF.md) for provider responsibilities, data contract and security boundaries.
 
@@ -223,7 +225,9 @@ The later connected-account phase can implement source normalization against the
 ## Run and verify
 
 - Open index.html in a modern browser or use VS Code Live Server.
-- Run: node tests/smoke.js
+- Run: node tests/smoke.js (119 sample-mode regression checks)
+- Run: node tests/connectors.js (37 connector-contract, security and connected-UI checks; synthetic fixtures, no network)
+- Private service (authorized hosts only): node server/index.js --check, then node server/index.js. See docs/PHASE11_SECURE_ARCHITECTURE.md §7.
 - On main, the custom GitHub Actions validation workflow runs the regression tests. Anime.js and the Inter web font are optional third-party CDN resources; UI navigation and sample data do not depend on their availability. GitHub Pages uses its separate publishing workflow.
 - Confirm both test and Pages workflow statuses under GitHub Actions. The automated suite currently includes 119 cases; physical Windows/macOS/Android/iOS visual acceptance remains separate.
 
@@ -245,10 +249,15 @@ The later connected-account phase can implement source normalization against the
 | mono.css | **v3.3 canonical styles:** monochrome system, responsive monitoring, static boot/recovery and short sidebar layout transitions |
 | motion.js | Reduced-motion-aware, nonessential Anime.js entrance transitions |
 | tests/smoke.js | Regression tests for navigation, adapters, fixtures and read-only operation |
+| tests/connectors.js · tests/fixtures/ | Connector-contract, reconciliation, auth, server and connected-UI tests on anonymized synthetic fixtures |
+| server/ | Private, authenticated, read-only connected service (never deployed to GitHub Pages; holds no secrets in the repo) |
+| docs/PHASE11_*.md | Source inventory and secure integration architecture |
 | docs/CLAUDE_CONNECTORS_HANDOFF.md | Future connector development instructions |
 | docs/PROTOTYPE_ACCEPTANCE.md | Complete screen/navigation matrix and physical-device acceptance checklist |
 | assets/madhalloween.jpg | Original user-supplied JPEG |
 
 ## Remaining phase
 
-**Not yet implemented:** real Airtable/Google/email source retrieval, connector authorization, private read-only synchronization, permission-filtered real records, true provider timestamps and physical-device visual QA. The public site is a functional **sample-data UI prototype**, not a live HR data system.
+**Implemented in v3.8:** private read-only service, Airtable/Sheets/Calendar adapters, cross-source reconciliation, Google Sign-In allowlist, connected Directory, 201 Files and Data & Sources, and honest "no verified source" states.
+
+**Not yet live:** the private service has not run against real providers because its read-only credentials and host are not yet issued. Journey, Welcome Kit, KPI, Reviews and Follow-ups have no authoritative per-employee source. Drive, Docs and Gmail evidence linkage is not implemented. Physical-device and screen-reader QA remain manual. The public site remains a **sample-data UI prototype**.

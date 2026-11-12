@@ -4,7 +4,6 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -25,3 +24,5 @@ jobs:
           node-version: '22'
       - name: Run regression checks
         run: node tests/smoke.js
+      - name: Run connector, security and connected-UI checks
+        run: node tests/connectors.js
