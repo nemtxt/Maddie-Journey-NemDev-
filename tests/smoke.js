@@ -1,4 +1,4 @@
-/* Maddie Journey v3.0 — dependency-free read-only smoke checks.
+/* Maddie Journey v3.1 — dependency-free read-only smoke checks.
    Run from repository root: node tests/smoke.js
    Simulated interactions; browser/device visual QA is separate. */
 'use strict';
@@ -723,5 +723,43 @@ check('Phase 4 attendance monthly buckets reconcile event classifications',()=>{
     late+'</td><td>'+absent+'</td><td>'+excused+'</td><td>'+approved+'</td><td>'+concerns+'</td>'));
   user.setFilter('frequency','weekly');
   assert(user.html().includes('value="weekly" selected'));
+});
+check('Phase 4 review status tables never infer missing dates or approvals',()=>{
+  user.navigate('employees');
+  user.click('open',{id:'MJ-001',detail:'approvals'});
+  let h=user.html(),table=h.split('class="table-wrap review-record-table"')[1]?.split('</table>')[0];
+  assert(table);
+  assert(table.includes('Recorded date'));
+  assert.equal((table.match(/<tr><td>0[1-4]<\/td>/g)||[]).length,4);
+  assert(table.includes('Approved'));
+  assert(h.includes('4 / 4 stages show an endorsed or approved status'));
+  assert(h.includes('not evidence of a verified chronological audit trail'));
+  user.click('close');
+  user.click('open',{id:'MJ-002',detail:'approvals'});
+  h=user.html();
+  assert(h.includes('0 / 4 stages show an endorsed or approved status'));
+  assert(h.includes('Not recorded'));
+  assert(h.includes('No recorded comment'));
+  user.click('close');
+});
+check('Phase 4 division comparison KPI and denominators agree with the fixture',()=>{
+  user.navigate('overview');
+  const table=user.html().split('class="overview-division-rail monitor-division-matrix"')[1]?.split('</section>')[0];
+  assert(table);
+  assert.equal((table.match(/class="monitor-division-row"/g)||[]).length,8);
+  for(const d of user.win.MJ_SEED.divisions){
+    const team=user.win.MJ_SEED.employees.filter(e=>e.division===d.id);
+    const scores=team.map(e=>Math.round((e.scores.division*.15+e.scores.individual*.45+
+      e.scores.values*.15+e.scores.behavior*.25)*100)/100);
+    const avg=Math.round(scores.reduce((sum,x)=>sum+x,0)/team.length);
+    const pending=team.filter(e=>e.review.division.status!=='Endorsed').length;
+    const row=table.split('data-division="'+d.id+'"')[1]?.split('</button>')[0];
+    assert(row,d.id);
+    assert(row.includes('class="monitor-division-kpi"')||row.includes('monitor-division-kpi'));
+    assert(row.includes('>'+avg+'%</b>'),d.id+' score');
+    assert(row.includes('>'+pending+' / '+team.length+'</b>'),d.id+' reviews');
+  }
+  assert(table.includes('not combined task totals'));
+  assert(table.includes('Official KPI data is disconnected'));
 });
 console.log('\n'+results.length+' smoke tests passed. Physical-device visual QA is separate.');

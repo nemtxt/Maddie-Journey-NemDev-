@@ -414,14 +414,15 @@
   // One comparative row per division; avoid eight competing cards and duplicate CTAs.
   // All values are computed from the exact employees seen in the division workspace.
   function overviewDivisionRail(){
-    const columns=['Division','People','Journey','Welcome Kit','Reviews open','Attendance concerns',''];
+    const columns=['Division','People','Journey avg','Kit avg','KPI avg','Reviews open','People w/ concerns',''];
     const rows=data.divisions.map(function(d){
       const team=data.employees.filter(function(e){return e.division===d.id;});
-      const journey=meanOf(team,journeyPct),kit=meanOf(team,kitPct);
+      const journey=meanOf(team,journeyPct),kit=meanOf(team,kitPct),kpi=meanOf(team,score);
       const reviews=team.filter(function(e){return reviewStatus(e,'division')!=='Endorsed';}).length;
       const concerns=team.filter(function(e){return attend(e).concerns>0;}).length;
       const detail='Open '+d.name+': '+team.length+' people, Journey '+journey+
-        '%, Welcome Kit '+kit+'%, '+reviews+' division reviews open, '+concerns+' people with verified attendance concerns';
+        '%, Welcome Kit '+kit+'%, weighted KPI mean '+kpi+'%, '+reviews+
+        ' division reviews open of '+team.length+', '+concerns+' people with verified attendance concerns out of '+team.length;
       return '<button type="button" class="monitor-division-row" data-action="goto-division"'+
         ' data-division="'+safe(d.id)+'" aria-label="'+safe(detail)+'">'+
         '<span class="monitor-division-identity"><span class="monitor-division-code">'+safe(d.short)+'</span>'+
@@ -429,16 +430,18 @@
         '<span class="monitor-division-cell monitor-division-people" data-label="People"><b>'+team.length+'</b></span>'+
         '<span class="monitor-division-cell monitor-division-journey" data-label="Journey"><b>'+journey+'%</b>'+
           '<span class="monitor-mini-track" aria-hidden="true"><span style="width:'+journey+'%"></span></span></span>'+
-        '<span class="monitor-division-cell monitor-division-kit" data-label="Welcome Kit"><b>'+kit+'%</b></span>'+
-        '<span class="monitor-division-cell monitor-division-reviews" data-label="Reviews open"><b>'+reviews+'</b></span>'+
-        '<span class="monitor-division-cell monitor-division-concerns" data-label="Attendance concerns"><b>'+concerns+'</b></span>'+
+        '<span class="monitor-division-cell monitor-division-kit" data-label="Kit avg"><b>'+kit+'%</b></span>'+
+        '<span class="monitor-division-cell monitor-division-kpi" data-label="KPI avg"><b>'+kpi+'%</b></span>'+
+        '<span class="monitor-division-cell monitor-division-reviews" data-label="Reviews open"><b>'+reviews+' / '+team.length+'</b></span>'+
+        '<span class="monitor-division-cell monitor-division-concerns" data-label="People w/ concerns"><b>'+concerns+' / '+team.length+'</b></span>'+
         '<span class="monitor-division-arrow" aria-hidden="true">↗</span></button>';
     });
     return '<section class="overview-spotlight monitor-division-section"><div class="overview-section-heading">'+
-      '<div><h2>Division comparison</h2><p>Eight divisions · one consistent read-only snapshot</p></div></div>'+
+      '<div><h2>Division comparison</h2><p>Eight divisions · arithmetic means and per-division people counts</p></div></div>'+
       '<div class="overview-division-rail monitor-division-matrix" aria-label="Division monitoring comparison">'+
       '<div class="monitor-division-head" aria-hidden="true">'+columns.map(function(x){return '<span>'+safe(x)+'</span>';}).join('')+'</div>'+
-      '<div class="monitor-division-list">'+rows.join('')+'</div></div></section>';
+      '<div class="monitor-division-list">'+rows.join('')+'</div></div>'+
+      '<p class="report-source-note">Journey, Kit and KPI values are averages of employee percentages, not combined task totals. Reviews open = Division Head status other than Endorsed. Attendance concerns count affected people, not incidents. Official KPI data is disconnected.</p></section>';
   }
   function overviewStagePanel(){
     const staff=data.employees,stages=data.stages.map(function(stage,i){
@@ -826,26 +829,39 @@
     return header('PERFORMANCE','KPI scorecards','Compare weighted sample scores and open employee scorecard previews.',button('Browse divisions','nav','data-tab="divisions"','small'))+
       '<p class="muted micro tracker-footnote">Weights: Division 15% · Individual 45% · Values 15% · Behavior 25%. Demo scores only.</p>'+trackerRoster('kpi');
   }
-  function reviewStatus(e,k){return e.review[k]&&e.review[k].status||'Pending';}
+  function reviewStatus(e,k){return e.review[k]&&e.review[k].status||'Not recorded';}
   function compensation(e){const base=Number(e.currentBasic)||0,allow=Number(e.currentAllowances)||0,proposal=Number(e.proposedPct)||0,approved=Number(e.approvedPct)||0;return '<div class="money-grid"><div class="money-stat"><span>Current basic salary · demo</span><strong>'+money(base)+'</strong></div><div class="money-stat"><span>Current gross · demo</span><strong>'+money(base+allow)+'</strong></div><div class="money-stat"><span>Proposed increase</span><strong>'+money(base*proposal/100)+' ('+proposal+'%)</strong></div><div class="money-stat"><span>Proposed new gross</span><strong>'+money(base*(1+proposal/100)+allow)+'</strong></div><div class="money-stat"><span>Approved increase</span><strong>'+money(base*approved/100)+' ('+approved+'%)</strong></div><div class="money-stat"><span>Approved new basic</span><strong>'+money(base*(1+approved/100))+'</strong></div><div class="money-stat"><span>Approved new gross</span><strong>'+money(base*(1+approved/100)+allow)+'</strong></div><div class="money-stat"><span>Effectivity date</span><strong>'+dateLabel(e.effectiveDate)+'</strong></div></div>';}
   function reviewFlow(e){
-    const steps=[['division','01','Division Head','KPI and initial review'],['corp','02','Corporate Operations','Organizational endorsement'],['cso','03','CSO','Strategic review'],['coo','04','COO','Final approval']];
-    return '<div class="review-steps">'+steps.map(function(s){
-      const key=s[0],status=reviewStatus(e,key);
-      return '<div class="review-step '+(['Approved','Endorsed'].includes(status)?'complete':'')+'">'+
-        '<div class="step-bubble">'+s[1]+'</div><div><h3>'+safe(s[2])+'</h3><p class="note">'+safe(s[3])+'</p>'+pill(status)+
-        '<p class="muted micro">'+safe(e.review[key].comment||'No sample review note')+'</p>'+
-        (e.review[key].at?'<p class="muted micro">Updated '+safe(dateLabel(e.review[key].at.slice(0,10)))+'</p>':'')+
-        '</div></div>';
-    }).join('')+'</div>';
+    const steps=[
+      ['division','01','Division Head','Initial evaluation'],
+      ['corp','02','Corporate Operations','Organizational endorsement'],
+      ['cso','03','CSO','Strategic review'],
+      ['coo','04','COO','Final decision']
+    ];
+    const completed=steps.filter(function(step){
+      return ['Endorsed','Approved'].includes(reviewStatus(e,step[0]));
+    }).length;
+    return '<section class="review-record-summary" aria-label="Review stage status summary">'+
+      '<strong>'+completed+' / '+steps.length+' stages show an endorsed or approved status</strong>'+
+      '<p>These are current fictional statuses, not evidence of a verified chronological audit trail.</p></section>'+
+      '<div class="table-wrap review-record-table"><table class="table"><thead><tr>'+
+      '<th scope="col">Step</th><th scope="col">Reviewer</th><th scope="col">Recorded status</th>'+
+      '<th scope="col">Recorded date</th><th scope="col">Sample note</th></tr></thead><tbody>'+
+      steps.map(function(step){
+        const record=e.review[step[0]]||{},status=reviewStatus(e,step[0]);
+        const date=record.at?dateLabel(record.at.slice(0,10)):'Not recorded';
+        return '<tr><td>'+step[1]+'</td><th scope="row">'+safe(step[2])+
+          '<small>'+safe(step[3])+'</small></th><td>'+pill(status)+'</td>'+
+          '<td>'+safe(date)+'</td><td>'+safe(record.comment||'No recorded comment')+'</td></tr>';
+      }).join('')+'</tbody></table></div>'+
+      '<p class="report-source-note">Pending is not an endorsement. Dates appear only when provided by the sample record; omitted dates are shown as Not recorded. No live review system is connected.</p>';
   }
-
   function approvalsDetail(e){
     return '<section class="panel reader-review-panel"><div class="panel-head"><div><h2>Review and approval snapshot</h2>'+
-      '<p>Sample review history · No approval actions are available here</p></div>'+pill(reviewStatus(e,'coo'))+'</div>'+
+      '<p>Recorded status at each step · no approval actions here</p></div>'+pill(reviewStatus(e,'coo'))+'</div>'+
       '<p class="muted micro">The original source is responsible for review decisions. The amounts below are fictional.</p>'+
       compensation(e)+'</section>'+
-      '<section class="panel"><div class="panel-head"><div><h2>Review timeline</h2><p>Division Head → Corporate Operations → CSO → COO</p></div></div>'+
+      '<section class="panel"><div class="panel-head"><div><h2>Review status by step</h2><p>Recorded statuses, dates and sample notes; not a verified event timeline</p></div></div>'+
       reviewFlow(e)+'<div class="reader-comments"><div><span class="field-label">Corporate Operations notes</span><p>'+safe(e.comments.corp||'No sample notes')+'</p></div>'+
       '<div><span class="field-label">CSO notes</span><p>'+safe(e.comments.cso||'No sample notes')+'</p></div>'+
       '<div><span class="field-label">COO remarks</span><p>'+safe(e.comments.coo||'No sample notes')+'</p></div>'+
@@ -855,7 +871,7 @@
   function approvalsTable(){return '<section class="panel" style="margin-top:18px"><div class="panel-head"><div><h2>Company-wide review queue</h2><p>Employees in '+safe(scopeLabel())+' and current approval milestones</p></div></div><div class="table-wrap"><table class="table"><thead><tr><th>Employee</th><th>Division</th><th>Division Head</th><th>Corporate Ops</th><th>CSO</th><th>COO</th><th></th></tr></thead><tbody>'+scopedEmployees().map(function(e){return '<tr><td>'+linkedEmployee(e)+'</td><td>'+safe(div(e.division).short)+'</td><td>'+pill(reviewStatus(e,'division'))+'</td><td>'+pill(reviewStatus(e,'corp'))+'</td><td>'+pill(reviewStatus(e,'cso'))+'</td><td>'+pill(reviewStatus(e,'coo'))+'</td><td>'+button('Preview','open','data-id="'+safe(e.id)+'" data-detail="approvals"','small')+'</td></tr>';}).join('')+'</tbody></table></div></section>';}
   function approvalsView(){
     return header('PERFORMANCE','Reviews','Monitor endorsement stages by division. Open an employee for the detailed evaluation and approval history.',button('Browse divisions','nav','data-tab="divisions"','small'))+
-      '<p class="muted micro tracker-footnote">Division Head → Corporate Operations → CSO → COO. All approvals shown are fictional status records; no changes can be submitted here.</p>'+trackerRoster('approvals')+
+      '<p class="muted micro tracker-footnote">Division Head → Corporate Operations → CSO → COO is the configured review order, not proof of chronological completion. All statuses are fictional and read-only.</p>'+trackerRoster('approvals')+
       '<details class="panel compact-details"><summary>See complete review queue</summary>'+approvalsTable()+'</details>';
   }
   function sourcesView(){
@@ -1109,7 +1125,7 @@
       '<footer class="landing-footer"><span>MADHOUSE DESIGN STUDIO</span>'+
       '<span>Fictional data · Demonstration only</span></footer></main></div>';
   }
-  function render(){if(ui.tab==='welcome'){$('app').innerHTML=landingView();document.title='Maddie Journey · Madhouse Design Studio';if(window.MJ_MOTION)window.MJ_MOTION.refresh('welcome');return;}const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,milestones:milestonesView,journey:journey,kit:kitView,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,sources:sourcesView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open ':'')+(ui.sidebarCollapsed?'sidebar-collapsed':'')+'">'+sidebar()+'<button type="button" class="workspace-scrim" aria-label="Close navigation" data-action="mobile"></button><main id="main-content" class="main" tabindex="-1">'+topnav()+(views[ui.tab]||overview)()+'<footer class="footer"><span>Maddie Journey · Prototype v3.0</span><span>Fictional snapshot · No connected sources</span></footer></main></div>'+(ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.employeeModalOpen?employeeModal():'');document.title=title(ui.tab)+' · Maddie Journey';if(window.MJ_MOTION)window.MJ_MOTION.refresh(ui.tab);if(ui.employeeModalOpen||ui.divisionModal||ui.employeePicker){const modal=$('app').querySelector('[role="dialog"]');if(modal&&typeof modal.focus==='function')modal.focus({preventScroll:true});}}
+  function render(){if(ui.tab==='welcome'){$('app').innerHTML=landingView();document.title='Maddie Journey · Madhouse Design Studio';if(window.MJ_MOTION)window.MJ_MOTION.refresh('welcome');return;}const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,milestones:milestonesView,journey:journey,kit:kitView,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,sources:sourcesView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open ':'')+(ui.sidebarCollapsed?'sidebar-collapsed':'')+'">'+sidebar()+'<button type="button" class="workspace-scrim" aria-label="Close navigation" data-action="mobile"></button><main id="main-content" class="main" tabindex="-1">'+topnav()+(views[ui.tab]||overview)()+'<footer class="footer"><span>Maddie Journey · Prototype v3.1</span><span>Fictional snapshot · No connected sources</span></footer></main></div>'+(ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.employeeModalOpen?employeeModal():'');document.title=title(ui.tab)+' · Maddie Journey';if(window.MJ_MOTION)window.MJ_MOTION.refresh(ui.tab);if(ui.employeeModalOpen||ui.divisionModal||ui.employeePicker){const modal=$('app').querySelector('[role="dialog"]');if(modal&&typeof modal.focus==='function')modal.focus({preventScroll:true});}}
   function openDivision(id,view,focusId){
     if(!data.divisions.some(function(d){return d.id===id;}))return;
     ui.scope=id;ui.activeDivision=id;

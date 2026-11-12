@@ -1,6 +1,6 @@
 # Maddie Journey — Prototype Acceptance Checklist
 
-Release: **v3.0**. Scope: **HTML/CSS/vanilla JavaScript + fictional fixture only**.
+Release: **v3.1**. Scope: **HTML/CSS/vanilla JavaScript + fictional fixture only**.
 
 This document distinguishes code-level verification from human visual acceptance. The automated smoke checks confirm the named routing and data contracts but cannot prove pixel-level accuracy on physical Windows, macOS, Android or iOS devices.
 
@@ -19,8 +19,8 @@ This document distinguishes code-level verification from human visual acceptance
 | --- | --- | --- |
 | Dashboard | Overview, Divisions | Four linked metric indicators, verified-attendance snapshot, person-first queue with explicit priority cues, eight-row division comparison, Journey stages and milestones |
 | People | Directory, Milestones | Search, sorting, division filters, visible-only CSV, centered employee modal, milestone categories |
-| Journey | Journey board, Welcome Kit, Attendance | Eight Kanban columns (seven stages + Completed), Table view, division scope, Kit summary, attendance chart and weekly/monthly breakdown |
-| Performance | KPI scorecards, Reviews | Read-only weighted KPI previews, source/validation flags, review timeline, final status summaries |
+| Journey | Journey board, Welcome Kit, Attendance | Seven stages plus Completed with denominators and task counts; scoped Kanban/Table, Kit summary, verified versus pending attendance audit and weekly/monthly reporting |
+| Performance | KPI scorecards, Reviews | Reconciled weighted KPI composition, fictional-only source flags, four-step status/date/comment review table and no inferred approval dates |
 | Data & Sources | Data sources, About the prototype | Five disconnected-provider cards, structural fixture checks, no-login/read-only explanation and handoff policy |
 
 Division detail must expose **Summary / Board / List / Org chart** in one workspace without creating extra top-level sections.
@@ -81,3 +81,11 @@ Automated tests cannot replace these checks; log any remaining visual issue befo
 - Source-specific privacy and data retention policies.
 
 For the intended integration boundary, see [Claude Connector Handoff](CLAUDE_CONNECTORS_HANDOFF.md).
+
+## Phase 4 — Reporting accuracy verification
+
+- **Journey:** Stage counts must sum to the selected employee population. Checklist completed/available totals use every recorded item. First-incomplete-stage grouping must not imply later tasks are uncompleted.
+- **Attendance:** Verified late/absent/leave records and pending verification must reconcile to the fixture. Excused late is counted in late arrivals but not concerns; approved leave is not absence. Missing records are not evidence of perfect attendance.
+- **KPI:** Category weights are 15%, 45%, 15%, 25%. Each raw score contributes raw × weight / 100; the sum must equal the displayed weighted score to two decimal places. Fictional sample flags are not official verification.
+- **Review:** Each reviewer displays their exact recorded status, comment and date if present; missing dates say Not recorded. A configured process order must not be misrepresented as a chronological event log.
+- **Division:** Eight division means are derived from each division's own employees. Review and concern metrics display affected people out of division members and must match the displayed detail lists.

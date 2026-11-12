@@ -1,4 +1,4 @@
-# Maddie Journey — Read-only Prototype v3.0
+# Maddie Journey — Read-only Prototype v3.1
 
 **Madhouse Design Studio · People & Culture**
 
@@ -101,6 +101,16 @@ The final design tokens and overrides are in **mono.css**. New features should u
 - **Accessibility:** Responsive Previous/Next controls, disabled list boundaries, keyboard focus continuity and an origin description. All employee information remains view-only; the app still uses 51 fictional employees, eight divisions and optional Anime.js.
 - **Validation:** Five new workflow regression tests plus the existing full suite. Physical-device visual QA remains pending.
 
+### Phase 4 — v3.1 reporting clarity
+
+- **Seven-stage Journey:** An eight-category first-incomplete-stage table displays person counts and denominators; every task numerator reconciles with the complete selected checklist count. Dashboard stage bars show share of all employees, not scale relative to the largest stage.
+- **Attendance:** Verified/total events, late arrivals, absences, concern entries, affected people, and pending verifications are distinct. The weekly/monthly report shows only periods with recorded verified events and counts excused late and approved leave separately. No attendance records never imply perfect attendance.
+- **KPI:** A single formula powers every weighted score. The composition table exposes 15/45/15/25 weights, raw scores, weighted contribution points and a reconciled total. All source/validation flags remain fictional, not official provider verification.
+- **Reviews:** A four-step status table displays only recorded statuses, existing dates and comments. The routing order is not represented as a verified chronology; missing dates remain Not recorded.
+- **Divisions:** Eight rows now include KPI mean, employee percentages, and explicit denominators for pending reviews and affected people. Calculations use the same fixture and employee cohort across screens.
+- **Read-only contract:** 51 fictional employees, eight divisions, all original routes and optional motion preserved. No fabricated historical trends, official statuses, sync timestamps, data mutations or connector credentials.
+- **Verification:** 51 dependency-free smoke tests, with attendance-classification, KPI arithmetic, Journey aggregation, review status and division cohort consistency assertions. Manual device visual QA remains separate.
+
 ### Seven-stage Journey
 
 The Journey monitoring screen contains **seven stages plus Completed**, with one card per employee grouped by the first incomplete stage. The Board scrolls horizontally; Table view shows all matching members and aggregate progress. All status rows are non-editable.
@@ -124,7 +134,7 @@ The later connected-account phase can implement source normalization against the
 - Open index.html in a modern browser or use VS Code Live Server.
 - Run: node tests/smoke.js
 - On main, the custom GitHub Actions validation workflow runs the regression tests. Anime.js and the Inter web font are optional third-party CDN resources; UI navigation and sample data do not depend on their availability. GitHub Pages uses its separate publishing workflow.
-- Confirm both test and Pages workflow statuses under GitHub Actions. The automated suite currently includes 45 cases; physical Windows/macOS/Android/iOS visual acceptance remains separate.
+- Confirm both test and Pages workflow statuses under GitHub Actions. The automated suite currently includes 51 cases; physical Windows/macOS/Android/iOS visual acceptance remains separate.
 
 ## Source files
 
@@ -139,7 +149,7 @@ The later connected-account phase can implement source normalization against the
 | landing.css | Landing page and source photo |
 | workspace.css / reader.css | Global workspace, primary/secondary navigation and read-only views |
 | refined.css | Dashboard metrics, searchable directory, source quality panel and responsive summaries |
-| mono.css | **v3.0 canonical styles:** shared UI tokens, neutral Light/Dark modes, contextual employee viewer, full-viewport landing and responsive comparison matrix |
+| mono.css | **v3.1 canonical styles:** shared UI tokens, monochrome system, contextual employee viewer, reporting tables and responsive division comparisons |
 | motion.js | Reduced-motion-aware, nonessential Anime.js entrance transitions |
 | tests/smoke.js | Regression tests for navigation, adapters, fixtures and read-only operation |
 | docs/CLAUDE_CONNECTORS_HANDOFF.md | Future connector development instructions |
