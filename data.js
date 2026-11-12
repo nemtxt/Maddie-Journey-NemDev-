@@ -6,8 +6,8 @@
     { id:'design', name:'Design Division', short:'Design', evaluators:['aj'] },
     { id:'corp', name:'Corporate Operations', short:'Corp Ops', evaluators:['renato','zsarina'] },
     { id:'media', name:'Media', short:'Media', evaluators:['michelle'] },
-    { id:'it', name:'IT', short:'IT', evaluators:['inigo'] },
-    { id:'gencon', name:'GenCon', short:'GenCon', evaluators:['inigo'] },
+    { id:'it', name:'IT', short:'IT', evaluators:['inigo-evaluator'] },
+    { id:'gencon', name:'GenCon', short:'GenCon', evaluators:['inigo-evaluator'] },
     { id:'bd', name:'Business Development', short:'Business Dev', evaluators:['cristine'] }
   ];
   const viewers = [
@@ -18,7 +18,8 @@
     {id:'renato',name:'RENATO RENDON',title:'Corporate Operations Head',role:'corp',divisions:['corp']},
     {id:'zsarina',name:'ZSARINA MAE LACUMBA',title:'Corporate Operations Head',role:'corp',divisions:['corp']},
     {id:'michelle',name:'MICHELLE OROCIO',title:'Media Manager',role:'head',divisions:['media']},
-    {id:'inigo',name:'INIGO ARELLANO',title:'COO · IT & GenCon',role:'coo',divisions:['it','gencon']},
+    {id:'inigo',name:'INIGO ARELLANO',title:'COO · Observer (all divisions)',role:'coo'},
+    {id:'inigo-evaluator',name:'INIGO ARELLANO',title:'Division Head · IT & GenCon evaluator',role:'head',divisions:['it','gencon']},
     {id:'cristine',name:'MA. CRISTINE ORTIZ',title:'Business Development Head',role:'head',divisions:['bd']},
     {id:'ceo',name:'CEO (DEMO ROLE)',title:'Executive · Monitoring',role:'ceo'},
     {id:'cso',name:'CSO (DEMO ROLE)',title:'Executive · Strategic Review',role:'cso'}
