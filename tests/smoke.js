@@ -1828,10 +1828,19 @@ check('Phase 10 division chooser and employee picker isolate their read-only bac
   assert(ctx.html().includes('inert aria-hidden="true"><aside'));
   assert(ctx.html().includes('role="dialog" aria-modal="true"'));
   ctx.click('close');
+  const before=JSON.stringify(ctx.win.MJ_SEED.employees);
   ctx.click('choose-employee');
   assert(ctx.html().includes('inert aria-hidden="true"><aside'));
-  ctx.click('close');
+  assert(ctx.html().includes('class="workspace-modal compact-modal member-picker-modal"'));
+  assert(ctx.html().includes('data-action="picker-division"'));
+  assert(ctx.html().includes('data-action="pick-member"'));
+  const division=ctx.win.MJ_SEED.divisions[1].id;
+  ctx.click('picker-division',{division});
+  const person=ctx.win.MJ_SEED.employees.find(e=>e.division===division);
+  assert(person);
+  ctx.click('pick-member',{id:person.id});
   assert(!ctx.html().includes('inert aria-hidden="true"'));
+  assert.equal(JSON.stringify(ctx.win.MJ_SEED.employees),before);
 });
 check('Phase 10 open mobile drawer survives mobile resize but closes at desktop breakpoint',()=>{
   let desktop=false;

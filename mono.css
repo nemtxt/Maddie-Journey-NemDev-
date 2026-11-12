@@ -2212,3 +2212,29 @@ body .employee-modal-tabs[role="tablist"] .employee-tab{scroll-margin-inline:16p
     outline-offset:-3px;box-shadow:none
   }
 }
+
+/* Restored source-neutral read-only person picker uses the canonical theme. */
+body .member-picker-modal .picker-department,
+body .member-picker-modal .picker-person{
+  color:var(--mono-text);background:var(--mono-surface);
+  border-color:var(--mono-border);min-width:0
+}
+body .member-picker-modal .picker-person-info{min-width:0;text-align:left}
+body .member-picker-modal .picker-person-info small{color:var(--mono-secondary)}
+body .member-picker-modal .picker-department.active{
+  color:var(--mono-text);background:var(--mono-soft);
+  border-color:var(--mj-focus-accent)
+}
+body .member-picker-modal .picker-department:hover,
+body .member-picker-modal .picker-person:hover{
+  color:var(--mono-text);background:var(--mono-hover);
+  border-color:var(--mj-focus-accent)
+}
+body .member-picker-modal .picker-person-score .ui-icon{width:16px;height:16px}
+@media(max-width:380px){
+  body .member-picker-modal .picker-person{gap:8px;padding:10px}
+  body .member-picker-modal .picker-person-info small{white-space:normal;overflow-wrap:anywhere}
+}
+@media(forced-colors:active){
+  body .member-picker-modal .picker-department.active{outline:2px solid Highlight;outline-offset:-2px}
+}

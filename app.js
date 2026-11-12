@@ -1216,6 +1216,27 @@
       '<section class="panel"><h3>Disciplinary actions</h3>'+recordListHTML(e,'discipline')+'</section></div>';
   }
 
+  // Source-neutral employee selector: fictional, view-only and limited to a division.
+  function memberPickerModal(){
+    const chosen=data.divisions.some(function(d){return d.id===ui.pickerDivision;})?
+      ui.pickerDivision:data.divisions[0].id;
+    const team=data.employees.filter(function(e){return e.division===chosen;})
+      .slice().sort(function(a,b){return a.name.localeCompare(b.name);});
+    return '<div class="overlay center-overlay" data-overlay="picker">'+
+      '<section class="workspace-modal compact-modal member-picker-modal" role="dialog" aria-modal="true" aria-labelledby="member-picker-title" tabindex="-1">'+
+      '<div class="modal-fixed-head"><div><span class="eyebrow">FICTIONAL EMPLOYEE DIRECTORY</span>'+ 
+      '<h2 id="member-picker-title">Choose an employee</h2><p>Read-only sample records. No employee data will be changed.</p></div>'+ 
+      '<button type="button" class="modal-close" data-action="close" aria-label="Close employee chooser">'+landingIcon('x')+'</button></div>'+ 
+      '<div class="workspace-modal-scroll"><div class="picker-department-buttons" role="group" aria-label="Choose division">'+
+      data.divisions.map(function(d){return '<button type="button" class="picker-department '+(d.id===chosen?'active':'')+'"' +
+        ' data-action="picker-division" data-division="'+safe(d.id)+'" aria-pressed="'+(d.id===chosen?'true':'false')+'">'+
+        safe(d.short||d.name)+'</button>';}).join('')+'</div>'+ 
+      '<div class="picker-list-title"><strong>'+safe(div(chosen).name)+'</strong><span>'+team.length+' fictional people</span></div>'+ 
+      '<div class="picker-employee-list">'+team.map(function(e){return '<button type="button" class="picker-person" data-action="pick-member" data-id="'+safe(e.id)+'">'+
+        avatar(e.name)+'<span class="picker-person-info"><b>'+safe(e.name)+'</b><small>'+safe(e.jobTitle)+' · '+safe(e.id)+'</small></span>'+ 
+        '<span class="picker-person-score" aria-hidden="true">'+landingIcon('arrow-right')+'</span></button>';}).join('')+
+      '</div></div></section></div>';
+  }
   function divisionPickerModal(){
     const scoped=ui.divisionPickerMode==='scope',milestone=ui.divisionPickerMode==='milestone';
     const local=scoped||milestone,selected=milestone?ui.milestoneDivision:ui.scope;

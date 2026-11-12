@@ -8,6 +8,7 @@
 
 | Code correction | Expected outcome | Automated evidence |
 | --- | --- | --- |
+| Functional person picker | The existing choose-employee action opens a real read-only division-scoped list and returns to the monitoring view without writes | Simulated picker and selection regression |
 | Inert background for centered dialogs | Employee, division and employee-picker previews do not expose the underlying workspace to sequential keyboard or AT navigation | Modal HTML isolation and cleanup checks |
 | Mobile-to-desktop breakpoint recovery | An open mobile drawer closes when crossing 761px and unlocks the workspace | Simulated resize checks on both sides of breakpoint |
 | Employee tab Home/End | Home selects Overview and End selects Profile, with aria-selected and panel label updated | Simulated keydown against nine tabs |

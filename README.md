@@ -30,6 +30,7 @@ All 13 screens are available to anyone using the fictional sample prototype. On 
 
 ### Phase 10 — v3.7 responsive and accessibility stabilization
 
+- **Restored read-only picker:** Repaired an unimplemented employee-selection modal discovered by the Phase 10 tests; it lists existing fictional employees by division without editing records. The picker reuses the existing action handlers and local SVG icons.
 - **Dialog isolation:** Employee, division and person-picker dialogs now mark the underlying workspace inert and hidden from assistive technology while the dialog is open. Closing restores the same source filters and source control focus.
 - **Viewport transitions:** An open mobile navigation drawer automatically dismisses when the viewport crosses to desktop at 761px, preventing an invisible modal drawer from leaving the monitoring workspace inert.
 - **Employee section keyboard navigation:** The nine existing tabs now support Home/End in addition to Left/Right and focus the selected tab while scrolling it into the nearest visible section of the horizontal strip.
