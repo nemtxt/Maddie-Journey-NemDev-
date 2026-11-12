@@ -1239,3 +1239,229 @@ body .data-error-card .data-error-footnote{
 body .layout{transition:grid-template-columns .16s ease}
 @media(max-width:760px){body .layout{transition:none}}
 @media(prefers-reduced-motion:reduce){body .layout{transition:none!important}}
+
+
+/* Additional operational monitors · 201 Files + three-month Calendar.
+   Inter, white/black surfaces, single pink emphasis. No animated data rows. */
+body .monitor-provenance{
+  background:var(--mono-soft);color:var(--mono-secondary);
+  padding:14px 17px;margin:0 0 16px;border:1px solid var(--mono-border);
+  border-left:3px solid var(--mono-accent);border-radius:10px;
+  font-size:12px;line-height:1.6
+}
+body .monitor-provenance strong{color:var(--mono-text)}
+body .monitor-documents,body .monitor-missing{padding:var(--mj-space-5);margin-bottom:18px}
+body .monitor-documents .panel-head,body .monitor-missing .panel-head{
+  flex-wrap:wrap;gap:10px
+}
+body .monitor-section-note{font-size:11px;color:var(--mono-secondary);line-height:1.5}
+body .monitor-files-grid{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px
+}
+body .monitor-file-card{
+  display:flex;flex-direction:column;gap:9px;min-width:0;
+  border:1px solid var(--mono-border);background:var(--mono-surface);
+  padding:17px 16px 13px;border-radius:11px
+}
+body .monitor-file-type{
+  color:var(--mono-secondary);font-size:10px;letter-spacing:.07em;
+  font-weight:700;text-transform:uppercase
+}
+body .monitor-file-card h3{
+  font-size:13px;line-height:1.4;letter-spacing:-.015em;
+  font-weight:710;overflow-wrap:anywhere;flex:1
+}
+body .monitor-file-card>strong{
+  font-size:26px;font-weight:760;letter-spacing:-.05em;
+  line-height:1.18;font-variant-numeric:tabular-nums
+}
+body .monitor-file-card>strong small{
+  font-size:11px;font-weight:570;letter-spacing:0;color:var(--mono-secondary)
+}
+body .monitor-file-counts{
+  display:flex;flex-wrap:wrap;gap:5px;padding-top:11px;
+  border-top:1px solid var(--mono-border)
+}
+body .monitor-file-counts span{
+  color:var(--mono-secondary);background:var(--mono-soft);
+  font-size:10px;padding:5px 7px;border-radius:6px;line-height:1.35
+}
+body .monitor-filterbar,body .monitor-calendar-typebar{
+  display:flex;gap:7px;flex-wrap:wrap;margin:0 0 15px
+}
+body .monitor-filter{
+  appearance:none;-webkit-appearance:none;
+  min-height:42px;padding:8px 12px;border:1px solid var(--mono-border);
+  border-radius:8px;background:var(--mono-surface);color:var(--mono-secondary);
+  cursor:pointer;font-size:11px;font-weight:680;
+  transition:background-color .14s ease,border-color .14s ease
+}
+body .monitor-filter b{padding-left:5px;font-size:10px;font-variant-numeric:tabular-nums}
+body .monitor-filter:hover{background:var(--mono-hover)}
+body .monitor-filter.active{
+  background:var(--mono-tint);border-color:var(--mono-accent);color:var(--mono-accent)
+}
+body .monitor-files-table{min-width:710px}
+body .monitor-files-table th:first-child{min-width:170px}
+body .monitor-files-table th:first-child strong{font-size:12px;display:block}
+body .monitor-files-table th:first-child small{
+  font-size:10px;font-weight:500;display:block;color:var(--mono-secondary)
+}
+body .monitor-files-table td{vertical-align:middle}
+body .monitor-file-requirements{
+  min-width:245px;max-width:500px;white-space:normal;
+  overflow-wrap:anywhere;line-height:1.5
+}
+body .monitor-file-status{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:91px;padding:6px 9px;border:1px solid var(--mono-border);
+  border-radius:7px;background:var(--mono-soft);color:var(--mono-secondary);
+  font-size:10px;font-weight:700;white-space:nowrap
+}
+body .monitor-file-missing{
+  color:var(--mono-accent);border-color:var(--mono-accent);background:var(--mono-tint)
+}
+body .monitor-list-footer{padding:16px 0 0;display:flex;justify-content:center}
+body .monitor-person-documents{padding:var(--mj-space-5)}
+body .monitor-file-detail-table{min-width:430px}
+body .monitor-file-detail-table th[scope="row"]{font-size:12px}
+body .monitor-calendar-workspace{min-width:0}
+body .monitor-calendar-toolbar{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:15px;flex-wrap:wrap;margin:0 0 15px
+}
+body .monitor-calendar-toolbar h2{
+  font-size:17px;letter-spacing:-.035em;line-height:1.25
+}
+body .monitor-calendar-toolbar p{
+  color:var(--mono-secondary);font-size:11px;line-height:1.5;margin:4px 0 0
+}
+body .monitor-calendar-controls{
+  display:flex;align-items:center;gap:7px;flex-wrap:wrap
+}
+body .monitor-calendar-controls .button{min-height:42px;white-space:nowrap}
+body .monitor-calendar-three{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  align-items:stretch;gap:12px
+}
+body .monitor-calendar-month{
+  background:var(--mono-soft)!important;
+  padding:16px!important;min-width:0;border-radius:14px;
+}
+body .monitor-calendar-month-heading{
+  display:flex;justify-content:space-between;align-items:center;
+  gap:8px;margin:0 0 12px
+}
+body .monitor-calendar-month-heading h2{
+  font-size:15px;line-height:1.25;letter-spacing:-.025em;
+  overflow-wrap:anywhere
+}
+body .monitor-calendar-month-heading>span{
+  font-size:10px;white-space:nowrap;line-height:1.3;font-weight:750;
+  padding:4px 8px;border-radius:50px;color:var(--mono-bg);
+  background:var(--mono-text);font-variant-numeric:tabular-nums
+}
+body .monitor-calendar-weekdays,body .monitor-calendar-grid{
+  display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px
+}
+body .monitor-calendar-weekdays{margin-bottom:5px}
+body .monitor-calendar-weekdays>span{
+  text-align:center;font-size:10px;color:var(--mono-secondary);
+  font-weight:700;padding:4px 0
+}
+body .monitor-calendar-date,body .monitor-calendar-empty{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;min-width:0;height:42px;
+  border:1px solid transparent;border-radius:7px;
+  color:var(--mono-text);background:var(--mono-surface);
+  font-size:11px;line-height:1.1;font-weight:680
+}
+body .monitor-calendar-empty{background:transparent}
+body button.monitor-calendar-date{
+  border-color:var(--mono-border);cursor:pointer;
+  padding:2px 0;min-height:42px;width:100%
+}
+body button.monitor-calendar-date:hover{background:var(--mono-hover)}
+body .monitor-calendar-date.today{
+  outline:2px solid var(--mono-accent);outline-offset:-2px
+}
+body button.monitor-calendar-date.selected{
+  border-color:var(--mono-accent);color:var(--mono-accent);
+  background:var(--mono-tint)
+}
+body .monitor-calendar-dots{
+  display:flex;justify-content:center;align-items:center;gap:3px;height:5px
+}
+body .monitor-calendar-dot{
+  display:inline-block;width:4px;height:4px;border-radius:50%;
+  background:var(--mono-secondary)
+}
+body .monitor-calendar-dot.type-checkin,
+body .monitor-calendar-dot.type-employment{background:var(--mono-accent)}
+body .monitor-calendar-month-summary{
+  display:flex;flex-wrap:wrap;gap:5px;margin:12px 0 0;padding:0 0 12px;
+  min-height:32px;border-bottom:1px dashed var(--mono-border)
+}
+body .monitor-calendar-month-summary>span{
+  color:var(--mono-secondary);background:var(--mono-surface);
+  border:1px solid var(--mono-border);border-radius:6px;
+  padding:4px 6px;font-size:10px;line-height:1.2
+}
+body .monitor-calendar-events{margin-top:12px}
+body .monitor-calendar-events-heading{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:6px;margin-bottom:5px
+}
+body .monitor-calendar-events-heading strong{
+  font-size:11px;line-height:1.35;color:var(--mono-text)
+}
+body .monitor-calendar-event{
+  display:grid;grid-template-columns:44px minmax(0,1fr) 12px;
+  align-items:center;text-align:left;gap:8px;width:100%;min-height:46px;
+  padding:8px 3px;background:transparent;border:0;
+  border-bottom:1px solid var(--mono-border);color:var(--mono-text);
+  cursor:pointer
+}
+body .monitor-calendar-event:hover{background:var(--mono-hover)}
+body .monitor-calendar-event time{
+  font-size:10px;font-weight:690;white-space:nowrap;
+  color:var(--mono-secondary);font-variant-numeric:tabular-nums
+}
+body .monitor-calendar-event>span:nth-child(2){min-width:0}
+body .monitor-calendar-event b{
+  font-size:11px;display:block;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap
+}
+body .monitor-calendar-event small{
+  display:block;color:var(--mono-secondary);
+  font-size:10px;line-height:1.5;overflow-wrap:anywhere
+}
+body .monitor-calendar-event>span:last-child{
+  font-size:14px;color:var(--mono-accent)
+}
+body .monitor-calendar-more{margin-top:9px;width:100%}
+body .monitor-calendar-empty-message{
+  font-size:11px;color:var(--mono-secondary);padding:12px 0
+}
+body .monitor-calendar-workspace>.report-source-note{margin:18px 0}
+@media(max-width:1180px){
+  body .monitor-files-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  body .monitor-calendar-three{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:760px){
+  body .monitor-files-grid,body .monitor-calendar-three{grid-template-columns:minmax(0,1fr)}
+  body .monitor-documents,body .monitor-missing,body .monitor-person-documents{padding:var(--mj-space-4)}
+  body .monitor-calendar-month{padding:12px!important}
+  body .monitor-calendar-controls{width:100%}
+  body .monitor-filter{min-height:44px}
+  body button.monitor-calendar-date{min-height:42px}
+}
+@media(max-width:350px){
+  body .monitor-calendar-month{padding:10px!important}
+  body .monitor-calendar-weekdays,body .monitor-calendar-grid{gap:2px}
+  body .monitor-calendar-date,body .monitor-calendar-empty{height:38px}
+  body .monitor-calendar-controls .button{font-size:10px;padding:8px 9px}
+}
+@media(prefers-reduced-motion:reduce){
+  body .monitor-filter{transition:none}
+}
