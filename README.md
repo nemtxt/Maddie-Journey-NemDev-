@@ -1,4 +1,4 @@
-# Maddie Journey · Static Prototype v1.2
+# Maddie Journey · Static Prototype v1.3
 
 An editable **51-employee demonstration** for the Madhouse People & Culture team. Built using **HTML, CSS and vanilla JavaScript**, with no build tools, subscriptions, Airtable, Firebase, Supabase or paid hosting required.
 
@@ -15,8 +15,8 @@ https://nemtxt.github.io/Maddie-Journey-NemDev-/
 ## What is included
 
 - **Overview:** company-wide metrics, division progress, pending reviews, attendance indicators and one-click access to assigned evaluator departments.
-- **Divisions:** seven separate evaluator workspaces, each using concise employee cards with **Preview charts** and **Open evaluation** buttons. A Change division button opens a department selection popup. Direct routes use #division/rmd, #division/design, #division/corp, #division/media, #division/it, #division/gencon and #division/bd.
-- **Employees:** 51 local demonstration records distributed across seven divisions. HR can modify profile details; other roles view them.
+- **Divisions:** eight separate evaluator workspaces, each using concise employee cards with **Preview charts** and **Open evaluation** buttons. A Change division button opens a department selection popup. Direct routes use #division/rmd, #division/design, #division/designops, #division/corp, #division/media, #division/it, #division/gencon and #division/bd.
+- **Employees:** 51 local demonstration records distributed across eight divisions. HR can modify profile details; other roles view them.
 - **Journey:** Stage 1 onboarding and documentation, Stage 2 orientation and immersion, and Stages 3–7.
 - **Welcome Maddie Kit:** equipment, AI software, email, messaging and community access, with notes and individual completion checklists.
 - **Attendance:** individual late/absent/leave entries, verification, approved/excused/unapproved distinction, rankings and trends.
@@ -25,7 +25,7 @@ https://nemtxt.github.io/Maddie-Journey-NemDev-/
 - **Activity & data:** local audit log, CSV/JSON exports, JSON backup import and reset.
 - **Screen summaries:** each workspace and each division screen displays four computed sample-data metrics; employee profiles include a compact personal summary.
 - **Employee preview popup:** centered responsive modal with a weighted KPI donut, 4 KPI category bars, 7-stage onboarding chart, recent verified attendance chart, Welcome Kit progress and review status. Buttons lead to KPI, journey, kit, attendance, review and HR-editable profile screens without navigating away.
-- **Employee chooser popup:** replaces the previous long 51-name dropdown with seven easy department filter buttons and an individual employee Select action. The full directory remains available.
+- **Employee chooser popup:** replaces the previous long 51-name dropdown with eight easy department filter buttons and an individual employee Select action. The full directory remains available.
 - **Separate HR and Division Head landing pages:** quick entry into relevant tasks and assigned members. Executive observers retain an organization-wide summary view.
 
 ## Evaluator and role demo
@@ -37,6 +37,7 @@ Use the **Switch Workspace button** in the upper-right corner (or the sidebar) t
 | People & Culture (HR) | GIEZELLE; KURT |
 | Revenue Management Division | TRIZIA BALDOVI — Chief Experience Officer |
 | Design Division | AR. AJ TRABADO — Design Operations Manager |
+| Design Operations | AR. AJ TRABADO — Design Operations Manager |
 | Corporate Operations | RENATO RENDON; ZSARINA MAE LACUMBA |
 | Media | MICHELLE OROCIO — Media Manager |
 | IT | INIGO ARELLANO — COO |
@@ -49,7 +50,7 @@ The **CEO** and **CSO** also have generic role-preview entries; their actual nam
 
 | Role preview | Accessible data and demo actions |
 | --- | --- |
-| **CEO / CSO / COO observer** | View company-wide metrics, all seven divisions, employee report cards and evaluation/approval status; **no edits or approvals** in this version |
+| **CEO / CSO / COO observer** | View company-wide metrics, all eight divisions, employee report cards and evaluation/approval status; **no edits or approvals** in this version |
 | **People & Culture / HR: GIEZELLE or KURT** | Maintain employee profiles, onboarding and Welcome Kit, attendance verification, KPI Values Alignment (15%) and Job Behavior (25%) |
 | **Assigned Division Head** | Open their department evaluation desk; update assigned employees' Division Objectives (15%), Individual Objectives (45%), sample targets and salary proposals; submit division evaluation |
 | **Corporate Operations: RENATO or ZSARINA** | Assigned Corporate Operations scoring and executive workflow endorsement demonstration |
@@ -61,7 +62,7 @@ Changing any evaluated KPI, objective, compensation proposal or an employee's di
 
 ### Initial demonstration data
 
-Fresh or reset data has 51 fictional employee records across seven divisions. A few evaluations include staged fictional approvals for executive dashboard previews. If you opened an earlier build in the same browser, existing local edits and statuses are retained; use **Activity & data → Reset 51 sample employees** only if you want the new sample fixtures, because reset clears previous local changes.
+Fresh or reset data has 51 fictional employee records across eight divisions, including staged demo evaluations. Old browser data is migrated when possible without resetting its previous edits. Reset only if you want to replace the data with the newest fresh sample fixtures; that clears local changes.
 
 
 ## Quick start: user workflow
@@ -75,12 +76,28 @@ Use **Escape**, the **×** close button, or click the shaded backdrop to dismiss
 
 Existing local browser changes remain after code updates. To load newly added sample review scenarios, export any important JSON backup first, then use **Activity & data → Reset 51 sample employees**; reset clears previous local changes.
 
+
+## v1.3: Eight divisions and consistent center-screen dialogs
+
+This update retains **51 fictional employees** while separating **Design Division** and **Design Operations** into different tracker groups. Both use the provided evaluator **AR. AJ TRABADO** because no distinct Design Operations evaluator was supplied. The other seven assignments remain unchanged.
+
+**Use the department scope button** at the top of the page to choose **All 8 divisions** or any specific department. This single selection is used consistently by the Employees directory, 7-stage Journey tracker, Welcome Maddie Kit tracker, verified Attendance trends and rankings, KPI evaluations, executive approval queue, activity log and the relevant CSV exports.
+
+- **All-divisions tracker:** eight department-level summary rows and buttons to open the selected department.
+- **Single-division tracker:** individual employee progress rows and direct actions to open the appropriate employee section.
+- **Center-screen modals:** employee chart preview, HR attendance entry/edit, role chooser, department picker and employee picker now share a centered responsive dialog pattern. The previous right-side attendance editor is gone.
+- **On refresh:** the selected division scope is restored in the same browser session. Department routes also restore their scope when loaded directly.
+- **Existing sample data:** legacy v3 browser data (51 employees) is accepted. Untouched fictional employees previously in Design are partially moved to Design Operations; profiles with previous edits retain their division assignment. No KPI, comments, compensation or attendance records are discarded. Version-3 JSON backups can also be imported.
+- **Resetting is optional:** reset creates the fresh v4 51-person, eight-division demo. Back up locally modified information with **Activity & data → Export all data (JSON)** before resetting.
+
+This is a local browser prototype. **Switch Workspace is not secure authentication**, and edits are not synced to GitHub or other people's browsers.
+
 ## Important: demo restrictions
 
 - **All 51 employee profiles, attendance entries, salary amounts, targets and KPI scores are fictional.** They must not be used for real employee assessments or compensation decisions.
 - Employee KPI figures are **not official 2026 records**. Missing official KPI links are intentionally marked for validation.
 - Changes are stored only in this browser's localStorage. **They do not sync across devices, users or GitHub.** Export JSON backups to move demo changes to another browser.
-- The role selector models who can edit what in the interface, but does **not** provide backend authorization. Anyone who accesses the page can switch demo roles.
+- The workspace chooser models who can edit what in the interface, but does **not** provide backend authorization. Anyone who accesses the page can switch demo roles.
 - **Do not store actual employee personal information, salary data, passwords, API keys, private Airtable URLs or confidential documents** in this public repository or prototype.
 - GitHub Pages hosts static files; actual multi-user collaboration, secure access permissions, attendance verification, sensitive HR records and server-side audit logs will require a properly secured backend and authentication.
 
