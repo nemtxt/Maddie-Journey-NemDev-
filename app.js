@@ -208,12 +208,12 @@
       '<section class="division-grid">'+sorted.map(divisionCard).join('')+'</section>';
   }
   function employeeCard(e){
-    const edit=roleCanHead(e)||isHR(),pct=score(e);
+    const pct=score(e);
     return '<article class="member-card"><div class="member-card-head">'+avatar(e.name)+'<div class="member-identity"><h3>'+safe(e.name)+'</h3><p>'+safe(e.jobTitle)+'</p></div>'+pill(reviewStatus(e,'division'))+'</div>'+
       '<div class="member-score-row"><span><small>Overall KPI</small><strong>'+pct.toFixed(1)+'%</strong></span><span><small>Onboarding</small><strong>'+journeyPct(e)+'%</strong></span><span><small>Welcome Kit</small><strong>'+kitPct(e)+'%</strong></span></div>'+
       '<div class="member-card-progress">'+progress(journeyPct(e))+'</div>'+
       '<div class="member-card-buttons">'+button('Preview charts','open','data-id="'+safe(e.id)+'" data-detail="preview"','small')+
-      button(edit?'Open evaluation':'View KPI','open','data-id="'+safe(e.id)+'" data-detail="kpi"','small primary')+'</div></article>';
+      button('View KPI','open','data-id="'+safe(e.id)+'" data-detail="kpi"','small primary')+'</div></article>';
   }
   function divisionStage(e){
     const journey=journeyPct(e),kit=kitPct(e),review=reviewStatus(e,'division');
@@ -422,7 +422,7 @@
 
   function employeeSelector(){ensureEmployeeScope();const e=emp();return '<label class="field-label">Selected employee</label><button type="button" class="employee-picker-trigger" data-action="choose-employee" aria-haspopup="dialog" aria-label="Choose an employee">'+avatar(e.name)+'<span><b>'+safe(e.name)+'</b><small>'+safe(div(e.division).short)+' · '+safe(e.id)+'</small></span><strong>Change member ↗</strong></button>';}
   function journey(){
-    return header('ONBOARDING','Journey tracker','Select a department, then open an employee to update their seven-stage checklist.',button('Browse divisions','nav','data-tab="divisions"','small'))+
+    return header('ONBOARDING','Journey tracker','Explore the seven-stage onboarding board and open an employee to inspect their progress.',button('Browse divisions','nav','data-tab="divisions"','small'))+
       trackerRoster('journey');
   }
   function kitSection(e){
@@ -458,7 +458,7 @@
   function rankRows(type){const ranked=scopedEmployees().map(function(e){return {e:e,n:attend(e)[type]};}).filter(function(v){return v.n>0;}).sort(function(a,b){return b.n-a.n;}).slice(0,5);return ranked.length?ranked.map(function(v,i){return '<div class="rank"><span class="rank-index">'+(i+1)+'</span><div><b>'+linkedEmployee(v.e)+'</b><p class="muted micro">'+safe(div(v.e.division).short)+'</p></div><span class="count">'+v.n+'</span></div>';}).join(''):'<p class="muted">No verified entries</p>';}
   function attendancePeriodTable(){const buckets={};scopedEmployees().forEach(function(e){e.attendance.forEach(function(r){if(!r.verified)return;let period=r.date.slice(0,7);if(ui.frequency==='weekly'){const d=new Date(r.date+'T00:00:00Z');d.setUTCDate(d.getUTCDate()-((d.getUTCDay()+6)%7));period=d.toISOString().slice(0,10);}if(!buckets[period])buckets[period]={late:0,absent:0,approved:0,excused:0};if(r.type==='Late'){buckets[period].late++;if(r.approval==='Excused')buckets[period].excused++;}if(r.type==='Absent')buckets[period].absent++;if(r.type==='Leave'&&r.approval==='Approved')buckets[period].approved++;});});const keys=Object.keys(buckets).sort().reverse().slice(0,12);return '<section class="panel" style="margin-top:17px"><div class="panel-head"><div><h2>Weekly & monthly summary</h2><p>Verified records only; approved leave and excused lateness are displayed separately</p></div><select class="field" style="max-width:150px" aria-label="Attendance summary frequency" data-ui="frequency">'+opts([{value:'weekly',label:'Weekly'},{value:'monthly',label:'Monthly'}],ui.frequency)+'</select></div><div class="table-wrap"><table class="table"><thead><tr><th>Period</th><th>Late arrivals</th><th>Absences</th><th>Excused lates</th><th>Approved leaves</th></tr></thead><tbody>'+(keys.length?keys.map(function(k){const b=buckets[k];return '<tr><td><strong>'+safe(k)+'</strong></td><td>'+b.late+'</td><td>'+b.absent+'</td><td>'+b.excused+'</td><td>'+b.approved+'</td></tr>';}).join(''):'<tr><td colspan="5">No verified records for this frequency.</td></tr>')+'</tbody></table></div></section>';}
   function attendanceView(){
-    return header('ATTENDANCE','Attendance monitoring','Verified incidents, monthly trends and individual records. Open an employee to enter or verify attendance.',button('Export attendance','attendance-csv','','small'))+
+    return header('ATTENDANCE','Attendance monitoring','Verified incidents, monthly trends and individual recorded entries. All information is view-only.',button('Export attendance','attendance-csv','','small'))+
       '<section class="panel attendance-trend-panel"><div class="panel-head"><div><h2>Recent attendance</h2><p>Verified late arrivals and absences · last six months</p></div></div>'+chart()+'</section>'+
       trackerRoster('attendance')+
       '<details class="panel compact-details"><summary>See late and absence rankings</summary><div class="grid subgrid" style="margin-top:18px"><div><h3>Late arrivals</h3>'+rankRows('lates')+'</div><div><h3>Absences</h3>'+rankRows('absences')+'</div></div></details>';
@@ -495,7 +495,7 @@
   }
 
   function kpiView(){
-    return header('PERFORMANCE','KPI scorecards','Choose a department, then open an employee for the weighted evaluation form.',button('Browse divisions','nav','data-tab="divisions"','small'))+
+    return header('PERFORMANCE','KPI scorecards','Compare weighted sample scores and open employee scorecard previews.',button('Browse divisions','nav','data-tab="divisions"','small'))+
       '<p class="muted micro tracker-footnote">Weights: Division 15% · Individual 45% · Values 15% · Behavior 25%. Demo scores only.</p>'+trackerRoster('kpi');
   }
   function reviewStatus(e,k){return e.review[k]&&e.review[k].status||'Pending';}
@@ -552,7 +552,7 @@
       '<p class="muted micro">Do not put passwords, API tokens or confidential HR records in this public repository or GitHub Pages.</p></section>';
   }
   function activity(){const logs=[];scopedEmployees().forEach(function(e){(e.audit||[]).forEach(function(a){logs.push({date:a.date,employee:e.name,actor:a.actor,action:a.action});});});logs.sort(function(a,b){return b.date.localeCompare(a.date);});return header('WORKSPACE SETTINGS','Activity & data','Review local changes and manage your demonstration dataset.',button('Download JSON backup','export','','primary'))+'<div class="grid dashboard-grid"><section class="panel"><h2>Data controls</h2><p class="muted micro" style="margin:8px 0 17px">Edits are saved to this browser only. They do not automatically sync across devices or evaluators.</p><div class="actions">'+button('Export all data (JSON)','export','','small')+button('Import backup','import','','small')+button('Download employee CSV','export-csv','','small')+button('Reset 51 sample employees','reset','','small danger')+'</div><input type="file" id="import-file" accept=".json,application/json" hidden><div class="hr"></div><div class="callout orange"><strong>Privacy & security:</strong> This is a public-repository prototype with simulated role permissions. It is not suitable for live employee, confidential compensation, or authentication data. Use a secure backend and verified access controls before any production rollout.</div></section><section class="panel"><h2>Assigned evaluators</h2><p class="muted micro" style="margin:7px 0 16px">Current roster per project instruction</p>'+data.divisions.map(function(d){return '<div class="quick-item"><div class="grow"><b>'+safe(d.name)+'</b><p>'+safe(d.evaluators.map(function(id){const v=data.viewers.find(function(p){return p.id===id;});return v?v.name:id;}).join(' / '))+'</p></div></div>';}).join('')+'<div class="hr"></div><p class="muted micro">HR: GIEZELLE · KURT</p></section></div><section class="panel"><div class="panel-head"><div><h2>Local activity log</h2><p>Actions recorded in this browser by the selected demo viewer</p></div><span class="tag info">'+logs.length+' events</span></div><div class="audit-list">'+(logs.length?logs.slice(0,60).map(function(a){return '<div class="audit-row"><span class="avatar">↗</span><div><p><strong>'+safe(a.actor)+'</strong> · '+safe(a.action)+'</p><small>'+safe(a.employee)+' · '+safe(new Date(a.date).toLocaleString('en-PH'))+'</small></div></div>';}).join(''):'<div class="empty">No edits recorded yet. Edit any sample entry to see its audit trail.</div>')+'</div></section>';}
-  function detailContent(e,t){if(t==='journey')return '<div class="panel"><div class="panel-head"><h2>Seven-stage checklist</h2><span class="tag info">'+journeyPct(e)+'% done</span></div>'+stageCards(e)+'</div>';if(t==='kit')return '<div class="panel"><div class="panel-head"><h2>Welcome Maddie Kit</h2><span class="tag info">'+kitPct(e)+'% ready</span></div>'+kitSection(e)+'</div>';if(t==='attendance')return '<section class="panel"><div class="heading-line"><h2>Attendance records</h2>'+(isHR()?button('Add record','new-record','','small primary'):'')+'</div>'+attendanceSummary(e)+'<div class="hr"></div>'+attendanceRows(e)+'</section>';if(t==='kpi')return kpiDetail(e);if(t==='approvals')return approvalsDetail(e);if(t==='milestones')return milestoneDetail(e);if(t==='preview')return previewCharts(e);if(t==='info')return '<section class="panel"><h2>Employee information</h2><p class="muted micro" style="margin:6px 0 15px">Profile details and department assignment</p>'+profileForm(e)+'</section>';return '';}
+  function detailContent(e,t){if(t==='journey')return '<div class="panel"><div class="panel-head"><h2>Seven-stage checklist</h2><span class="tag info">'+journeyPct(e)+'% done</span></div>'+stageCards(e)+'</div>';if(t==='kit')return '<div class="panel"><div class="panel-head"><h2>Welcome Maddie Kit</h2><span class="tag info">'+kitPct(e)+'% ready</span></div>'+kitSection(e)+'</div>';if(t==='attendance')return '<section class="panel"><div class="heading-line"><h2>Attendance records</h2></div>'+attendanceSummary(e)+'<div class="hr"></div>'+attendanceRows(e)+'</section>';if(t==='kpi')return kpiDetail(e);if(t==='approvals')return approvalsDetail(e);if(t==='milestones')return milestoneDetail(e);if(t==='preview')return previewCharts(e);if(t==='info')return '<section class="panel"><h2>Employee information</h2><p class="muted micro" style="margin:6px 0 15px">Profile details and department assignment</p>'+profileForm(e)+'</section>';return '';}
   function profileForm(e){
     const fields=[['Full name',e.name],['Job title',e.jobTitle],['Sample email',e.email],['Hiring date',dateLabel(e.startDate)],
       ['Birthday',dateLabel(e.birthday)],['Division',div(e.division).name]];
@@ -616,8 +616,7 @@
         return '<button type="button" class="milestone-tab '+(k.id===kind.id?'active':'')+'" data-action="milestone-category" data-kind="'+k.id+'" aria-pressed="'+(k.id===kind.id)+'">'+safe(k.name)+'</button>';
       }).join('')+'</div>'+
       '<section class="panel milestone-results"><div class="panel-head"><div><h2>'+safe(kind.name)+'</h2><p>'+safe(kind.description)+' · '+(restricted?'HR-only details':rows.length+' records')+'</p></div>'+
-      ((kind.id==='promotion'&&(isHR()||viewer().role==='head'||viewer().role==='corp'))||(isHR()&&(kind.id==='perfect'||kind.id==='discipline'))?
-         button('Record event','choose-milestone-employee','','small primary'):'')+'</div>'+
+      ''+'</div>'+
       '<div class="milestone-people">'+roster+'</div>'+
       (!restricted&&rows.length>12?'<div class="milestone-list-footer">'+button(ui.milestoneShowAll?'Show fewer':'Show all '+rows.length,'milestone-more','','small')+'</div>':'')+
       '<div class="milestone-help">'+(kind.id==='perfect'?'Perfect attendance is recorded only when HR explicitly confirms the award; it is not inferred from incomplete time entries.':kind.id==='discipline'?'All cases are fictional. Real disciplinary records require secure, audited access.':'All names, dates and milestones are sample data, not real employee records.')+'</div></section>';
@@ -628,24 +627,23 @@
     return collection.length?collection.map(function(r){
       const name=kind==='promotion'?(r.from+' → '+r.to):kind==='perfect'?('Attendance · '+r.period):(r.category+' · '+r.severity);
       const date=kind==='perfect'?(r.period||'—'):dateLabel(r.date);
-      const canEdit=isHR()||(kind==='promotion'&&roleCanHead(e)&&r.status!=='Approved');
+      const canEdit=false;
       return '<div class="milestone-mini-row"><div><b>'+safe(name)+'</b><small>'+safe(date)+' · '+safe(r.status)+'</small></div>'+
         (canEdit?button('Edit','milestone-edit','data-kind="'+kind+'" data-employee="'+safe(e.id)+'" data-id="'+safe(r.id)+'"','small'):'')+'</div>';
     }).join(''):'<p class="muted micro">No recorded examples yet.</p>';
   }
   function milestoneDetail(e){
-    const ten=anniversaryInfo(e),canCareer=isHR()||roleCanHead(e),a=attend(e);
-    return '<div class="milestone-profile">'+
-      '<div class="milestone-profile-highlights"><div><span class="muted micro">Birthday</span><strong>'+dateLabel(e.birthday)+'</strong><small>'+ (daysToBirthday(e.birthday)===9999?'Not provided':daysToBirthday(e.birthday)+' days until next')+'</small></div>'+
-      '<div><span class="muted micro">Hiring date</span><strong>'+dateLabel(e.startDate)+'</strong><small>'+ten.years+' completed service years</small></div>'+
+    const ten=anniversaryInfo(e);
+    return '<div class="milestone-profile"><div class="milestone-profile-highlights">'+
+      '<div><span class="muted micro">Birthday</span><strong>'+dateLabel(e.birthday)+'</strong><small>Next in '+daysToBirthday(e.birthday)+' days</small></div>'+
+      '<div><span class="muted micro">Hiring date</span><strong>'+dateLabel(e.startDate)+'</strong><small>'+ten.years+' service years completed</small></div>'+
       '<div><span class="muted micro">Next anniversary</span><strong>'+dateLabel(ten.next)+'</strong><small>In '+ten.days+' days</small></div></div>'+
-      '<section class="panel"><div class="heading-line"><h3>Promotions & career growth</h3>'+(canCareer?button('Add promotion','milestone-edit','data-kind="promotion" data-employee="'+safe(e.id)+'"','small'):'')+'</div>'+
-      recordListHTML(e,'promotion')+'</section>'+
-      '<section class="panel"><div class="heading-line"><h3>Perfect attendance recognition</h3>'+(isHR()?button('Add award','milestone-edit','data-kind="perfect" data-employee="'+safe(e.id)+'"','small'):'')+'</div>'+
-      '<p class="muted micro" style="margin-bottom:10px">Awards require explicit HR confirmation; sparse attendance entries cannot establish perfect attendance.</p>'+recordListHTML(e,'perfect')+'</section>'+
-      '<section class="panel"><div class="heading-line"><h3>Disciplinary actions</h3>'+(isHR()?button('Add case','milestone-edit','data-kind="discipline" data-employee="'+safe(e.id)+'"','small'):'')+'</div>'+
-      recordListHTML(e,'discipline')+'</section></div>';
+      '<section class="panel"><h3>Promotions & career growth</h3>'+recordListHTML(e,'promotion')+'</section>'+
+      '<section class="panel"><h3>Perfect attendance recognition</h3>'+
+      '<p class="muted micro">Only explicitly confirmed sample awards are shown.</p>'+recordListHTML(e,'perfect')+'</section>'+
+      '<section class="panel"><h3>Disciplinary actions</h3>'+recordListHTML(e,'discipline')+'</section></div>';
   }
+
   function roleChoiceGroup(title,description,roles){
     return '<section class="role-choice-section"><div class="role-choice-heading"><h3>'+safe(title)+'</h3><p>'+safe(description)+'</p></div><div class="role-choice-grid">'+roles.map(function(v){
       const departments=(v.divisions||[]).map(function(id){return div(id).short;}).join(' + ');
@@ -714,12 +712,12 @@
       '<section class="chart-card"><div class="chart-card-heading"><h3>Attendance · recent months</h3><span class="tag info">Verified only</span></div>'+attendanceMicrochart(e)+'<p class="chart-note">'+a.lates+' late arrivals · '+a.absences+' absences · '+a.concerns+' unexcused concerns</p></section>'+
       '<section class="chart-card preview-status"><div class="chart-card-heading"><h3>Onboarding & review</h3></div><div class="preview-check"><span>Welcome Maddie Kit</span><strong>'+kitPct(e)+'% complete</strong></div>'+progress(kitPct(e))+'<div class="preview-check"><span>Division evaluation</span>'+pill(reviewStatus(e,'division'))+'</div><div class="preview-check"><span>Executive review</span>'+pill(reviewStatus(e,'coo'))+'</div></section>'+
     '</div><div class="profile-actions"><span class="eyebrow">OPEN EMPLOYEE SCREEN</span><div class="profile-action-buttons">'+
-    button(hr?'HR / KPI scoring':editable?'Evaluate KPI':'View KPI','detail','data-tab="kpi"','primary')+
+    button('View KPI','detail','data-tab="kpi"','primary')+
     button('Journey checklist','detail','data-tab="journey"','')+
     button('Welcome Kit','detail','data-tab="kit"','')+
     button('Attendance','detail','data-tab="attendance"','')+
     button('Review status','detail','data-tab="approvals"','')+
-    button(hr?'Edit profile':'Profile details','detail','data-tab="info"','')+
+    button('Profile details','detail','data-tab="info"','')+
     '</div></div>';
   }
   function employeeMini(e){const a=attend(e);return '<div class="employee-mini-summary" aria-label="Employee summary"><span><small>Journey</small><strong>'+journeyPct(e)+'%</strong></span><span><small>Welcome kit</small><strong>'+kitPct(e)+'%</strong></span><span><small>Weighted KPI</small><strong>'+score(e).toFixed(1)+'%</strong></span><span><small>Verified lates / absences</small><strong>'+a.lates+' / '+a.absences+'</strong></span></div>';}
