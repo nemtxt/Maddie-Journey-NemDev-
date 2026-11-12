@@ -1,4 +1,4 @@
-# Maddie Journey — Read-only Prototype v3.3
+# Maddie Journey — Read-only Prototype v3.3.1
 
 **Madhouse Design Studio · People & Culture**
 
@@ -26,7 +26,7 @@ The responsive frontend uses HTML, CSS and vanilla JavaScript, with a text-only 
 | Performance | KPI Scorecards · Reviews |
 | Data & Sources | Data Sources · About the Prototype |
 
-All 11 screens are available to anyone using the fictional sample prototype. On desktop, the primary sidebar collapses to icon navigation and remembers the display preference locally; on mobile it remains a full-width accessible drawer. A division also offers its own Summary, Board, List and Org Chart tabs. Employee cards open centered view-only previews.
+All 13 screens are available to anyone using the fictional sample prototype. On desktop, the primary sidebar collapses to icon navigation and remembers the display preference locally; on mobile it remains a full-width accessible drawer. A division also offers its own Summary, Board, List and Org Chart tabs. Employee cards open centered view-only previews.
 
 ### v2.2 overview improvements
 
@@ -129,6 +129,15 @@ The final design tokens and overrides are in **mono.css**. New features should u
 - Selecting an already-active monitoring view or category does not replace the entire DOM. Directory typing updates only its result table, visible count and clear control, then recalculates keyboard scroll accessibility.
 - The startup placeholder is a static accessible status and invalid/missing fictional fixtures show an accessible, recoverable error screen without fake synchronization.
 - **66 automated smoke tests** check animation budgets, optional dependency failure, modal/drawer behavior, render avoidance and loading/error recovery. Manual performance traces and physical-device visual checks are still pending; see [Phase 6 QA](docs/PHASE6_MOTION_QA.md).
+
+### v3.3.1 — Additional monitoring before Phase 7: 201 Files and Calendar
+
+- **201 Files Checklist** (Journey → 201 Files): Nine fictional HR document requirements tracked for the existing **51** employees, with explicit `Complete`, `Missing`, `Not checked` and `Not applicable` states. The dashboard shows employee-level totals and a **By document** comparison. The **Who is missing what** table names employees and their exact sample missing documents, with status filters and non-editable employee previews. Each document card uses the applicable-person denominator, excluding N/A.
+- **Three-month Calendar** (People → Calendar): A responsive **three-month grid** anchored to the current month in **Asia/Manila**, with Previous / Today / Next controls, category filters, selectable event dates and named event summaries. Months are contiguous across year boundaries; the layout adapts from three columns to two and one.
+- **Calendar provenance:** Events derive from fictional employee start dates (3rd- and 5th-month check-ins and 6-month probation checkpoints), profile birthdays, projected work anniversaries and explicitly recorded fictional promotions. Calculated dates are **not confirmed bookings, legal deadlines or HR actions**. The dataset contains no official PIP/LIP schedule; these are not invented.
+- **No source connection:** The 201 tracker, Google Drive, calendar provider and PIP/LIP source data are **not connected**. New document states are separate synthetic samples rather than assumed Journey completion or inferred file existence.
+- **Read-only design:** No upload, editing, attendance changes, meeting creation, account requirement or provider authentication. The established five parent menu groups remain; the application now has 13 read-only sections and employee previews include a ninth 201 Files tab.
+- **Quality:** Structural checks include the 201 document catalog and per-employee status assignments. Regression tests verify source-derived employee/document totals, named missing requirements, status filtering, calendar months, date navigation and immutable records. Physical-device visual inspection remains pending.
 
 ### Seven-stage Journey
 

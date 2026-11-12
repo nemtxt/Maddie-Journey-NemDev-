@@ -1,6 +1,6 @@
 # Maddie Journey — Prototype Acceptance Checklist
 
-Release: **v3.3**. Scope: **HTML/CSS/vanilla JavaScript + fictional fixture only**.
+Release: **v3.3.1**. Scope: **HTML/CSS/vanilla JavaScript + fictional fixture only**.
 
 This document distinguishes code-level verification from human visual acceptance. The automated smoke checks confirm the named routing and data contracts but cannot prove pixel-level accuracy on physical Windows, macOS, Android or iOS devices.
 
@@ -18,8 +18,8 @@ This document distinguishes code-level verification from human visual acceptance
 | Parent menu | Top tabs | Checks |
 | --- | --- | --- |
 | Dashboard | Overview, Divisions | Four linked metric indicators, verified-attendance snapshot, person-first queue with explicit priority cues, eight-row division comparison, Journey stages and milestones |
-| People | Directory, Milestones | Search, sorting, division filters, visible-only CSV, centered employee modal, milestone categories |
-| Journey | Journey board, Welcome Kit, Attendance | Seven stages plus Completed with denominators and task counts; scoped Kanban/Table, Kit summary, verified versus pending attendance audit and weekly/monthly reporting |
+| People | Directory, Milestones, Calendar | Search, sorting, division filters, visible-only CSV, centered employee modal, milestone categories |
+| Journey | Journey board, Welcome Kit, 201 Files, Attendance | Seven stages plus Completed with denominators and task counts; scoped Kanban/Table, Kit summary, verified versus pending attendance audit and weekly/monthly reporting |
 | Performance | KPI scorecards, Reviews | Reconciled weighted KPI composition, fictional-only source flags, four-step status/date/comment review table and no inferred approval dates |
 | Data & Sources | Data sources, About the prototype | Five disconnected-provider cards, structural fixture checks, no-login/read-only explanation and handoff policy |
 
@@ -110,3 +110,12 @@ For the intended integration boundary, see [Claude Connector Handoff](CLAUDE_CON
 - Directory search updates only its table/result count; selecting the current filter or view must not rebuild the workspace. Horizontal table accessibility is recalculated after localized search updates.
 - The loading state is static and accessible; missing/corrupted fictional records show an alert and reload action, with no claims of live synchronization.
 - A real browser/performance trace remains mandatory before declaring physical-device or runtime performance acceptance. See [Phase 6 manual QA](PHASE6_MOTION_QA.md).
+
+## Additional pre-Phase-7 monitors — v3.3.1
+
+- **201 Files totals:** Each of 51 employees has one explicit status per each of nine fictional document types. Employee-level complete, missing, and not-checked categories are mutually exclusive and total 51. Document-level complete, missing, unchecked and N/A totals also equal 51. The "complete/applicable" denominator excludes N/A.
+- **Named missing requirements:** "Who is missing what" lists actual fictional names and the exact documents marked Missing in the fixture; selecting Not checked must not mix those gaps with missing documents. Employee previews include a read-only 201 Files tab and do not modify sample records.
+- **Calendar:** The default three months begin in the Asia/Manila current month. Previous/Next move by three months, Today restores the current month, and date/category selections affect presentation only. Verify year boundaries and 320px mobile grids.
+- **Calendar source fidelity:** Only computed milestones from fictional start/birthday dates and explicitly recorded example promotions appear. No real meetings, PIP/LIP records, live invitations or synchronized Google Calendar/Drive statuses should be displayed or implied.
+- **Navigation:** 13 read-only screens across five existing main menu groups. Direct `#files201` and `#calendar` routes should work on reload. No role chooser or editor appears.
+- **Browser QA:** Visually inspect 320px, 375px, 768px, 1024px, 1440px and 1920px widths, light/dark themes, tab keyboard focus, internal data-table scrolling and calendar accessibility. The smoke suite is source-level and does not prove visual non-clipping.
