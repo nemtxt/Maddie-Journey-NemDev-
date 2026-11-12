@@ -1863,7 +1863,7 @@ check('Phase 10 Home and End keys select employee tab extremes without writing d
   const names=['preview','milestones','kpi','journey','kit','files201','attendance','approvals','info'];
   const buttons=names.map(tab=>({dataset:{action:'detail',tab}}));
   const group={querySelectorAll(){return buttons;}};
-  const target={...buttons[2],closest(){return group;}};
+  const target=buttons[2];target.closest=function(){return group;};
   const end=ctx.key('End',{target});
   assert(end.prevented);
   assert(ctx.html().includes('aria-labelledby="employee-tab-info"'));
