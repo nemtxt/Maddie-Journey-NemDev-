@@ -980,3 +980,224 @@ body:has(.employee-overlay){overflow:hidden}
   .monitor-division-kpi{grid-area:kpi}
   .monitor-division-arrow{justify-self:end}
 }
+
+
+/* ============================================================
+   Phase 5 · v3.2 — responsive and accessible monitoring console
+   Mobile interactions are 44px minimum; read-only data remains
+   scrollable. The photographic landing remains one viewport.
+   ============================================================ */
+html[data-theme="light"]{--mj-focus-accent:#a82759}
+html[data-theme="dark"]{--mj-focus-accent:#f278aa}
+body .layout,body .main,body .panel,body .screen-summary,
+body .employee-modal,body .employee-modal-body,body .table-wrap,
+body .overview-monitor-grid,body .department-table-panel{
+  min-width:0;max-width:100%;box-sizing:border-box
+}
+body .main{overflow:visible;overflow-wrap:break-word}
+body .page-header h1,
+body .page-header p,
+body .employee-modal-top .profile h2{
+  overflow-wrap:anywhere;min-width:0
+}
+body :is(a[href],button,input,select,textarea,summary,[tabindex]):focus-visible{
+  outline:3px solid var(--mj-focus-accent)!important;
+  outline-offset:2px!important;
+}
+body :is(.overview-signal,.monitor-division-row,.workspace-mainnav-item):focus-visible{
+  outline-offset:-3px!important
+}
+body .table-wrap{
+  max-width:100%;width:100%;min-width:0;
+  overflow-x:auto!important;overflow-y:hidden;
+  overscroll-behavior-x:contain;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:thin;scrollbar-color:var(--mono-secondary) transparent;
+}
+body .table-wrap[data-overflow="true"]{
+  border-bottom:2px solid var(--mono-border);
+  scroll-padding-inline:12px
+}
+body .table-wrap[data-overflow="true"]:focus-visible{
+  outline-offset:-2px!important
+}
+body .table-wrap>.table{max-width:none}
+body .mobile-drawer-close{display:none}
+body .employee-modal .employee-modal-tabs,
+body .division-tabs,body .workspace-subnav-links{
+  scroll-padding-inline:16px;overscroll-behavior-x:contain
+}
+body .employee-modal .profile,
+body .employee-modal .profile>div:last-child{
+  min-width:0
+}
+body .employee-modal .profile .avatar{flex:0 0 auto}
+body .employee-modal .modal-close{flex:0 0 44px;width:44px;height:44px;min-height:44px}
+body .employee-modal .employee-tab{
+  min-height:44px;display:inline-flex;align-items:center;justify-content:center;
+  flex:0 0 auto;padding:9px 13px
+}
+body .employee-modal .employee-context-pager button,
+body .employee-modal .employee-context-division{min-height:44px}
+body .employee-modal .employee-context-origin{
+  overflow-wrap:anywhere
+}
+body .employee-modal .employee-modal-body{
+  min-height:0;overflow-y:auto;overscroll-behavior-y:contain
+}
+body .employee-modal .employee-modal-body .table-wrap{
+  max-width:100%
+}
+body .mobile-top [data-action="mobile"]{min-height:44px}
+@media(max-width:760px){
+  body:not(:has(.landing-shell)) button:not(.workspace-scrim){
+    min-height:44px
+  }
+  body .layout,body .layout.sidebar-collapsed{
+    display:block;max-width:100%;min-height:100dvh
+  }
+  body .main{width:100%;min-height:100dvh;max-width:100%}
+  body .layout.menu-open .workspace-sidebar{
+    display:flex;position:fixed;top:60px;left:0;
+    width:min(284px,calc(100vw - 32px));height:calc(100dvh - 60px);
+    max-height:calc(100dvh - 60px);min-height:0;
+    z-index:41;overflow:hidden
+  }
+  body .layout.menu-open .workspace-scrim{
+    position:fixed;inset:60px 0 0;z-index:40
+  }
+  body .layout.menu-open .workspace-sidepanel{
+    display:flex;flex-direction:column;max-height:100%;
+    height:100%;overflow-y:auto;overscroll-behavior:contain;
+    padding-bottom:max(18px,env(safe-area-inset-bottom))
+  }
+  body .mobile-drawer-close{
+    display:inline-flex;align-self:flex-end;
+    align-items:center;justify-content:space-between;
+    gap:12px;width:auto;min-height:44px;flex:0 0 auto;
+    padding:9px 12px;margin:0 0 6px;
+    border:1px solid var(--mono-border);border-radius:8px;
+    color:var(--mono-text);background:var(--mono-soft);
+    font-size:11px;font-weight:700;cursor:pointer
+  }
+  body .mobile-drawer-close span{font-size:22px;line-height:1}
+  body .mobile-top{padding-inline:max(12px,env(safe-area-inset-left))}
+  body .mobile-top .mobile-brand{min-width:0;max-width:calc(100% - 110px)}
+  body .mobile-top .mobile-brand b{
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap
+  }
+  body .workspace-topbar .workspace-search{
+    width:44px;min-width:44px;min-height:44px;height:44px
+  }
+  body .workspace-topbar .workspace-location{min-width:0;flex:1 1 auto}
+  body .workspace-topbar .workspace-location strong{
+    min-width:0;max-width:calc(100vw - 190px);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap
+  }
+  body .workspace-topbar .workspace-top-actions{
+    flex:0 0 auto;min-width:0;gap:4px
+  }
+  body .workspace-topbar .theme-choice{min-width:40px;height:44px;min-height:44px}
+  body .workspace-subnav{max-width:100%}
+  body .workspace-subnav-links{overflow-x:auto;scrollbar-width:thin}
+  body .workspace-subnav a{min-height:44px;display:inline-flex;align-items:center}
+  body .division-tabs{overflow-x:auto;max-width:100%;scrollbar-width:thin}
+  body .division-tab{min-height:44px}
+  body .workspace-view-switch button,
+  body .queue-filter,body .milestone-tab{min-height:44px}
+  body .page-header{min-width:0;flex-wrap:wrap}
+  body .page-header .actions{min-width:0;max-width:100%}
+  body .page-header .actions>*{max-width:100%}
+  body .panel,body .screen-summary{min-width:0}
+  body .grid.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  body .metric{min-width:0;overflow-wrap:anywhere}
+  body .overview-summary-tile{min-width:0}
+  body .employee-overlay{padding:8px}
+  body .employee-modal{
+    width:100%;max-width:100%;max-height:calc(100dvh - 16px);
+    min-height:0;overflow:hidden;border-radius:14px
+  }
+  body .employee-modal .employee-modal-top{
+    gap:8px;padding:12px;min-width:0
+  }
+  body .employee-modal .employee-modal-top .profile{
+    flex:1 1 auto;min-width:0;gap:9px
+  }
+  body .employee-modal .employee-modal-top h2{
+    font-size:clamp(15px,4.5vw,19px);line-height:1.25
+  }
+  body .employee-modal .employee-modal-tabs{
+    padding:0 10px;overflow-x:auto;scrollbar-width:thin;
+    white-space:nowrap;min-height:48px
+  }
+  body .employee-modal .employee-modal-body{
+    padding:12px;overflow-x:hidden
+  }
+  body .employee-charts-grid,
+  body .employee-modal .employee-charts-grid{
+    grid-template-columns:minmax(0,1fr)
+  }
+  body .employee-modal .employee-context-bar{min-width:0}
+  body .table-wrap > table:has(thead th:nth-child(4)){
+    min-width:max(520px,100%)
+  }
+  body .table-wrap > table:has(thead th:nth-child(5)){
+    min-width:max(650px,100%)
+  }
+  body .table-wrap > table:has(thead th:nth-child(7)){
+    min-width:max(750px,100%)
+  }
+  body .table-wrap .link-btn{
+    min-height:44px;display:inline-flex;align-items:center
+  }
+  body .form-grid,body .reader-profile-grid{
+    grid-template-columns:minmax(0,1fr)
+  }
+  body .form-grid .span2{grid-column:auto}
+}
+@media(max-width:420px){
+  body .main{padding-inline:12px}
+  body .mobile-top,body .workspace-topbar,body .workspace-subnav{
+    margin-inline:-12px
+  }
+  body .workspace-topbar,body .workspace-subnav{padding-inline:12px}
+  body .workspace-location strong{font-size:11px}
+  body .work-list-row{min-width:0}
+  body .work-list-subject{padding-left:0;min-width:0}
+  body .employee-context-actions{
+    min-width:0;flex-wrap:wrap;justify-content:space-between
+  }
+  body .employee-context-pager{margin-left:auto}
+  body .directory-filters{min-width:0}
+}
+@media(max-width:359px){
+  body .workspace-topbar .workspace-location strong{
+    max-width:calc(100vw - 196px)
+  }
+  body .employee-modal .employee-context-pager button span{display:none}
+  body .employee-modal .employee-modal-top .profile .avatar{
+    width:33px;height:33px
+  }
+  body .employee-modal .employee-modal-body{padding:10px}
+  body .page-header h1{font-size:24px}
+}
+@media(min-width:1600px){
+  body .main{max-width:var(--mj-page-width);margin-inline:auto}
+  body .employee-modal{width:min(1040px,calc(100vw - 80px))}
+}
+/* Maintain the full-bleed, no-scroll introduction independent of workspace scrolling. */
+body:has(.landing-shell){overflow:hidden!important}
+body .landing-shell{
+  height:100dvh;max-height:100dvh;min-height:0!important;
+  overflow:hidden!important
+}
+@media(forced-colors:active){
+  body :is(a[href],button,input,select,summary,[tabindex]):focus-visible{
+    outline:3px solid Highlight!important
+  }
+  body .table-wrap[data-overflow="true"]{border-color:CanvasText}
+  body .mobile-drawer-close{border:1px solid ButtonText}
+}
+@media(prefers-reduced-motion:reduce){
+  body .mobile-drawer-close,body .table-wrap{scroll-behavior:auto!important}
+}

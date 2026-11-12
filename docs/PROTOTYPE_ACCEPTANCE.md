@@ -1,6 +1,6 @@
 # Maddie Journey — Prototype Acceptance Checklist
 
-Release: **v3.1**. Scope: **HTML/CSS/vanilla JavaScript + fictional fixture only**.
+Release: **v3.2**. Scope: **HTML/CSS/vanilla JavaScript + fictional fixture only**.
 
 This document distinguishes code-level verification from human visual acceptance. The automated smoke checks confirm the named routing and data contracts but cannot prove pixel-level accuracy on physical Windows, macOS, Android or iOS devices.
 
@@ -89,3 +89,15 @@ For the intended integration boundary, see [Claude Connector Handoff](CLAUDE_CON
 - **KPI:** Category weights are 15%, 45%, 15%, 25%. Each raw score contributes raw × weight / 100; the sum must equal the displayed weighted score to two decimal places. Fictional sample flags are not official verification.
 - **Review:** Each reviewer displays their exact recorded status, comment and date if present; missing dates say Not recorded. A configured process order must not be misrepresented as a chronological event log.
 - **Division:** Eight division means are derived from each division's own employees. Review and concern metrics display affected people out of division members and must match the displayed detail lists.
+
+## Phase 5 — Responsive and accessibility acceptance
+
+- **Mobile 320px, 375px, 390px and 430px:** Confirm the workspace has no unintended *page-level* sideways overflow; intentional wide tables and navigation tab strips remain independently horizontally scrollable. Drawer menu, employee preview and controls must not be clipped.
+- **Tablet 768px and 1024px:** Inspect sidebar transitions, combined KPI cards, division summaries, chart layouts and long employee names.
+- **Large desktop 1440px and 1920px:** Confirm readable measure widths, no wasteful card expansion and consistent sidebar collapse state.
+- **Drawer:** On phones, Open menu focuses the drawer's Close menu button, the workspace becomes inert, Tab stays inside the drawer, Escape closes it and keyboard focus returns to the mobile toggle.
+- **Tables:** When horizontal overflow exists, the data container gets `tabindex="0"`, `role="region"` and a descriptive accessible label. Closed details and window resizing re-run the check. Small tables should not generate redundant tab stops.
+- **Dialog and tabs:** Employee previews fit within the available viewport and scroll internally. Modal focus stays trapped, Previous/Next preserve the active detail, and arrow keys change employee/division tabs. Test with keyboard and touch.
+- **Accessibility:** Confirm visible focus, ≥44px mobile targets where practical, zoom/text resizing, both themes, reduced-motion preference and high-contrast OS mode. Check with an actual screen reader.
+- **Landing:** The photographic landing must remain one full viewport with no independent scrollbar and a working Skip to main content target.
+- **Integrity:** Source remains 51 fictional employees, eight divisions, read-only controls and no connected provider. Manual viewport/browser checks are not replaced by unit tests; track actual observations separately.

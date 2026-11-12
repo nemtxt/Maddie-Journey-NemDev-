@@ -1,4 +1,4 @@
-# Maddie Journey — Read-only Prototype v3.1
+# Maddie Journey — Read-only Prototype v3.2
 
 **Madhouse Design Studio · People & Culture**
 
@@ -111,6 +111,16 @@ The final design tokens and overrides are in **mono.css**. New features should u
 - **Read-only contract:** 51 fictional employees, eight divisions, all original routes and optional motion preserved. No fabricated historical trends, official statuses, sync timestamps, data mutations or connector credentials.
 - **Verification:** 51 dependency-free smoke tests, with attendance-classification, KPI arithmetic, Journey aggregation, review status and division cohort consistency assertions. Manual device visual QA remains separate.
 
+### Phase 5 — v3.2 responsive experience and accessibility
+
+- **320px through desktop layout:** Targeted mobile breakpoints at 359px, 420px and 760px, with spacious desktop presentation at 1600px+. The main workspace remains naturally scrollable; the landing remains a fixed full-viewport introduction.
+- **Modal mobile navigation:** The mobile sidebar now has a labeled close button and dialog semantics while open. The underlying workspace becomes inert; Tab/Shift+Tab stay inside the drawer, Escape closes it and returns focus to the menu control. Desktop collapsed navigation still exposes its five destinations.
+- **Tables:** Width-constrained tables scroll horizontally rather than clipping columns. Only overflowing containers receive a keyboard-focusable labeled region; resizing and expanding report details re-evaluate their overflow. Narrower tables do not gain unnecessary tab stops.
+- **Employee detail:** Responsive dialog widths, internal scrolling, nonclipping profile headings, touch-sized controls, and horizontally scrolling detail tabs. Arrow Left/Right changes employee and division tabs using the existing actions.
+- **Readability and contrast:** Strong focus rings in light/dark themes plus forced-colors support; 44px mobile interactive targets; layout safeguards for high-density data and narrow screens. Appearance stays one-font, black/white, with restrained pink.
+- **Navigation continuity:** A route change focuses the new screen heading, and frequency/sort choices retain keyboard context. No new input/edit workflow, data changes or integrations.
+- **Verification:** 57 dependency-free smoke tests, covering drawer state/trapping, overflow region behavior, deep keyboard navigation and layout/style safeguards. **Manual visual testing at specific viewport sizes is still required; automated source checks do not prove no clipped pixels.** See [the Phase 5 manual QA checklist](docs/PHASE5_RESPONSIVE_QA.md).
+
 ### Seven-stage Journey
 
 The Journey monitoring screen contains **seven stages plus Completed**, with one card per employee grouped by the first incomplete stage. The Board scrolls horizontally; Table view shows all matching members and aggregate progress. All status rows are non-editable.
@@ -134,7 +144,7 @@ The later connected-account phase can implement source normalization against the
 - Open index.html in a modern browser or use VS Code Live Server.
 - Run: node tests/smoke.js
 - On main, the custom GitHub Actions validation workflow runs the regression tests. Anime.js and the Inter web font are optional third-party CDN resources; UI navigation and sample data do not depend on their availability. GitHub Pages uses its separate publishing workflow.
-- Confirm both test and Pages workflow statuses under GitHub Actions. The automated suite currently includes 51 cases; physical Windows/macOS/Android/iOS visual acceptance remains separate.
+- Confirm both test and Pages workflow statuses under GitHub Actions. The automated suite currently includes 57 cases; physical Windows/macOS/Android/iOS visual acceptance remains separate.
 
 ## Source files
 
@@ -149,7 +159,7 @@ The later connected-account phase can implement source normalization against the
 | landing.css | Landing page and source photo |
 | workspace.css / reader.css | Global workspace, primary/secondary navigation and read-only views |
 | refined.css | Dashboard metrics, searchable directory, source quality panel and responsive summaries |
-| mono.css | **v3.1 canonical styles:** shared UI tokens, monochrome system, contextual employee viewer, reporting tables and responsive division comparisons |
+| mono.css | **v3.2 canonical styles:** shared tokens, monochrome design, 320px responsive safeguards, accessible drawers and keyboard-scrollable tables |
 | motion.js | Reduced-motion-aware, nonessential Anime.js entrance transitions |
 | tests/smoke.js | Regression tests for navigation, adapters, fixtures and read-only operation |
 | docs/CLAUDE_CONNECTORS_HANDOFF.md | Future connector development instructions |

@@ -1,4 +1,4 @@
-/* Maddie Journey v3.1 — dependency-free read-only smoke checks.
+/* Maddie Journey v3.2 — dependency-free read-only smoke checks.
    Run from repository root: node tests/smoke.js
    Simulated interactions; browser/device visual QA is separate. */
 'use strict';
@@ -761,5 +761,96 @@ check('Phase 4 division comparison KPI and denominators agree with the fixture',
   }
   assert(table.includes('not combined task totals'));
   assert(table.includes('Official KPI data is disconnected'));
+});
+check('Phase 5 landing skip link targets a true main landmark and retains one viewport',()=>{
+  user.navigate('welcome');
+  const markup=user.html();
+  assert(markup.includes('<main id="main-content" class="landing-main" tabindex="-1">'));
+  assert(!markup.includes('class="landing-shell" id="main-content"'));
+  assert(src['mono.css'].includes('max-height:100dvh'));
+  assert(src['mono.css'].includes('body:has(.landing-shell){overflow:hidden!important}'));
+  user.navigate('overview');
+  assert(user.html().includes('<main id="main-content" class="main" tabindex="-1">'));
+});
+check('Phase 5 mobile drawer exposes a close action and isolates workspace content',()=>{
+  user.navigate('overview');
+  user.click('mobile');
+  const markup=user.html();
+  assert(markup.includes('role="dialog" aria-modal="true" aria-label="Workspace navigation"'));
+  assert(markup.includes('class="mobile-drawer-close" data-action="mobile"'));
+  assert(markup.includes('<main id="main-content" class="main" tabindex="-1" inert>'));
+  assert(markup.includes('class="workspace-scrim" aria-label="Close navigation" tabindex="-1" aria-hidden="true"'));
+  user.click('mobile');
+  assert(!user.html().includes('menu-open'));
+  assert(!user.html().includes('aria-modal="true" aria-label="Workspace navigation"'));
+});
+check('Phase 5 drawer traps Tab and restores keyboard focus on Escape',()=>{
+  const ctx=boot({},'#overview'),mount=ctx.doc.getElementById('app');
+  let opened=0,closed=0,firstFocus=0,lastFocus=0;
+  const first={focus(){firstFocus++;}},last={focus(){lastFocus++;}};
+  const drawer={querySelectorAll(){return[first,last];}};
+  mount.querySelector=function(q){
+    if(q==='.workspace-sidebar .mobile-drawer-close')return{focus(){opened++;}};
+    if(q==='.mobile-top [data-action="mobile"]')return{focus(){closed++;}};
+    if(q==='.workspace-sidebar')return drawer;
+    return null;
+  };
+  ctx.click('mobile');
+  assert.equal(opened,1);
+  ctx.doc.activeElement=first;
+  const reverse=ctx.key('Tab',{shiftKey:true});
+  assert(reverse.prevented);
+  assert.equal(lastFocus,1);
+  ctx.doc.activeElement=last;
+  const forward=ctx.key('Tab');
+  assert(forward.prevented);
+  assert.equal(firstFocus,1);
+  const esc=ctx.key('Escape');
+  assert(esc.prevented);
+  assert.equal(closed,1);
+  assert(!ctx.html().includes('menu-open'));
+});
+check('Phase 5 overflow regions are keyboard accessible only when scrolling is needed',()=>{
+  const ctx=boot({},'#employees'),mount=ctx.doc.getElementById('app');
+  const attributes={},wrap={
+    scrollWidth:900,clientWidth:320,dataset:{},
+    closest(){return{querySelector(){return{textContent:'People directory'};}};},
+    setAttribute(key,value){attributes[key]=value;},
+    removeAttribute(key){delete attributes[key];}
+  };
+  mount.querySelectorAll=selector=>selector==='.table-wrap'?[wrap]:[];
+  ctx.navigate('attendance');
+  assert.equal(attributes.tabindex,'0');
+  assert.equal(attributes.role,'region');
+  assert(attributes['aria-label'].includes('People directory table'));
+  assert.equal(wrap.dataset.overflow,'true');
+  wrap.scrollWidth=250;ctx.win.handlers.resize();
+  assert.equal(attributes.tabindex,undefined);
+  assert.equal(attributes.role,undefined);
+  assert.equal(wrap.dataset.overflow,undefined);
+});
+check('Phase 5 arrow keys change the existing division view without extra navigation',()=>{
+  const ctx=boot({},'#division/rmd');
+  const first={dataset:{action:'division-tab',tab:'summary'}};
+  const second={dataset:{action:'division-tab',tab:'list'}};
+  const strip={querySelectorAll(){return[first,second];}};
+  first.closest=()=>strip;
+  const ev=ctx.key('ArrowRight',{target:first});
+  assert(ev.prevented);
+  assert.equal(ctx.loc.hash,'#division/rmd/list');
+  assert(ctx.html().includes('department-table'));
+  assert(ctx.html().includes('aria-pressed="true"'));
+});
+check('Phase 5 mobile styles include 320px safeguards, touch size and focus contrast',()=>{
+  const css=src['mono.css'];
+  for(const term of [
+    '@media(max-width:359px)','@media(max-width:420px)','@media(max-width:760px)',
+    'min-height:44px','--mj-focus-accent:#a82759',
+    '@media(forced-colors:active)','scrollbar-width:thin',
+    'body .employee-modal .employee-modal-body','body .table-wrap[data-overflow="true"]'
+  ])assert(css.includes(term),term);
+  assert(css.includes('min-width:max(750px,100%)'));
+  assert(css.includes('height:100dvh'));
+  assert(css.includes('body .main{overflow:visible'));
 });
 console.log('\n'+results.length+' smoke tests passed. Physical-device visual QA is separate.');
