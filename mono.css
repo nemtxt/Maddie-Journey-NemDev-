@@ -205,6 +205,13 @@ textarea:focus-visible,[tabindex]:focus-visible{
 .workspace-search{border-radius:9px;background:var(--mono-soft)}
 .workspace-search:hover{background:var(--mono-hover)}
 .theme-control{background:var(--mono-soft);border-color:var(--mono-border)}
+.theme-choice .theme-icon{
+  display:inline-grid;place-items:center;flex:0 0 18px;
+  width:18px;height:18px
+}
+.theme-choice .theme-icon svg{
+  display:block;width:16px;height:16px;min-width:16px;min-height:16px
+}
 .theme-choice.active{background:var(--mono-surface);color:var(--mono-text);border-color:var(--mono-border)}
 /* Collapse desktop navigation to an icon rail, never remove destination links. */
 .layout{
