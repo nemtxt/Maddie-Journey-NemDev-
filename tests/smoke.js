@@ -1,4 +1,4 @@
-/* Maddie Journey v2.4 — dependency-free read-only smoke checks.
+/* Maddie Journey v2.5 — dependency-free read-only smoke checks.
    Run from repository root: node tests/smoke.js
    Simulated interactions; browser/device visual QA is separate. */
 'use strict';
@@ -440,4 +440,42 @@ check('Every rendered screen uses handled action names',()=>{
   }
 });
 
+check('Navigation has fewer duplicates while preserving the two landing destinations',()=>{
+  user.navigate('welcome');
+  const landing=user.html();
+  assert(!landing.includes('landing-header-cta'));
+  assert.equal((landing.match(/data-nav="overview"/g)||[]).length,1);
+  assert(landing.includes('data-nav="divisions"'));
+  user.navigate('overview');
+  assert(!user.html().includes('workspace-subnav-caption'));
+  assert(!user.html().includes('sidebar-return-link'));
+  user.navigate('employees');
+  user.click('open',{id:'MJ-003'});
+  assert(!user.html().includes('profile-action-buttons'));
+  assert(user.html().includes('employee-modal-tabs'));
+  user.click('close');
+});
+check('Unrecognized employee ID cannot break the viewer',()=>{
+  user.navigate('employees');
+  user.click('open',{id:'NONEXISTENT'});
+  assert(!user.html().includes('role="dialog"'));
+  assert(user.html().includes('All Maddies'));
+});
+check('The optional mobile drawer animates only on entrance',()=>{
+  const made=[],drawer={id:'drawer'};
+  let open=false;
+  const doc={
+    readyState:'complete',visibilityState:'visible',
+    querySelector(q){return q==='.layout.menu-open .workspace-sidebar'&&open?drawer:null;},
+    querySelectorAll(){return[];}
+  };
+  const win={anime:{animate(el,options){made.push({el,options});}},matchMedia(){return{matches:false}}};
+  new Function('window','document',src['motion.js'])(win,doc);
+  assert.equal(made.length,0);
+  open=true;win.MJ_MOTION.refresh('overview');
+  assert.equal(made.length,1);
+  assert.equal(made[0].el,drawer);
+  win.MJ_MOTION.refresh('overview');
+  assert.equal(made.length,1);
+});
 console.log('\n'+results.length+' smoke tests passed. Physical-device visual QA is separate.');

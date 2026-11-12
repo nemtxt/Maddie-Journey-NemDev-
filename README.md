@@ -1,4 +1,4 @@
-# Maddie Journey — Read-only Prototype v2.4
+# Maddie Journey — Read-only Prototype v2.5
 
 **Madhouse Design Studio · People & Culture**
 
@@ -60,6 +60,14 @@ All 11 screens are available to anyone using the fictional sample prototype. On 
 
 The final design tokens and overrides are in **mono.css**. New features should use these shared tokens rather than introducing additional accent colors or page-specific fonts. The historical base stylesheets remain for compatibility.
 
+### v2.5 navigation and accessibility refinement
+
+- **Fewer duplicate routes:** The landing has one dashboard CTA and one division CTA, the logo remains the home return, and the workspace no longer repeats unnecessary sidebar and subnavigation instructions.
+- **One employee drill-down:** Employee previews use their existing eight accessible tabs rather than a second bank of six buttons that went to the same information.
+- **Search stays responsive:** The visible directory count, matching table and clear-search control react as the user types, without changing or persisting employee data.
+- **Keyboard continuity:** Closing an employee or division dialog restores keyboard focus to its originating action when available. Invalid employee identifiers cannot open a broken dialog.
+- **Gentle Anime.js motion:** Small screen and modal entrances plus a mobile drawer entrance, all optional, non-looping and disabled for reduced-motion users. Sidebar size and hover transitions remain CSS-only.
+
 ### Seven-stage Journey
 
 The Journey monitoring screen contains **seven stages plus Completed**, with one card per employee grouped by the first incomplete stage. The Board scrolls horizontally; Table view shows all matching members and aggregate progress. All status rows are non-editable.
@@ -83,7 +91,7 @@ The later connected-account phase can implement source normalization against the
 - Open index.html in a modern browser or use VS Code Live Server.
 - Run: node tests/smoke.js
 - On main, the custom GitHub Actions validation workflow runs the regression tests. Anime.js and the Inter web font are optional third-party CDN resources; UI navigation and sample data do not depend on their availability. GitHub Pages uses its separate publishing workflow.
-- Confirm both test and Pages workflow statuses under GitHub Actions. The automated suite currently includes 29 cases; physical Windows/macOS/Android/iOS visual acceptance remains separate.
+- Confirm both test and Pages workflow statuses under GitHub Actions. The automated suite currently includes additional regression cases; physical Windows/macOS/Android/iOS visual acceptance remains separate.
 
 ## Source files
 
@@ -98,7 +106,7 @@ The later connected-account phase can implement source normalization against the
 | landing.css | Landing page and source photo |
 | workspace.css / reader.css | Global workspace, primary/secondary navigation and read-only views |
 | refined.css | Dashboard metrics, searchable directory, source quality panel and responsive summaries |
-| mono.css | **v2.4 canonical design tokens:** monochrome Light/Dark modes, one font, one accent and collapsing sidebar |
+| mono.css | **v2.5 canonical design tokens:** monochrome Light/Dark modes, one font, one accent and collapsing sidebar |
 | motion.js | Reduced-motion-aware, nonessential Anime.js entrance transitions |
 | tests/smoke.js | Regression tests for navigation, adapters, fixtures and read-only operation |
 | docs/CLAUDE_CONNECTORS_HANDOFF.md | Future connector development instructions |

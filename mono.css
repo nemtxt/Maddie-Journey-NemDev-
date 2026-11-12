@@ -350,3 +350,6 @@ body .landing-shell{
   html{scroll-behavior:auto}
   *,*::before,*::after{transition-duration:0.01ms!important;animation-duration:0.01ms!important;scroll-behavior:auto!important}
 }
+
+/* A clear-search control only occupies space while a query exists. */
+.directory-clear-slot:empty{display:none}

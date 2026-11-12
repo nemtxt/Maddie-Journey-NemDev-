@@ -1,8 +1,8 @@
 # Maddie Journey — Prototype Acceptance Checklist
 
-Release: **v2.4**. Scope: **HTML/CSS/vanilla JavaScript + fictional fixture only**.
+Release: **v2.5**. Scope: **HTML/CSS/vanilla JavaScript + fictional fixture only**.
 
-This document distinguishes code-level verification from human visual acceptance. The 29 automated smoke checks confirm the named routing and data contracts but cannot prove pixel-level accuracy on physical Windows, macOS, Android or iOS devices.
+This document distinguishes code-level verification from human visual acceptance. The automated smoke checks confirm the named routing and data contracts but cannot prove pixel-level accuracy on physical Windows, macOS, Android or iOS devices.
 
 ## Product boundaries
 
@@ -45,7 +45,8 @@ The smoke suite covers:
 - Keyboard search shortcuts and mobile drawer close.
 - Desktop icon-only sidebar toggle, local display preference and accessible navigation labels.
 - No unwanted landing-card strips or percentage widgets; one Inter font and one pink accent.
-- Motion enhancement, graceful missing-CDN fallback and reduced-motion preference.
+- Motion enhancement for page/dialog/mobile drawer, graceful missing-CDN fallback and reduced-motion preference.
+- Single landing dashboard CTA, no redundant modal navigation buttons and restored dialog focus.
 - Invalid fixture recovery and zero writes to fictional source records.
 - Rendered HTML action names against implemented action handlers.
 
