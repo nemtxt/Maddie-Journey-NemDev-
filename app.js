@@ -148,6 +148,8 @@
       group.tabs.map(function(t){const selected=current===t[0];return '<a href="#'+t[0]+'" data-nav="'+t[0]+'"'+(selected?' aria-current="page"':'')+' class="'+(selected?'active':'')+'">'+safe(t[1])+'</a>';}).join('')+
       '</div></nav>';
   }
+  const routeTargets=['overview','divisions','employees','milestones','calendar','journey',
+    'kit','files201','attendance','kpi','approvals','sources','audit'];
   function sidebar(){
     const active=activeNavGroup().id;
     return '<aside class="sidebar workspace-sidebar"'+(ui.mobile?' role="dialog" aria-modal="true" aria-label="Workspace navigation"':' aria-label="Main navigation"')+'><div class="workspace-sidepanel">'+
@@ -1465,7 +1467,7 @@
       if(parts.length<=2&&['summary','board','list','chart'].includes(view)&&
         data.divisions.some(function(d){return d.id===id;})&&
         (ui.tab!=='division'||ui.activeDivision!==id||ui.divisionTab!==view))openDivision(id,view);
-    }else if(items.some(function(a){return a[0]===target;})&&target!==ui.tab)navigate(target);
+    }else if(routeTargets.includes(target)&&target!==ui.tab)navigate(target);
   });
   const hash=location.hash.slice(1),parts=hash.startsWith('division/')?hash.slice(9).split('/'):[],
     validDivision=parts.length>0&&parts.length<=2&&
@@ -1473,6 +1475,6 @@
       (!parts[1]||['summary','board','list','chart'].includes(parts[1]));
   if(validDivision){ui.tab='division';ui.activeDivision=parts[0];ui.scope=ui.activeDivision;
     ui.divisionTab=parts[1]||'summary';ensureEmployeeScope();
-  }else if(items.some(function(a){return a[0]===hash;}))ui.tab=hash;else ui.tab='welcome';
+  }else if(routeTargets.includes(hash))ui.tab=hash;else ui.tab='welcome';
   render();
 })();
