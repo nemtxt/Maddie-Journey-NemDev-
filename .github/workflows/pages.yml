@@ -1,4 +1,4 @@
-name: Maddie Journey - Test and deploy Pages
+name: Maddie Journey - Validate Prototype
 
 on:
   push:
@@ -9,38 +9,17 @@ permissions:
   contents: read
 
 concurrency:
-  group: maddie-journey-pages
+  group: maddie-journey-validation
   cancel-in-progress: true
 
 jobs:
   test:
-    name: Verify prototype workflows
+    name: Verify sample data and navigation
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-      - name: Test routes and sample-data preservation
+          node-version: '22'
+      - name: Run regression checks
         run: node tests/smoke.js
-
-  deploy:
-    name: Publish static site
-    needs: test
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: .
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
