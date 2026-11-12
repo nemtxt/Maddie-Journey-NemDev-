@@ -166,18 +166,24 @@
   function render(){const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,journey:journey,kit:kitView,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open':'')+'">'+sidebar()+'<main class="main">'+topnav()+(views[ui.tab]||overview)()+'<footer class="footer"><span>Maddie Journey · Prototype v1.0</span><span>51 fictional employees · Local browser storage · No live integrations</span></footer></main></div>'+(ui.drawer?drawer():'');document.title=title(ui.tab)+' · Maddie Journey';}
   function openDivision(id){if(!data.divisions.some(function(d){return d.id===id;}))return;ui.activeDivision=id;ui.tab='division';ui.drawer=false;ui.mobile=false;ui.query='';ui.division='all';if(location.hash!=='#division/'+id)location.hash='#division/'+id;window.scrollTo({top:0,behavior:'instant'});render();}
   function navigate(tab){if(tab==='division'){openDivision(ui.activeDivision);return;}ui.tab=tab;ui.drawer=false;ui.mobile=false;ui.query='';ui.division='all';if(location.hash!=='#'+tab)location.hash='#'+tab;window.scrollTo({top:0,behavior:'instant'});render();}
+  function invalidateEvaluation(e){
+    const changed=['division','corp','cso','coo'].some(function(k){return e.review[k].status!=='Pending';})||e.approvedPct>0||!!e.effectiveDate;
+    if(!changed)return;
+    ['division','corp','cso','coo'].forEach(function(k){e.review[k]={status:'Pending',comment:'',at:''};});
+    e.approvedPct=0;e.effectiveDate='';
+    toast('Evaluation changed: previous review endorsements were reset.');
+  }
   function changeField(el){const e=emp(),field=el.dataset.field;if(!e||!field)return;const val=el.value;
-    if(field.indexOf('profile.')===0){if(!isHR())return;const k=field.slice(8);if(!['name','jobTitle','email','startDate','division'].includes(k))return;if((k==='name'||k==='jobTitle')&&!val.trim()){toast('This field cannot be empty.');render();return;}if(k==='division'&&!data.divisions.some(function(d){return d.id===val;}))return;e[k]=val.slice(0,150);if(k==='division'){['division','corp','cso','coo'].forEach(function(step){e.review[step]={status:'Pending',comment:'',at:''};});}audit(e,'Updated employee '+k);}
-    else if(field.indexOf('kpi.')===0){if(!roleCanHead(e))return;const parts=field.split('.'),i=Number(parts[1]),k=parts[2];if(!e.kpiItems[i]||!['target','actual'].includes(k))return;e.kpiItems[i][k]=val.slice(0,200);e.kpiItems[i].verified=false;e.kpiValidated=false;audit(e,'Updated demonstration KPI '+(i+1)+' '+k);}
-    else if(field==='kpiSource'){if(!isHR())return;e.kpiSource=val.slice(0,400);e.kpiValidated=false;audit(e,'Updated KPI source note');}
-    else if(field.indexOf('score.')===0){const k=field.split('.')[1];if(!canScore(e,k))return;const n=Number(val);if(val===''||!Number.isFinite(n)||n<0||n>100){toast('Scores must be between 0 and 100.');render();return;}e.scores[k]=Math.round(n*100)/100;audit(e,'Updated '+k+' evaluation score');}
+    if(field.indexOf('profile.')===0){if(!isHR())return;const k=field.slice(8);if(!['name','jobTitle','email','startDate','division'].includes(k))return;if((k==='name'||k==='jobTitle')&&!val.trim()){toast('This field cannot be empty.');render();return;}if(k==='division'&&!data.divisions.some(function(d){return d.id===val;}))return;e[k]=val.slice(0,150);if(k==='division')invalidateEvaluation(e);audit(e,'Updated employee '+k);}
+    else if(field.indexOf('kpi.')===0){if(!roleCanHead(e))return;const parts=field.split('.'),i=Number(parts[1]),k=parts[2];if(!e.kpiItems[i]||!['target','actual'].includes(k))return;e.kpiItems[i][k]=val.slice(0,200);e.kpiItems[i].verified=false;e.kpiValidated=false;invalidateEvaluation(e);audit(e,'Updated demonstration KPI '+(i+1)+' '+k);}
+    else if(field==='kpiSource'){if(!isHR())return;e.kpiSource=val.slice(0,400);e.kpiValidated=false;invalidateEvaluation(e);audit(e,'Updated KPI source note');}
+    else if(field.indexOf('score.')===0){const k=field.split('.')[1];if(!canScore(e,k))return;const n=Number(val);if(val===''||!Number.isFinite(n)||n<0||n>100){toast('Scores must be between 0 and 100.');render();return;}e.scores[k]=Math.round(n*100)/100;invalidateEvaluation(e);audit(e,'Updated '+k+' evaluation score');}
     else if(field.indexOf('kitnote.')===0){if(!canTrack(e))return;e.kitNotes[field.slice(8)]=val.slice(0,200);audit(e,'Updated kit issuance or access note');}
     else if(field.indexOf('comment.')===0){const k=field.slice(8);const allowed=k==='hr'?isHR():k==='division'?roleCanHead(e):k==='employee'?isHR():canReview(k);if(!allowed)return;e.comments[k]=val.slice(0,1000);audit(e,'Updated '+k+' comment');}
     else if(['currentBasic','currentAllowances','proposedPct','approvedPct','effectiveDate'].includes(field)){if(field==='approvedPct'||field==='effectiveDate'){return;}else if(!roleCanHead(e))return;
       if(field==='effectiveDate'){if(val&&!/^\d{4}-\d{2}-\d{2}$/.test(val)){toast('Invalid date');return;}e[field]=val;}
       else {const n=Number(val);if(val===''||!Number.isFinite(n)||n<0||(field.endsWith('Pct')&&n>100)){toast('Enter a valid, nonnegative amount (percentages up to 100).');render();return;}e[field]=Math.round(n*100)/100;}
-      if(field==='approvedPct'||field==='effectiveDate'){if(e.review.coo.status==='Approved'){e.review.coo.status='Pending';toast('Final approval reset: reviewed compensation changed.');}}
-      else if(e.review.division.status==='Endorsed'){e.review.division.status='Pending';e.review.corp.status='Pending';e.review.cso.status='Pending';e.review.coo.status='Pending';}
+      invalidateEvaluation(e);
       audit(e,'Updated sample compensation: '+field);
     }else return;render();
   }
