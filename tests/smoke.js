@@ -1,4 +1,4 @@
-/* Maddie Journey v2.3 — dependency-free read-only smoke checks.
+/* Maddie Journey v2.4 — dependency-free read-only smoke checks.
    Run from repository root: node tests/smoke.js
    Simulated interactions; browser/device visual QA is separate. */
 'use strict';
@@ -8,7 +8,7 @@ const path=require('node:path');
 const root=path.resolve(__dirname,'..');
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 
-const files=['index.html','data.js','data-adapter.js','app.js','operations.css','palette.css','landing.css','workspace.css','reader.css','refined.css'];
+const files=['index.html','data.js','data-adapter.js','app.js','operations.css','palette.css','landing.css','workspace.css','reader.css','refined.css','mono.css','motion.js'];
 const src=Object.fromEntries(files.map(name=>[name,read(name)]));
 const results=[];
 function check(name,fn){fn();results.push(name);console.log('PASS '+name);}
@@ -61,7 +61,7 @@ function boot(initial={},hash='',mutateFixture){
 }
 
 check('Files parse; reader CSS is last and PNG/JPEG media are preserved',()=>{
-  new Function(src['data.js']);new Function(src['data-adapter.js']);new Function(src['app.js']);
+  new Function(src['data.js']);new Function(src['data-adapter.js']);new Function(src['app.js']);new Function(src['motion.js']);
   assert(src['index.html'].indexOf('reader.css')>src['index.html'].indexOf('workspace.css'));
   assert(src['landing.css'].includes('assets/madhalloween.jpg'));
   assert(src['app.js'].includes('assets/madhouse-logo.png'));
@@ -106,19 +106,21 @@ check('No access gate, saved persona, chooser or editable source controls remain
   assert(src['reader.css'].includes('.workspace-subnav'));
 });
 
-check('Landing links directly to dashboard features without a popup',()=>{
+check('Landing is a single focused hero without card strips or percentage badges',()=>{
   user.navigate('welcome');
-  assert(user.html().includes('landing-hero'));
-  assert(user.html().includes('assets/madhouse-logo.png'));
-  assert(!user.html().includes('Who is using the dashboard?'));
-  assert(user.html().includes('class="landing-audience-card" data-nav="employees"'));
-  assert(user.html().includes('class="landing-audience-card" data-nav="divisions"'));
-  assert(user.html().includes('class="landing-audience-card" data-nav="overview"'));
+  const html=user.html();
+  assert(html.includes('landing-hero'));
+  assert(html.includes('assets/madhouse-logo.png'));
+  assert(html.includes('data-nav="overview"'));
+  assert(html.includes('data-nav="divisions"'));
+  for(const forbidden of ['landing-audiences','landing-shortcuts','landing-audience-card','landing-shortcut','Who is using the dashboard?','89%']){
+    assert(!html.includes(forbidden),'Unexpected landing element: '+forbidden);
+  }
   user.navigate('overview');
   assert(user.html().includes('Organization overview'));
   assert(!user.html().includes('workspace-gate'));
-  assert(!user.html().includes('role-choice'));
 });
+
 
 check('Sidebar has exactly five primary sections with correct destinations',()=>{
   user.navigate('overview');
@@ -368,6 +370,64 @@ check('Attendance exposes both weekly and monthly read-only breakdowns',()=>{
   assert(user.html().includes('value="monthly" selected'));
   assert(user.html().includes('Late arrivals'));
   assert(user.html().includes('Approved leaves'));
+});
+
+check('Desktop sidebar collapses to icon navigation and remembers the state',()=>{
+  user.navigate('overview');
+  assert(user.html().includes('id="primary-navigation"'));
+  assert(user.html().includes('data-action="toggle-sidebar"'));
+  assert(user.html().includes('aria-label="Collapse sidebar"'));
+  assert(!user.html().includes('sidebar-collapsed'));
+  user.click('toggle-sidebar');
+  assert(user.html().includes('sidebar-collapsed'));
+  assert(user.html().includes('aria-label="Expand sidebar"'));
+  assert.equal(user.mem['maddie-journey-sidebar-collapsed'],'true');
+  assert.equal((user.html().match(/class="workspace-mainnav-item /g)||[]).length,5);
+  user.click('toggle-sidebar');
+  assert(!user.html().includes('sidebar-collapsed'));
+  assert.equal(user.mem['maddie-journey-sidebar-collapsed'],'false');
+  const returning=boot({'maddie-journey-sidebar-collapsed':'true'},'#journey');
+  assert(returning.html().includes('sidebar-collapsed'));
+  assert(returning.html().includes('data-nav="journey"'));
+});
+
+check('One Inter font and neutral backgrounds are the final theme',()=>{
+  const css=src['mono.css'],html=src['index.html'];
+  assert(html.includes('family=Inter'));
+  assert(css.includes('font-family:"Inter",sans-serif!important'));
+  assert(css.includes('--mono-bg:#ffffff'));
+  assert(css.includes('--mono-bg:#080808'));
+  assert(css.includes('--mono-accent:#db3c7c'));
+  assert(css.includes('.overview-summary-grid .overview-summary-tile'));
+  assert(html.indexOf('mono.css')>html.indexOf('refined.css'));
+  assert(!html.includes('.webp'));
+});
+
+check('Anime.js v4 is optional, reduced-motion aware and limits its motion',()=>{
+  const html=src['index.html'],code=src['motion.js'];
+  assert(html.includes('animejs@4.5.0/dist/bundles/anime.umd.min.js'));
+  assert(html.indexOf('motion.js')>html.indexOf('app.js'));
+  assert(code.includes('prefers-reduced-motion: reduce'));
+  assert(code.includes("doc.visibilityState==='hidden'"));
+  assert(!code.includes('loop:true'));
+  const made=[],fakeNodes=[{name:'header'},{name:'hero'}];
+  const doc={
+    readyState:'complete',visibilityState:'visible',
+    querySelector(selector){return selector==='.landing-shell'?{}:null;},
+    querySelectorAll(){return fakeNodes;}
+  };
+  const win={anime:{animate(node,params){made.push({node,params});}},matchMedia(){return{matches:false}}};
+  new Function('window','document',code)(win,doc);
+  assert.equal(made.length,2);
+  win.MJ_MOTION.refresh('welcome');
+  assert.equal(made.length,2);
+  const still=[],reduced={anime:{animate(){still.push(true);}},
+    matchMedia(){return{matches:true}}};
+  new Function('window','document',code)(reduced,doc);
+  assert.equal(still.length,0);
+  const noCDN={matchMedia(){return{matches:false}}};
+  new Function('window','document',code)(noCDN,doc);
+  assert(typeof noCDN.MJ_MOTION.refresh==='function');
 });
 
 check('Every rendered screen uses handled action names',()=>{
