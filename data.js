@@ -77,5 +77,19 @@
     };
   }
   const employees=Array.from({length:51},(_,i)=>makeEmployee(i));
+  // Fictional end-to-end review examples for executive dashboard demonstrations.
+  // These are never official or verified employee reviews.
+  employees.forEach(function(e,index){
+    const stage=index%11===0?'coo':index%9===0?'cso':index%7===0?'corp':index%5===0?'division':null;
+    if(!stage)return;
+    const steps=['division','corp','cso','coo'],limit=steps.indexOf(stage);
+    for(let n=0;n<=limit;n++){
+      const k=steps[n],who=k==='division'?'Division evaluator':k==='corp'?'Corporate Operations':k==='cso'?'CSO':'COO';
+      const status=k==='coo'?'Approved':'Endorsed',comment=who+' · completed demonstration review';
+      e.review[k]={status:status,comment:comment,at:'2026-11-08T09:00:00.000Z'};
+      e.comments[k]=comment;
+    }
+    if(stage==='coo'){e.approvedPct=e.proposedPct;e.effectiveDate='2026-12-01';}
+  });
   window.MJ_SEED={version:3,divisions:divisions,viewers:viewers,stages:stages,kit:kit,employees:employees};
 })();
