@@ -604,8 +604,34 @@
       ' attendance concerns in verified sample entries. No integrations or editable records.</p>';
   }
   function overview(){return roleHome();}
-  function employeesTable(list,mode){if(!list.length)return '<div class="empty"><span class="big" aria-hidden="true">'+landingIcon('search')+'</span>No employees match these filters.</div>';
-    return '<div class="table-wrap"><table class="table"><thead><tr><th>Employee</th><th>Division</th><th>Journey</th><th>Kit issued</th><th>KPI score</th><th>Actions</th></tr></thead><tbody>'+list.map(function(e){return '<tr><td><div class="name-cell">'+avatar(e.name)+'<div><strong>'+safe(e.name)+'</strong><small>'+safe(e.id)+' · '+safe(e.jobTitle)+'</small></div></div></td><td>'+safe(div(e.division).short)+'</td><td><div class="progress-wrapper">'+progress(journeyPct(e))+'<span>'+journeyPct(e)+'%</span></div></td><td>'+kitPct(e)+'%</td><td><strong>'+score(e).toFixed(1)+'%</strong><small>'+rating(score(e))+'</small></td><td>'+button('Preview','open','data-id="'+e.id+'" data-detail="'+(mode||'preview')+'"','small')+'</td></tr>';}).join('')+'</tbody></table></div>';}
+  function employeesTable(list,mode){
+    if(!list.length)return '<div class="empty report-empty" role="status">'+
+      '<span class="big" aria-hidden="true">'+landingIcon('search')+'</span>'+
+      '<strong>No employees match these filters.</strong>'+
+      '<p>Try another name, division or search term. The fictional records have not changed.</p></div>';
+    return '<div class="table-wrap"><table class="table">'+
+      '<caption class="sr-only">Employee directory: '+list.length+' of '+scopedEmployees().length+
+      ' selected fictional employees, sorted by '+safe(ui.employeeSort)+'.</caption>'+
+      '<thead><tr><th scope="col">Employee</th><th scope="col">Division</th>'+
+      '<th scope="col">Journey</th><th scope="col">Kit issued</th>'+
+      '<th scope="col">KPI score</th><th scope="col">Details</th></tr></thead><tbody>'+
+      list.map(function(e){
+        const tasks=e.journey.flat(),completed=tasks.filter(Boolean).length;
+        const kits=e.kit.filter(Boolean).length;
+        return '<tr><th scope="row"><div class="name-cell">'+avatar(e.name)+'<div>'+
+          '<strong>'+safe(e.name)+'</strong><small>'+safe(e.id)+' · '+safe(e.jobTitle)+'</small>'+
+          '</div></div></th><td>'+safe(div(e.division).short)+'</td>'+
+          '<td><div class="progress-wrapper">'+progress(journeyPct(e))+
+          '<span class="report-num">'+journeyPct(e)+'%</span></div>'+
+          '<small class="report-cell-sub">'+completed+' / '+tasks.length+' tasks complete</small></td>'+
+          '<td class="report-num"><strong>'+kitPct(e)+'%</strong>'+
+          '<small class="report-cell-sub">'+kits+' / '+e.kit.length+' requirements</small></td>'+
+          '<td class="report-num"><strong>'+score(e).toFixed(1)+'%</strong>'+
+          '<small class="report-cell-sub">'+rating(score(e))+'</small></td>'+
+          '<td>'+button('Preview','open','data-id="'+safe(e.id)+
+          '" data-detail="'+(mode||'preview')+'"','small')+'</td></tr>';
+      }).join('')+'</tbody></table></div>';
+  }
   function filtered(){
     const term=ui.query.trim().toLocaleLowerCase();
     const matches=scopedEmployees().filter(function(e){
@@ -817,10 +843,20 @@
   function attendanceSummary(e){const a=attend(e);return '<div class="grid metrics"><div class="metric"><div class="metric-label">Verified late arrivals</div><strong>'+a.lates+'</strong><div class="metric-sub">Last: '+dateLabel(a.lastLate)+'</div></div><div class="metric"><div class="metric-label">Verified absences</div><strong>'+a.absences+'</strong><div class="metric-sub">Last: '+dateLabel(a.lastAbs)+'</div></div><div class="metric"><div class="metric-label">Attendance concerns</div><strong>'+a.concerns+'</strong><div class="metric-sub">Excused late entries excluded</div></div><div class="metric"><div class="metric-label">Attendance status</div><strong style="font-size:21px">'+(a.records.length?'With records':'No record')+'</strong><div class="metric-sub">Only verified entries are counted</div></div></div>';}
   function attendanceRows(e){
     const rows=e.attendance.slice().sort(function(a,b){return b.date.localeCompare(a.date);});
-    return '<div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Type</th><th>Approval</th><th>Verification</th><th>Reason / remarks</th></tr></thead><tbody>'+
-      rows.map(function(r){return '<tr><td>'+dateLabel(r.date)+'</td><td><strong>'+safe(r.type)+'</strong></td><td>'+pill(r.approval)+'</td>'+
-        '<td>'+pill(r.verified?'Verified':'Pending')+'</td><td><strong>'+safe(r.reason)+'</strong><small>'+safe(r.remarks)+'</small></td></tr>';}).join('')+
-      '</tbody></table></div>';
+    return '<div class="table-wrap"><table class="table"><caption class="sr-only">'+
+      'Attendance entries for '+safe(e.name)+': '+rows.length+' fictional recorded entries.'+
+      '</caption><thead><tr><th scope="col">Date</th><th scope="col">Type</th>'+
+      '<th scope="col">Approval</th><th scope="col">Verification</th>'+
+      '<th scope="col">Reason / remarks</th></tr></thead><tbody>'+
+      (rows.length?rows.map(function(r){
+        return '<tr><th scope="row" class="report-date">'+dateLabel(r.date)+'</th>'+
+          '<td><strong>'+safe(r.type)+'</strong></td><td>'+pill(r.approval)+'</td>'+
+          '<td>'+pill(r.verified?'Verified':'Pending')+'</td>'+
+          '<td><strong>'+safe(r.reason)+'</strong><small class="report-cell-sub">'+
+          safe(r.remarks)+'</small></td></tr>';
+      }).join(''):'<tr><td class="report-empty-cell" colspan="5">'+
+        'No attendance entries are recorded for this fictional employee. This is not evidence of perfect attendance.'+
+        '</td></tr>')+'</tbody></table></div>';
   }
 
   function series(){const months=[];const dt=new Date();dt.setDate(1);for(let i=5;i>=0;i--){const d=new Date(dt.getFullYear(),dt.getMonth()-i,1);const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');let late=0,abs=0;scopedEmployees().forEach(function(e){e.attendance.forEach(function(r){if(r.verified&&r.date.slice(0,7)===key){if(r.type==='Late')late++;if(r.type==='Absent')abs++;}});});months.push({label:d.toLocaleDateString('en-PH',{month:'short'}),late:late,abs:abs});}return months;}
@@ -864,8 +900,10 @@
       (keys.length?keys.map(function(k){
         const b=buckets[k];
         return '<tr><th scope="row">'+safe(k)+'</th>'+
-          '<td>'+b.verified+'</td><td>'+b.late+'</td><td>'+b.absent+'</td>'+
-          '<td>'+b.excused+'</td><td>'+b.approved+'</td><td>'+b.concerns+'</td></tr>';
+          '<td class="report-num">'+b.verified+'</td><td class="report-num">'+b.late+
+          '</td><td class="report-num">'+b.absent+'</td><td class="report-num">'+b.excused+
+          '</td><td class="report-num">'+b.approved+'</td><td class="report-num">'+b.concerns+
+          '</td></tr>';
       }).join(''):'<tr><td colspan="7">No verified records for this frequency.</td></tr>')+
       '</tbody></table></div>'+
       '<p class="report-source-note">Excused lateness is included in Late, but not in Concern entries. Approved leave is not an absence or concern. Pending records are excluded from this table.</p></section>';
@@ -888,10 +926,12 @@
       '<th scope="col">Contribution</th></tr></thead><tbody>'+
       parts.map(function(part){
         return '<tr><th scope="row">'+safe(part.name)+'</th><td>'+part.raw.toFixed(1)+' / 100</td>'+
-          '<td>'+part.weight+'%</td><td><strong>'+part.points.toFixed(2)+' pts</strong></td></tr>';
+          '<td class="report-num">'+part.weight+'%</td><td class="report-num"><strong>'+
+          part.points.toFixed(2)+' pts</strong></td></tr>';
       }).join('')+
       '<tr class="kpi-composition-total"><th scope="row">Weighted total</th>'+
-      '<td>—</td><td>100%</td><td><strong>'+score(e).toFixed(2)+' / 100</strong></td></tr>'+
+      '<td>—</td><td class="report-num">100%</td><td class="report-num"><strong>'+
+      score(e).toFixed(2)+' / 100</strong></td></tr>'+
       '</tbody></table></div>'+
       '<p class="report-source-note">All category scores are fictional. Contributions are weighted percentage points; they sum to the displayed weighted total. No official KPI source is connected.</p></section>';
   }
@@ -941,7 +981,7 @@
       steps.map(function(step){
         const record=e.review[step[0]]||{},status=reviewStatus(e,step[0]);
         const date=record.at?dateLabel(record.at.slice(0,10)):'Not recorded';
-        return '<tr><td>'+step[1]+'</td><th scope="row">'+safe(step[2])+
+        return '<tr><td class="report-num">'+step[1]+'</td><th scope="row">'+safe(step[2])+
           '<small>'+safe(step[3])+'</small></th><td>'+pill(status)+'</td>'+
           '<td>'+safe(date)+'</td><td>'+safe(record.comment||'No recorded comment')+'</td></tr>';
       }).join('')+'</tbody></table></div>'+
