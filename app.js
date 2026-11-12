@@ -339,12 +339,39 @@
       audit(e,'Updated sample compensation: '+field);
     }else return;render();
   }
-  function openRecordEditor(id){if(!isHR()){toast('Select a People & Culture (HR) demo role to edit attendance.');return;}const e=emp();let old=id?e.attendance.find(function(x){return x.id===id;}):null;
+  function openRecordEditor(id){
+    if(!isHR()){toast('Select an HR demo workspace to edit attendance.');return;}
+    const e=emp(),old=id?e.attendance.find(function(x){return x.id===id;}):null;
     const entry={id:old?old.id:'a-'+Date.now(),date:old?old.date:now(),type:old?old.type:'Late',approval:old?old.approval:'Pending',reason:old?old.reason:'',remarks:old?old.remarks:'',verified:old?old.verified:false};
-    const modal=document.createElement('div');modal.className='overlay';modal.id='record-modal';modal.innerHTML='<div class="drawer" style="max-width:480px"><div class="drawer-top"><h2>'+(old?'Edit':'Add')+' attendance entry</h2><button class="drawer-close" data-record-close="1" aria-label="Close">×</button></div><p class="muted micro" style="margin-bottom:20px">'+safe(e.name)+' · Verified entries appear in rankings</p><form id="record-form" class="stack"><label><span class="field-label">Date</span><input class="field" name="date" type="date" required value="'+safe(entry.date)+'"></label><label><span class="field-label">Attendance type</span><select class="field" name="type">'+opts(['Late','Absent','Leave'].map(function(x){return {label:x,value:x};}),entry.type)+'</select></label><label><span class="field-label">Approval / excuse status</span><select class="field" name="approval">'+opts(['Pending','Approved','Excused','Unapproved'].map(function(x){return {label:x,value:x};}),entry.approval)+'</select></label><label><span class="field-label">Reason for leave / absence / late arrival</span><textarea class="field textarea" required name="reason">'+safe(entry.reason)+'</textarea></label><label><span class="field-label">Supervisor remarks</span><textarea class="field textarea" name="remarks">'+safe(entry.remarks)+'</textarea></label><label class="check-row"><input type="checkbox" name="verified" '+(entry.verified?'checked':'')+'><span>Verified by HR (counts in analytics)</span></label><button class="button primary" type="submit">Save attendance entry</button></form></div>';document.body.appendChild(modal);
-    modal.querySelector('[data-record-close]').addEventListener('click',function(){modal.remove();});
-    modal.addEventListener('click',function(ev){if(ev.target===modal)modal.remove();});
-    modal.querySelector('#record-form').addEventListener('submit',function(ev){ev.preventDefault();const f=new FormData(ev.currentTarget);const newEntry={id:entry.id,date:String(f.get('date')||''),type:String(f.get('type')||''),approval:String(f.get('approval')||''),reason:String(f.get('reason')||'').trim().slice(0,500),remarks:String(f.get('remarks')||'').trim().slice(0,500),verified:f.has('verified')};if(!newEntry.date||!newEntry.reason){toast('Date and reason are required.');return;}if(old)Object.assign(old,newEntry);else e.attendance.push(newEntry);audit(e,(old?'Edited':'Added')+' attendance record '+newEntry.date);modal.remove();render();toast('Attendance record saved locally.');});
+    const existing=$('record-modal');if(existing)existing.remove();
+    const modal=document.createElement('div');
+    modal.className='overlay center-overlay record-overlay';modal.id='record-modal';
+    modal.setAttribute('data-overlay','record');
+    modal.innerHTML='<section class="workspace-modal attendance-edit-modal" role="dialog" aria-modal="true" aria-labelledby="record-modal-title" tabindex="-1">'+
+      '<div class="modal-fixed-head"><div><span class="eyebrow">ATTENDANCE · '+safe(e.id)+'</span><h2 id="record-modal-title">'+(old?'Edit attendance':'New attendance')+'</h2><p>'+safe(e.name)+' · Confirm verification before counting in analytics</p></div><button class="modal-close" type="button" data-record-close="1" aria-label="Close attendance form">×</button></div>'+
+      '<div class="workspace-modal-scroll"><form id="record-form" class="stack attendance-record-form">'+
+      '<div class="form-grid"><label><span class="field-label">Date</span><input class="field" name="date" type="date" required value="'+safe(entry.date)+'"></label>'+
+      '<label><span class="field-label">Record type</span><select class="field" name="type">'+opts(['Late','Absent','Leave'].map(function(x){return {label:x,value:x};}),entry.type)+'</select></label>'+
+      '<label class="span2"><span class="field-label">Approval / excuse status</span><select class="field" name="approval">'+opts(['Pending','Approved','Excused','Unapproved'].map(function(x){return {label:x,value:x};}),entry.approval)+'</select></label></div>'+
+      '<label><span class="field-label">Reason for leave, absence or lateness</span><textarea class="field textarea" required name="reason">'+safe(entry.reason)+'</textarea></label>'+
+      '<label><span class="field-label">Supervisor remarks</span><textarea class="field textarea" name="remarks">'+safe(entry.remarks)+'</textarea></label>'+
+      '<label class="check-row"><input type="checkbox" name="verified" '+(entry.verified?'checked':'')+'><span>HR verified — include in analytics</span></label>'+
+      '<div class="attendance-record-actions"><button type="button" class="button" data-record-close="1">Cancel</button><button class="button primary" type="submit">Save record</button></div>'+
+      '</form></div></section>';
+    document.body.appendChild(modal);
+    const close=function(){modal.remove();};
+    modal.querySelectorAll('[data-record-close]').forEach(function(el){el.addEventListener('click',close);});
+    modal.addEventListener('click',function(ev){if(ev.target===modal)close();});
+    modal.addEventListener('keydown',function(ev){if(ev.key==='Escape'){ev.preventDefault();ev.stopPropagation();close();}});
+    modal.querySelector('#record-form').addEventListener('submit',function(ev){
+      ev.preventDefault();const f=new FormData(ev.currentTarget);
+      const next={id:entry.id,date:String(f.get('date')||''),type:String(f.get('type')||''),approval:String(f.get('approval')||''),reason:String(f.get('reason')||'').trim().slice(0,500),remarks:String(f.get('remarks')||'').trim().slice(0,500),verified:f.has('verified')};
+      if(!next.date||!next.reason){toast('Date and reason are required.');return;}
+      if(old)Object.assign(old,next);else e.attendance.push(next);
+      audit(e,(old?'Edited':'Added')+' verified status and attendance record '+next.date);
+      close();render();toast('Attendance record saved locally.');
+    });
+    const focus=modal.querySelector('input[name="date"]');if(focus)focus.focus({preventScroll:true});
   }
   function reviewAction(step,decision){const e=emp();if(!reviewCanAct(e,step)){toast('This review step is not available to the selected evaluator.');return;}
     if(step==='coo'&&decision==='Approved'&&(!e.effectiveDate||!e.comments.coo.trim())){toast('COO: enter the effectivity date and final remarks before approval.');return;}
