@@ -1,4 +1,4 @@
-# Maddie Journey · Prototype v1.6
+# Maddie Journey · Prototype v1.7
 
 A lightweight, button-first People & Culture prototype built using **HTML, CSS and vanilla JavaScript only**. No build tools, paid subscriptions, login, Airtable or cloud service are needed for demonstration.
 
@@ -6,7 +6,7 @@ A lightweight, button-first People & Culture prototype built using **HTML, CSS a
 
 ## Open and deploy
 
-Open `index.html` in a modern browser for a local test.
+Open `index.html` in a modern browser for a local test. The first screen is the official-logo landing page.
 
 To deploy, open **GitHub repository → Settings → Pages → Deploy from a branch → main / (root) → Save**. After GitHub reports a successful publication, the expected URL is:
 
@@ -27,6 +27,20 @@ The interface now follows the design language of the **Nemesis Corporation** web
 - **Keyboard access:** Visible focus indicators and a Skip to main content link. Theme switching does not re-render forms or discard open modal state.
 
 Appearance changes need no build process and no backend. All new styling lives in \`theme.css\`, layered after the original \`styles.css\` to keep future refinements separate.
+
+## v1.7 — Official Madhouse landing page
+
+The root URL (no hash, or `#welcome`) now opens a lightweight, responsive landing screen before the dashboard.
+
+- **Authentic branding only:** the provided Madhouse Design Studio logo is used in the landing header, dashboard sidebar and mobile header. The invented pink “M” symbol from the earlier illustration is intentionally not part of the project.
+- **Real supplied photo:** the Madhalloween team photograph is the landing hero background, optimized locally as `assets/madhalloween-hero.webp`. The original source was supplied for this prototype; the optimized image does not contain baked-in text or fabricated branding.
+- **Pastel interface:** pink, white, soft yellow and blue, with the existing persistent Light / Dark control. Light is the initial appearance for new browsers; previously saved choices remain unchanged.
+- **Direct navigation:** Open dashboard, View divisions, and links to Org charts, Employees and Data sources. The HR, Division Heads and Executive overview cards set a fictional demo workspace and open the overview; these are not login or authorization controls.
+- **Preserved routes:** `#overview`, `#divisions`, `#division/rmd`, and all other direct dashboard links still work. A new `#welcome` destination returns to the landing screen.
+- **Preserved information:** no employee data, scores, milestones, evaluators or sources were replaced. The 51 sample employees in eight divisions are still stored in the local browser.
+- **Accessibility:** keyboard-reachable links and buttons, focus outlines, calm responsive layouts and reduced-motion support. No new JS framework, sign-in dependency or billing is required.
+
+Landing styling lives in `landing.css`. The design is built using normal HTML/CSS/JS; it is **not** a screenshot used as a website background. Images are kept as separate files so they can be replaced or compressed without changing navigation.
 
 ## v1.6 changes
 
@@ -98,8 +112,15 @@ Do not store real employee details, disciplinary actions, salaries, passwords, a
 
 ## Files
 
-- `index.html` — static entry point
+- `index.html` — landing and dashboard entry point
 - `styles.css` — core responsive screens and centered dialogs
 - `theme.css` — Inter-based Nemesis design system and progressive Light / Dark themes
 - `data.js` — fictional 51-person dataset and initial milestone records
 - `app.js` — workflows, charts, edit dialogs, local storage and exports
+
+### Branding assets
+
+- `assets/madhouse-logo.png` — optimized copy of the authentic logo supplied by the user.
+- `assets/madhalloween-hero.webp` — optimized copy of the supplied Madhalloween photograph.
+- `landing.css` — responsive pastel landing appearance and official branding in the dashboard shell.
+
