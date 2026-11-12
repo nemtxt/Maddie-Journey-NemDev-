@@ -1169,7 +1169,7 @@
     (t==='info'?'<div class="panel" style="margin-bottom:15px"><div class="form-grid"><div><span class="field-label">Start date</span><strong>'+dateLabel(e.startDate)+'</strong></div><div><span class="field-label">Employee ID</span><strong>'+safe(e.id)+'</strong></div><div><span class="field-label">Org level (sample)</span><strong>Level '+safe(e.orgLevel||'—')+'</strong></div><div><span class="field-label">Reports to (sample)</span><strong>'+safe((data.employees.find(function(p){return p.id===e.reportsTo;})||{}).name||'Department lead')+'</strong></div></div></div>':'')+
     detailContent(e,t)+'</div></section></div>';
   }
-  function landingIcon(name){return window.MJ_ICONS.svg(name);}
+  function landingIcon(name){return window.MJ_ICONS&&typeof window.MJ_ICONS.svg==='function'?window.MJ_ICONS.svg(name):'';}
   function landingView(){
     return '<div class="landing-shell">'+
       '<main id="main-content" class="landing-main" tabindex="-1">'+
