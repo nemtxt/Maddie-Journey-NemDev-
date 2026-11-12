@@ -80,7 +80,7 @@ test('Landing audience choices open the intended demo workspaces',()=>{
   assert(app.html().includes('Organization overview'));
   app.click('nav',{tab:'welcome'});
   app.click('landing-role',{role:'hr'});
-  assert(app.html().includes('People & Culture overview'));
+  assert(app.html().includes('People &amp; Culture overview'));
 });
 
 test('Home contains actionable worklist and transparent source status',()=>{
