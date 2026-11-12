@@ -41,7 +41,7 @@
         return row.employee.files201[doc.id]===state;
       }).length;};
       const complete=count('complete'),missing=count('missing'),unchecked=count('not-checked'),na=count('not-applicable');
-      return '<article class="monitor-file-card"><span class="monitor-file-type">'+esc(doc.group)+'</span>'+
+      return '<article class="monitor-file-card" data-group="'+esc(doc.group)+'"><span class="monitor-file-type">'+esc(doc.group)+'</span>'+
         '<h3>'+esc(doc.label)+'</h3><strong>'+complete+' <small>/ '+(total-na)+' applicable complete</small></strong>'+
         '<div class="monitor-file-counts"><span>'+missing+' missing</span><span>'+unchecked+' not checked</span>'+
         (na?'<span>'+na+' N/A</span>':'')+'</div></article>';
@@ -182,7 +182,7 @@
       '<div class="monitor-calendar-grid">'+slots+'</div>'+
       '<div class="monitor-calendar-month-summary">'+
       Object.keys(kinds).filter(function(k){return kinds[k];}).map(function(k){
-        return '<span>'+kinds[k]+' '+esc(k==='checkin'?'check-ins':k==='employment'?'employment':
+        return '<span class="monitor-calendar-count type-'+esc(k)+'">'+kinds[k]+' '+esc(k==='checkin'?'check-ins':k==='employment'?'employment':
           k==='change'?'changes':'milestones')+'</span>';
       }).join('')+'</div>'+
       '<div class="monitor-calendar-events"><div class="monitor-calendar-events-heading"><strong>'+
