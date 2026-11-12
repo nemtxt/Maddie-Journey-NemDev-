@@ -1181,4 +1181,20 @@ check('New monitoring styles keep single font, three-to-one calendar layout and 
     assert(!fresh.html().includes('Save changes'));
   }
 });
+check('New small monitoring labels use accessible text contrast in both themes',()=>{
+  const css=src['mono.css'];
+  assert(css.includes('body .monitor-filter.active,'));
+  assert(css.includes('color:var(--mj-focus-accent)'));
+  const rgb=hex=>[0,1,2].map(n=>parseInt(hex.slice(1+2*n,3+2*n),16)/255);
+  const luminance=hex=>{
+    const c=rgb(hex).map(v=>v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4));
+    return c[0]*.2126+c[1]*.7152+c[2]*.0722;
+  };
+  const ratio=(x,y)=>{
+    const l=[luminance(x),luminance(y)].sort((a,b)=>b-a);
+    return (l[0]+.05)/(l[1]+.05);
+  };
+  assert(ratio('#a82759','#ffffff')>=4.5);
+  assert(ratio('#f278aa','#111111')>=4.5);
+});
 console.log('\n'+results.length+' smoke tests passed. Physical-device visual QA is separate.');

@@ -1471,3 +1471,17 @@ body .monitor-calendar-workspace>.report-source-note{margin:18px 0}
   body .monitor-calendar-date,body .monitor-calendar-empty{height:44px}
   body button.monitor-calendar-date{min-height:44px}
 }
+
+
+/* Keep small operational status text readable in both appearances. */
+body .monitor-filter.active,
+body .monitor-file-missing,
+body button.monitor-calendar-date.selected,
+body .monitor-calendar-event>span:last-child{
+  color:var(--mj-focus-accent)
+}
+body .monitor-filter.active,
+body .monitor-file-missing,
+body button.monitor-calendar-date.selected{
+  border-color:var(--mj-focus-accent)
+}

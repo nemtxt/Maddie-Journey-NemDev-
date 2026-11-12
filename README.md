@@ -137,7 +137,7 @@ The final design tokens and overrides are in **mono.css**. New features should u
 - **Calendar provenance:** Events derive from fictional employee start dates (3rd- and 5th-month check-ins and 6-month probation checkpoints), profile birthdays, projected work anniversaries and explicitly recorded fictional promotions. Calculated dates are **not confirmed bookings, legal deadlines or HR actions**. The dataset contains no official PIP/LIP schedule; these are not invented.
 - **No source connection:** The 201 tracker, Google Drive, calendar provider and PIP/LIP source data are **not connected**. New document states are separate synthetic samples rather than assumed Journey completion or inferred file existence.
 - **Read-only design:** No upload, editing, attendance changes, meeting creation, account requirement or provider authentication. The established five parent menu groups remain; the application now has 13 read-only sections and employee previews include a ninth 201 Files tab.
-- **Quality:** Structural checks include the 201 document catalog and per-employee status assignments. Regression tests verify source-derived employee/document totals, named missing requirements, status filtering, calendar months, date navigation and immutable records. Physical-device visual inspection remains pending.
+- **Quality:** Structural checks include the 201 document catalog and per-employee status assignments. The **79 regression tests** verify employee/document totals, named missing requirements, applicable denominators, calendar months and leap years, date navigation, data immutability and accessible focus. Physical-device visual inspection remains pending.
 
 ### Seven-stage Journey
 
@@ -148,10 +148,11 @@ The Journey monitoring screen contains **seven stages plus Completed**, with one
 The script loading order is:
 
 1. data.js — fictional fixture
-2. data-adapter.js — read-only snapshot and data-source contract
-3. app.js — rendering, navigation, metrics and employee previews
+2. data-adapter.js — read-only snapshot, versioned validation and provider status
+3. monitoring.js — pure, read-only 201 Files and three-month Calendar presentation
+4. app.js — routing, rendering, shared metrics and employee previews
 
-data-adapter.js exposes getSnapshot(), getSources(), getProvenance(), getQualityReport() and validateSnapshot(snapshot). It currently returns a defensive copy of the fictional fixture and marks all five planned providers **Not connected**. There are **no network calls or provider tokens**.
+data-adapter.js (contract version 2) exposes getSnapshot(), getSources(), getProvenance(), getQualityReport() and validateSnapshot(snapshot). Its required 201-document catalog and explicit per-employee status map are sample-only. It currently returns a defensive copy of the fictional fixture and marks all five planned providers **Not connected**. There are **no network calls or provider tokens**.
 
 The later connected-account phase can implement source normalization against the same frontend view model, but the private data delivery mechanism must be authenticated and controlled. Read the [Claude connector handoff](docs/CLAUDE_CONNECTORS_HANDOFF.md) for provider responsibilities, data contract and security boundaries.
 
@@ -162,7 +163,7 @@ The later connected-account phase can implement source normalization against the
 - Open index.html in a modern browser or use VS Code Live Server.
 - Run: node tests/smoke.js
 - On main, the custom GitHub Actions validation workflow runs the regression tests. Anime.js and the Inter web font are optional third-party CDN resources; UI navigation and sample data do not depend on their availability. GitHub Pages uses its separate publishing workflow.
-- Confirm both test and Pages workflow statuses under GitHub Actions. The automated suite currently includes 66 cases; physical Windows/macOS/Android/iOS visual acceptance remains separate.
+- Confirm both test and Pages workflow statuses under GitHub Actions. The automated suite currently includes 79 cases; physical Windows/macOS/Android/iOS visual acceptance remains separate.
 
 ## Source files
 
@@ -171,7 +172,8 @@ The later connected-account phase can implement source normalization against the
 | index.html | Entry point and ordered CSS/JS assets |
 | data.js | 51 fictional employee records and complete 8-division fixtures |
 | data-adapter.js | Read-only source boundary, provider status and snapshot validation |
-| app.js | Single-page UI, division overview, summary calculations and previews |
+| monitoring.js | Pure read-only 201 Files and three-month Calendar views; no connector calls or writes |
+| app.js | Single-page routing, division overview, shared metrics and previews |
 | styles.css / theme.css | Base and theme styles |
 | operations.css / palette.css | Org chart, tracking and historical brand styles |
 | landing.css | Landing page and source photo |

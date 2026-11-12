@@ -1,7 +1,7 @@
 # Pre-Phase-7 QA — 201 Files Checklist and Calendar
 
 **Release:** v3.3.1 · **Scope:** Additive read-only monitoring features.  
-**Status:** Automated structural and behavioral checks run; physical-device and screen-reader visual acceptance remain to be completed.
+**Status:** 79 automated structural and behavioral checks passed. Physical-device, pixel-level and screen-reader visual acceptance remain to be completed.
 
 ## 201 Files Checklist
 
