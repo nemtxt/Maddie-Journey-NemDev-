@@ -6,23 +6,30 @@
   const KEY='maddie-journey-demo-v3';
   const $=function(id){return document.getElementById(id);};
   const clone=function(x){return JSON.parse(JSON.stringify(x));};
-  let data;
-  try {
-    const raw=JSON.parse(localStorage.getItem(KEY));
-    const valid=raw&&[3,4].includes(raw.version)&&Array.isArray(raw.employees)&&raw.employees.length===51;
-    data=valid?raw:clone(seed);
-    if(valid&&raw.version===3){
-      // Preserve all saved scores and comments. Reallocate only untouched fictional
-      // Design samples to the new Design Operations division (no real employees).
-      const untouched=data.employees.filter(function(e){return e.division==='design'&&!e.modifiedAt&&!(e.audit||[]).length;});
+  function upgradeData(source){
+    if(!source||![3,4,5].includes(source.version)||!Array.isArray(source.employees)||source.employees.length!==51)return clone(seed);
+    if(source.version===3){
+      const untouched=source.employees.filter(function(e){return e.division==='design'&&!e.modifiedAt&&!(e.audit||[]).length;});
       untouched.forEach(function(e,i){if(i%2===1)e.division='designops';});
-      data.version=seed.version;
-      try{localStorage.setItem(KEY,JSON.stringify(data));}catch(err){}
     }
+    const byId=new Map(seed.employees.map(function(e){return [e.id,e];}));
+    source.employees.forEach(function(e){
+      const template=byId.get(e.id);if(!template)return;
+      if(typeof e.birthday!=='string')e.birthday=template.birthday;
+      for(const k of ['promotions','disciplinaryActions','attendanceAwards'])if(!Array.isArray(e[k]))e[k]=clone(template[k]);
+      if(!Array.isArray(e.audit))e.audit=[];
+    });
+    source.version=seed.version;return source;
+  }
+  let data;
+  try{
+    const raw=JSON.parse(localStorage.getItem(KEY));
+    data=upgradeData(raw);
+    if(raw&&data===raw)try{localStorage.setItem(KEY,JSON.stringify(data));}catch(err){}
   }catch(err){data=clone(seed);}
   data.viewers=clone(seed.viewers); data.divisions=clone(seed.divisions); data.stages=clone(seed.stages); data.kit=clone(seed.kit);
-  let ui={tab:'overview',viewer:'giezelle',division:'all',activeDivision:'rmd',scope:'all',divisionPickerMode:'view',query:'',employee:data.employees[0].id,detail:'preview',employeeModalOpen:false,roleModal:false,divisionModal:false,employeePicker:false,pickerDivision:'rmd',frequency:'monthly',mobile:false};
-  try {const saved=JSON.parse(sessionStorage.getItem('maddie-journey-ui')||'null');if(saved&&data.viewers.some(function(v){return v.id===saved.viewer;}))ui.viewer=saved.viewer;if(saved&&(saved.scope==='all'||data.divisions.some(function(d){return d.id===saved.scope;})))ui.scope=saved.scope;}catch(err){}
+  let ui={tab:'overview',viewer:'giezelle',division:'all',activeDivision:'rmd',scope:'all',divisionPickerMode:'view',query:'',employee:data.employees[0].id,detail:'preview',employeeModalOpen:false,roleModal:false,divisionModal:false,employeePicker:false,pickerDivision:'rmd',frequency:'monthly',mobile:false,milestoneCategory:'birthday',milestoneDivision:'all',milestoneShowAll:false};
+  try {const saved=JSON.parse(sessionStorage.getItem('maddie-journey-ui')||'null');if(saved&&data.viewers.some(function(v){return v.id===saved.viewer;}))ui.viewer=saved.viewer;ui.scope='all';}catch(err){}
   const now=function(){return new Date().toISOString().slice(0,10);};
   const safe=function(v){return String(v===undefined||v===null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
   const money=function(n){return '₱'+(Number(n)||0).toLocaleString('en-PH',{maximumFractionDigits:2,minimumFractionDigits:2});};
@@ -65,25 +72,22 @@
   function linkedEmployee(e){return '<button class="link-btn" data-action="open" data-id="'+safe(e.id)+'">'+safe(e.name)+'</button>';}
   function progress(val){return '<div class="progress"><span style="width:'+Math.max(0,Math.min(100,val))+'%"></span></div>';}
   function topnav(){
-    const v=viewer(),isObserver=['ceo','cso','coo'].includes(v.role);
     return '<div class="mobile-top"><div class="brand"><span class="logo">m.</span><b>Maddie Journey</b></div>'+button('☰','mobile','','small')+'</div>'+
-    '<div class="topbar"><div class="breadcrumb">MADHOUSE / PEOPLE & CULTURE <strong>'+safe(title(ui.tab))+'</strong></div>'+
-    '<div class="top-actions"><button type="button" class="scope-trigger" data-action="choose-scope" aria-haspopup="dialog" aria-label="Select division for all trackers"><span class="scope-dot">◈</span><span class="scope-label">'+safe(scopeLabel())+'</span><span class="scope-arrow">⌄</span></button><span class="tag warn demo-marker">DEMO DATA</span>'+
-    '<button class="workspace-trigger" type="button" data-action="choose-workspace" aria-haspopup="dialog" aria-label="Switch workspace, currently '+safe(v.name)+'">'+
-    avatar(v.name)+'<span class="workspace-trigger-copy"><b>'+safe(v.name)+'</b><small>'+(isObserver?'Observer · View only':isHR()?'HR · Editor':'Division · Editor')+'</small></span><span class="workspace-chevron" aria-hidden="true">⌄</span></button></div></div>';
+      '<div class="topbar"><div class="breadcrumb">MADHOUSE / PEOPLE & CULTURE <strong>'+safe(title(ui.tab))+'</strong></div>'+
+      '<div class="topbar-context">51 sample employees · 8 divisions</div></div>';
   }
-  const items=[['overview','◫','Overview'],['divisions','▦','Divisions'],['employees','◎','Employees'],['journey','◷','Journey stages'],['kit','▣','Welcome Maddie Kit'],['attendance','◩','Attendance'],['kpi','◈','KPI scorecards'],['approvals','✓','Approvals'],['audit','≡','Activity & data']];
+  const items=[['overview','◫','Overview'],['divisions','▦','Divisions'],['employees','◎','Employees'],['milestones','✦','Milestones'],['journey','◷','Journey'],['kit','▣','Welcome Kit'],['attendance','◩','Attendance'],['kpi','◈','KPI scorecards'],['approvals','✓','Reviews'],['audit','≡','Data & settings']];
   function sidebar(){
-    const v=viewer(),own=assignedDivisionIds(),observer=['ceo','cso','coo'].includes(v.role);
-    const visible=isHR()?['overview','divisions','employees','journey','kit','attendance','kpi','audit']
-     :observer?['overview','divisions','employees','attendance','kpi','approvals']
-     :['overview','divisions','employees','journey','kit','attendance','kpi','approvals'];
-    const deptLinks=own.length?'<div class="sidebar-label division-side-label">My departments</div><nav class="nav division-shortcuts" aria-label="My departments">'+own.map(function(id){const d=div(id);return '<a href="#division/'+safe(id)+'" data-nav-division="'+safe(id)+'" class="'+(ui.tab==='division'&&ui.activeDivision===id?'active':'')+'"><span class="nav-icon">◈</span>'+safe(d.short)+'</a>';}).join('')+'</nav>':'';
-    return '<aside class="sidebar"><div class="brand"><span class="logo">m.</span><span><b>Maddie Journey</b><small>People & Culture Workspace</small></span></div>'+
-    '<div class="sidebar-label">My workspace</div><nav class="nav" aria-label="Main navigation">'+items.filter(function(i){return visible.includes(i[0]);}).map(function(i){return '<a href="#'+i[0]+'" data-nav="'+i[0]+'" class="'+(ui.tab===i[0]||(i[0]==='divisions'&&ui.tab==='division')?'active':'')+'"><span class="nav-icon">'+i[1]+'</span>'+safe(i[2])+'</a>';}).join('')+'</nav>'+
-    deptLinks+'<div class="sidebar-bottom"><div class="demo">PROTOTYPE · Demo mode only<br>Edits stay on this device.</div><div class="sidebar-user">'+avatar(v.name)+'<span><b>'+safe(v.name)+'</b><small>'+safe(v.title)+'</small></span></div><button class="sidebar-switch" data-action="choose-workspace" type="button">Switch workspace ↗</button></div></aside>';
+    const v=viewer();
+    const groups=[['PEOPLE',['overview','divisions','employees','milestones']],['OPERATIONS',['journey','kit','attendance']],['PERFORMANCE',['kpi','approvals']]];
+    const navItems=function(ids){return ids.map(function(id){const item=items.find(function(x){return x[0]===id;});return item?'<a href="#'+id+'" data-nav="'+id+'" class="'+(ui.tab===id||(id==='divisions'&&ui.tab==='division')?'active':'')+'"><span class="nav-icon">'+item[1]+'</span>'+item[2]+'</a>':'';}).join('');};
+    return '<aside class="sidebar"><div class="brand"><span class="logo">m.</span><span><b>Maddie Journey</b><small>People & Culture</small></span></div>'+
+      groups.map(function(g){return '<div class="sidebar-label">'+g[0]+'</div><nav class="nav" aria-label="'+g[0]+'">'+navItems(g[1])+'</nav>';}).join('')+
+      '<div class="sidebar-bottom"><nav class="nav" aria-label="Settings">'+navItems(['audit'])+'</nav>'+
+      '<div class="sidebar-user">'+avatar(v.name)+'<span><b>'+safe(v.name)+'</b><small>'+safe(v.title)+'</small></span></div>'+
+      '<button class="sidebar-switch" data-action="choose-workspace" type="button">Switch demo view</button></div></aside>';
   }
-  function title(t){if(t==='division')return div(ui.activeDivision).name+' · Evaluation';return {divisions:'Divisions',overview:'Overview',employees:'People directory',journey:'Employee journey',kit:'Welcome Maddie Kit',attendance:'Attendance analytics',kpi:'2026 KPI evaluations',approvals:'Executive approvals',audit:'Activity & data'}[t]||'Overview';}
+  function title(t){if(t==='division')return div(ui.activeDivision).name+' · Evaluation';return {divisions:'Divisions',overview:'Overview',milestones:'Employee milestones',employees:'People directory',journey:'Employee journey',kit:'Welcome Maddie Kit',attendance:'Attendance analytics',kpi:'2026 KPI evaluations',approvals:'Executive approvals',audit:'Activity & data'}[t]||'Overview';}
   function header(eyebrow,heading,description,actions){return '<div class="page-header"><div><div class="eyebrow">'+safe(eyebrow)+'</div><h1>'+safe(heading)+'</h1><p>'+safe(description)+'</p></div><div class="actions">'+(actions||'')+'</div></div>'+(ui.tab==='overview'?'':screenSummary());}
 
   /* Summaries use the same calculated sample records displayed in each screen. */
