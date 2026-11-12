@@ -8,7 +8,7 @@ const path=require('node:path');
 const root=path.resolve(__dirname,'..');
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 
-const files=['index.html','data.js','data-adapter.js','app.js','operations.css','palette.css','landing.css','workspace.css','reader.css','refined.css','mono.css','motion.js'];
+const files=['index.html','data.js','data-adapter.js','monitoring.js','app.js','operations.css','palette.css','landing.css','workspace.css','reader.css','refined.css','mono.css','motion.js'];
 const src=Object.fromEntries(files.map(name=>[name,read(name)]));
 const results=[];
 function check(name,fn){fn();results.push(name);console.log('PASS '+name);}
@@ -35,6 +35,7 @@ function boot(initial={},hash='',mutateFixture,configureRuntime){
   new Function('window',src['data.js'])(win);
   if(mutateFixture)mutateFixture(win.MJ_SEED);
   new Function('window',src['data-adapter.js'])(win);
+  new Function('window',src['monitoring.js'])(win);
   if(configureRuntime)configureRuntime(win,doc);
   function TestBlob(chunks,options){this.text=chunks.join('');this.type=options.type;}
   const testURL={createObjectURL(blob){currentDownloadBlob=blob;return 'blob:test-download';},revokeObjectURL(){}};
@@ -67,7 +68,7 @@ function boot(initial={},hash='',mutateFixture,configureRuntime){
 }
 
 check('Files parse; reader CSS is last and PNG/JPEG media are preserved',()=>{
-  new Function(src['data.js']);new Function(src['data-adapter.js']);new Function(src['app.js']);new Function(src['motion.js']);
+  new Function(src['data.js']);new Function(src['data-adapter.js']);new Function(src['monitoring.js']);new Function(src['app.js']);new Function(src['motion.js']);
   assert(src['index.html'].indexOf('reader.css')>src['index.html'].indexOf('workspace.css'));
   assert(src['landing.css'].includes('assets/madhalloween.jpg'));
   assert(!src['app.js'].includes('assets/madhouse-logo.png'));
@@ -141,8 +142,8 @@ check('Sidebar has exactly five primary sections with correct destinations',()=>
 check('Top subnavigation changes with context and supports direct links',()=>{
   const configs={
     overview:[['overview','Overview'],['divisions','Divisions']],
-    employees:[['employees','Directory'],['milestones','Milestones']],
-    journey:[['journey','Journey board'],['kit','Welcome Kit'],['attendance','Attendance']],
+    employees:[['employees','Directory'],['milestones','Milestones'],['calendar','Calendar']],
+    journey:[['journey','Journey board'],['kit','Welcome Kit'],['files201','201 Files'],['attendance','Attendance']],
     kpi:[['kpi','KPI scorecards'],['approvals','Reviews']],
     sources:[['sources','Data sources'],['audit','About the prototype']]
   };
@@ -158,8 +159,8 @@ check('Top subnavigation changes with context and supports direct links',()=>{
   }
 });
 
-check('All eleven screens accessible to any visitor, read-only',()=>{
-  const screens=['overview','divisions','employees','milestones','journey','kit','attendance','kpi','approvals','sources','audit'];
+check('All thirteen screens accessible to any visitor, read-only',()=>{
+  const screens=['overview','divisions','employees','milestones','calendar','journey','kit','files201','attendance','kpi','approvals','sources','audit'];
   for(const tab of screens){
     user.navigate(tab);
     const h=user.html();
@@ -986,5 +987,132 @@ check('Phase 6 a broken optional animation layer does not stop the app',()=>{
   assert(ctx.html().includes('aria-pressed="true">KPI'));
   assert.doesNotThrow(()=>ctx.navigate('employees'));
   assert(ctx.html().includes('All Maddies'));
+});
+check('201 Files catalog has nine requirements and consistent 51-person statuses',()=>{
+  const snap=user.win.MJ_SOURCE_ADAPTER.getSnapshot(),quality=user.win.MJ_SOURCE_ADAPTER.getQualityReport();
+  assert.equal(snap.employees.length,51);
+  assert.equal(snap.documents201.length,9);
+  assert.equal(quality.document201Count,9);
+  assert(quality.structureValid);
+  const all=new Set(['complete','missing','not-checked','not-applicable']);
+  const ids=snap.documents201.map(x=>x.id);
+  for(const e of snap.employees){
+    assert.equal(Object.keys(e.files201).length,ids.length);
+    for(const id of ids)assert(all.has(e.files201[id]),id);
+  }
+  const report=user.win.MJ_MONITORING.fileSummary(snap);
+  assert.equal(report.total,51);
+  assert.equal(report.groups.missing.length+report.groups['not-checked'].length+
+    report.groups.complete.length,51);
+  const missing=report.rows.reduce((n,r)=>n+r.missing.length,0);
+  assert.equal(missing,snap.employees.flatMap(e=>ids.filter(id=>e.files201[id]==='missing')).length);
+});
+check('201 Files page lists real fictional names and specific missing documents',()=>{
+  user.navigate('files201');
+  const html=user.html(),snapshot=user.win.MJ_SOURCE_ADAPTER.getSnapshot();
+  const report=user.win.MJ_MONITORING.fileSummary(snapshot);
+  assert(html.includes('<h1>201 Files Checklist</h1>'));
+  assert(html.includes('By document'));
+  assert(html.includes('Who is missing what'));
+  assert.equal((html.match(/class="monitor-file-card"/g)||[]).length,9);
+  assert(html.includes('Missing documents'));
+  assert(html.includes('data-kind="missing" aria-pressed="true"'));
+  assert.equal((html.match(/class="monitor-file-requirements"/g)||[]).length,
+    Math.min(report.groups.missing.length,12));
+  const first=report.groups.missing[0];
+  assert(html.includes(first.employee.name));
+  assert(first.missing.every(doc=>html.includes(doc.label)));
+  assert(!html.includes('type="checkbox"'));
+  assert(!html.includes('Upload document'));
+  assert(html.includes('not connected'));
+});
+check('201 Files status categories and expansion preserve all 51 employees',()=>{
+  user.navigate('files201');
+  user.click('files-more');
+  let h=user.html();
+  assert.equal((h.match(/class="monitor-file-requirements"/g)||[]).length,21);
+  user.click('files-filter',{kind:'not-checked'});
+  h=user.html();assert(h.includes('data-kind="not-checked" aria-pressed="true"'));
+  assert.equal((h.match(/class="monitor-file-requirements"/g)||[]).length,6);
+  user.click('files-filter',{kind:'complete'});
+  h=user.html();assert(h.includes('24 employees in this view'));
+  user.click('files-filter',{kind:'all'});
+  user.click('files-more');
+  h=user.html();assert.equal((h.match(/class="monitor-file-requirements"/g)||[]).length,51);
+});
+check('201 Files employee reader shows nine noneditable statuses',()=>{
+  const before=JSON.stringify(user.win.MJ_SEED.employees);
+  user.navigate('files201');
+  const sample=user.win.MJ_MONITORING.fileSummary(user.win.MJ_SOURCE_ADAPTER.getSnapshot()).groups.missing[0];
+  user.click('open',{id:sample.employee.id,detail:'files201'});
+  const h=user.html();
+  assert(h.includes('data-tab="files201" aria-current="page"'));
+  assert(h.includes('Fictional per-document statuses'));
+  assert.equal((h.split('class="table monitor-file-detail-table"')[1]||'').split('</table>')[0]
+    .match(/<tr><th scope="row">/g).length,9);
+  assert(sample.missing.some(doc=>h.includes(doc.label)));
+  for(const forbidden of ['type="file"','data-action="upload"','type="checkbox"']){
+    assert(!h.includes(forbidden));
+  }
+  user.click('close');
+  assert.equal(JSON.stringify(user.win.MJ_SEED.employees),before);
+});
+check('Three-month Calendar renders contiguous months and sample events',()=>{
+  user.navigate('calendar');
+  const h=user.html(),api=user.win.MJ_MONITORING;
+  const start=api.todayManila().slice(0,7);
+  const m1=api.monthShift(start,1),m2=api.monthShift(start,2);
+  assert(h.includes('<h1>Calendar</h1>'));
+  assert.equal((h.match(/class="panel monitor-calendar-month"/g)||[]).length,3);
+  const snap=user.win.MJ_SOURCE_ADAPTER.getSnapshot();
+  const ev=api.events(snap,start);
+  assert(h.includes(ev.length+' of '+ev.length+' fictional dates displayed'));
+  for(const month of [start,m1,m2]){
+    const d=new Date(month+'-01T00:00:00Z');
+    const label=d.toLocaleDateString('en-PH',{month:'long',year:'numeric',timeZone:'UTC'});
+    assert(h.includes('<h2>'+label+'</h2>'));
+  }
+  assert(h.includes('not confirmed appointments'));
+  assert(!h.includes('Add to calendar'));
+});
+check('Calendar filters and navigation never create or mutate events',()=>{
+  const before=JSON.stringify(user.win.MJ_SEED.employees),api=user.win.MJ_MONITORING;
+  const month=api.todayManila().slice(0,7);
+  user.navigate('calendar');
+  user.click('calendar-type',{kind:'checkin'});
+  let h=user.html();
+  assert(h.includes('data-kind="checkin" aria-pressed="true"'));
+  user.click('calendar-type',{kind:'all'});
+  user.click('calendar-shift',{shift:'3'});
+  h=user.html();
+  const next=api.monthShift(month,3),date=new Date(next+'-01T00:00:00Z');
+  assert(h.includes(date.toLocaleDateString('en-PH',{month:'long',year:'numeric',timeZone:'UTC'})));
+  user.click('calendar-shift',{shift:'-3'});
+  user.click('calendar-today');
+  h=user.html();
+  assert(h.includes('Three-month outlook'));
+  assert.equal(JSON.stringify(user.win.MJ_SEED.employees),before);
+});
+check('Calendar day selection and employee preview remain read-only',()=>{
+  user.navigate('calendar');
+  const start=user.win.MJ_MONITORING.todayManila().slice(0,7);
+  const event=user.win.MJ_MONITORING.events(user.win.MJ_SOURCE_ADAPTER.getSnapshot(),start)[0];
+  assert(event);
+  user.click('calendar-day',{date:event.date});
+  assert(user.html().includes('Events · '));
+  assert(user.html().includes('aria-pressed="true"'));
+  const detail=event.type==='checkin'||event.type==='employment'?'journey':'milestones';
+  user.click('open',{id:event.employee.id,detail});
+  assert(user.html().includes('employee-modal'));
+  user.click('close');
+  assert(user.html().includes('calendar-three')||user.html().includes('monitor-calendar-three'));
+});
+check('Calendar and 201 deep links open on fresh page load',()=>{
+  for(const tab of ['calendar','files201']){
+    const instance=boot({},'#'+tab);
+    assert(instance.html().includes('workspace-sidebar'));
+    assert(instance.html().includes(tab==='calendar'?'monitor-calendar-three':'Who is missing what'));
+    assert(!instance.html().includes('Who is using the dashboard?'));
+  }
 });
 console.log('\n'+results.length+' smoke tests passed. Physical-device visual QA is separate.');
