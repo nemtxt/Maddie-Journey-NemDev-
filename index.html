@@ -7,7 +7,7 @@
   <script>
     // Apply saved appearance before styles paint to prevent a bright-to-dark flash.
     (function () {
-      var theme = 'dark';
+      var theme = 'light';
       try {
         var saved = localStorage.getItem('maddie-journey-theme');
         if (saved === 'light' || saved === 'dark') theme = saved;
@@ -17,16 +17,19 @@
       if (meta) meta.setAttribute('content', theme === 'dark' ? '#090A0C' : '#F6F7F8');
     })();
   </script>
-  <meta name="description" content="Maddie Journey prototype — onboarding, Welcome Maddie Kit, attendance and KPI evaluation.">
-  <title>Maddie Journey · People & Culture</title>
+  <meta name="description" content="Maddie Journey by Madhouse Design Studio — people, division and executive summaries in one clear demo workspace.">
+  <title>Maddie Journey · Madhouse Design Studio</title>
+  <meta name="color-scheme" content="light dark">
+  <link rel="preload" href="./assets/madhalloween-hero.webp" as="image" type="image/webp">
   <link rel="stylesheet" href="./styles.css">
   <link rel="stylesheet" href="./theme.css">
   <link rel="stylesheet" href="./operations.css">
+  <link rel="stylesheet" href="./landing.css">
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
   <div id="app">
-    <div class="boot"><span class="boot-mark">m.</span><p>Opening Maddie Journey…</p></div>
+    <div class="boot"><p>Opening Maddie Journey…</p></div>
   </div>
   <noscript><p style="padding:30px">JavaScript must be enabled for this prototype.</p></noscript>
   <script src="./data.js" defer></script>
