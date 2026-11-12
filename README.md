@@ -51,7 +51,7 @@ All 11 screens are available to anyone using the fictional sample prototype. On 
 
 ### v2.4 visual consistency and motion
 
-- **Minimal landing:** Removed both rows of audience/shortcut cards and any landing progress badge. The landing now contains a full-bleed original photograph, one workspace entry, a typographic identity and a quiet footer.
+- **Minimal landing (v2.4):** Removed both rows of audience/shortcut cards and landing progress badges. The full-viewport, typography-only landing is the later v2.6 design.
 - **Black and white workspace:** White surfaces in Light mode, near-black surfaces in Dark mode, neutral status backgrounds, one pink accent for active navigation, focus rings and essential actions. Decorative pastel panel fills and purple gradients are no longer part of the displayed system.
 - **One typeface:** Inter for the entire site; the font is loaded as a free web font, with a sans-serif fallback only when the font request fails. Navigation and appearance icons are consistent inline SVG rather than platform-dependent symbols.
 - **Sidebar control:** Collapse or expand the main desktop sidebar from the top header. The collapsed state retains all five destination icons, accessible labels and tooltips and is stored as a UI preference only. Mobile uses its separate Menu drawer.
@@ -62,7 +62,7 @@ The final design tokens and overrides are in **mono.css**. New features should u
 
 ### v2.5 navigation and accessibility refinement
 
-- **Fewer duplicate routes:** The landing has one dashboard CTA and one division CTA, the logo remains the home return, and the workspace no longer repeats unnecessary sidebar and subnavigation instructions.
+- **Fewer duplicate routes (v2.5):** Removed unnecessary sidebar and subnavigation instructions. The v2.6 landing now has one dashboard CTA and a text-only brand return.
 - **One employee drill-down:** Employee previews use their existing eight accessible tabs rather than a second bank of six buttons that went to the same information.
 - **Search stays responsive:** The visible directory count, matching table and clear-search control react as the user types, without changing or persisting employee data.
 - **Keyboard continuity:** Closing an employee or division dialog restores keyboard focus to its originating action when available. Invalid employee identifiers cannot open a broken dialog.
@@ -114,7 +114,7 @@ The later connected-account phase can implement source normalization against the
 | landing.css | Landing page and source photo |
 | workspace.css / reader.css | Global workspace, primary/secondary navigation and read-only views |
 | refined.css | Dashboard metrics, searchable directory, source quality panel and responsive summaries |
-| mono.css | **v2.5 canonical design tokens:** monochrome Light/Dark modes, one font, one accent and collapsing sidebar |
+| mono.css | **v2.6 canonical styles:** monochrome Light/Dark modes, full-screen landing, monitoring hierarchy, responsive grid, one font and one accent |
 | motion.js | Reduced-motion-aware, nonessential Anime.js entrance transitions |
 | tests/smoke.js | Regression tests for navigation, adapters, fixtures and read-only operation |
 | docs/CLAUDE_CONNECTORS_HANDOFF.md | Future connector development instructions |
