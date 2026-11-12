@@ -691,7 +691,7 @@ check('Phase 4 KPI table contributions exactly reconcile to weighted score',()=>
   assert(comp);
   for(const point of contributions)assert(comp.includes(point.toFixed(2)+' pts'));
   assert(comp.includes(weighted.toFixed(2)+' / 100'));
-  assert(comp.includes('<td>100%</td>'));
+  assert(comp.includes('<td class="report-num">100%</td>'));
   assert(html.includes('Demo validation flag unset'));
   user.click('detail',{tab:'preview'});
   for(const point of contributions)assert(user.html().includes(point.toFixed(2)+' weighted points'));
@@ -727,8 +727,10 @@ check('Phase 4 attendance monthly buckets reconcile event classifications',()=>{
   const approved=batch.filter(r=>r.type==='Leave'&&r.approval==='Approved').length;
   const concerns=batch.filter(r=>(r.type==='Late'&&r.approval!=='Excused')||
     (r.type==='Absent'&&r.approval==='Unapproved')).length;
-  assert(section.includes('<th scope="row">'+key+'</th><td>'+batch.length+'</td><td>'+
-    late+'</td><td>'+absent+'</td><td>'+excused+'</td><td>'+approved+'</td><td>'+concerns+'</td>'));
+  assert(section.includes('<th scope="row">'+key+'</th><td class="report-num">'+batch.length+
+    '</td><td class="report-num">'+late+'</td><td class="report-num">'+absent+
+    '</td><td class="report-num">'+excused+'</td><td class="report-num">'+approved+
+    '</td><td class="report-num">'+concerns+'</td>'));
   user.setFilter('frequency','weekly');
   assert(user.html().includes('value="weekly" selected'));
 });
@@ -738,7 +740,7 @@ check('Phase 4 review status tables never infer missing dates or approvals',()=>
   let h=user.html(),table=h.split('class="table-wrap review-record-table"')[1]?.split('</table>')[0];
   assert(table);
   assert(table.includes('Recorded date'));
-  assert.equal((table.match(/<tr><td>0[1-4]<\/td>/g)||[]).length,4);
+  assert.equal((table.match(/<tr><td class="report-num">0[1-4]<\/td>/g)||[]).length,4);
   assert(table.includes('Approved'));
   assert(h.includes('4 / 4 stages show an endorsed or approved status'));
   assert(h.includes('not evidence of a verified chronological audit trail'));
