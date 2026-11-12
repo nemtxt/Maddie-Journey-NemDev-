@@ -100,7 +100,7 @@
       '<p class="workspace-sidebar-caption">PEOPLE MONITORING</p>'+
       '<nav class="nav workspace-mainnav" aria-label="Workspace sections">'+navGroups.map(function(g){
         return '<a href="#'+g.defaultTab+'" data-nav="'+g.defaultTab+'" class="workspace-mainnav-item '+(g.id===active?'active':'')+'"'+
-        (g.id===active?' aria-current="location"':'')+'><span class="nav-icon" aria-hidden="true">'+g.icon+'</span><span>'+g.label+'</span>'+
+        (g.id===active?' aria-current="location"':'')+'><span class="nav-icon" aria-hidden="true">'+g.icon+'</span><span>'+safe(g.label)+'</span>'+
         '<span class="workspace-mainnav-chevron" aria-hidden="true">›</span></a>';
       }).join('')+'</nav>'+
       '<div class="sidebar-bottom"><div class="reader-sidebar-status"><span class="data-provenance-dot"></span>'+
