@@ -456,7 +456,8 @@
           '<div class="work-list-subject"><span class="monitor-priority-cue monitor-priority-'+cue.kind+'">'+cue.label+'</span>'+
           '<span class="monitor-signal-text">'+safe(item.label)+
           (extra?'<small>+'+extra+' other '+(extra===1?'signal':'signals')+' for this person</small>':'')+'</span></div>'+
-          '<span class="work-list-division">'+safe(div(item.e.division).short)+'</span>'+button('Open','open','data-id="'+safe(item.e.id)+'" data-detail="'+item.detail+'"','small')+'</div>';
+          '<span class="work-list-division">'+safe(div(item.e.division).short)+'</span>'+button('Open','open','data-id="'+safe(item.e.id)+'" data-detail="'+item.detail+
+          '" data-origin-kind="'+safe(item.group)+'" data-origin-label="'+safe(item.label)+'"','small')+'</div>';
       }).join(''):'<p class="empty">No sample follow-ups in this category.</p>')+'</div>';
     const groups=categories.slice(1).filter(function(c){return active==='all'||active===c[0];});
     const board='<div class="work-board" role="group" aria-label="Follow-up categories">'+groups.map(function(c){
@@ -464,7 +465,8 @@
       return '<section class="work-lane work-lane-'+c[0]+'"><header class="work-lane-head"><strong>'+c[1]+'</strong><span>'+subset.length+'</span></header>'+
         '<div class="work-lane-cards">'+(shown.length?shown.map(function(item){
           const percent=item.group==='onboarding'?journeyPct(item.e):item.group==='kpi'?score(item.e):null;
-          return '<button type="button" class="work-card" data-action="open" data-id="'+safe(item.e.id)+'" data-detail="'+item.detail+'" aria-label="Open '+safe(item.e.name)+': '+safe(item.label)+'">'+
+          return '<button type="button" class="work-card" data-action="open" data-id="'+safe(item.e.id)+'" data-detail="'+item.detail+'" data-origin-kind="'+safe(item.group)+
+            '" data-origin-label="'+safe(item.label)+'" aria-label="Open '+safe(item.e.name)+': '+safe(item.label)+'">'+
             '<strong>'+safe(item.label)+'</strong><span class="work-card-employee">'+avatar(item.e.name)+'<span>'+safe(item.e.name)+'</span></span>'+
             '<span class="work-card-meta">'+safe(div(item.e.division).short)+(percent!==null?' · '+Math.round(percent)+'%':'')+'</span>'+
             (percent!==null?'<span class="work-card-progress"><span style="width:'+Math.min(100,Math.max(0,percent))+'%"></span></span>':'')+'</button>';
