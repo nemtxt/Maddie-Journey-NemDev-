@@ -67,7 +67,7 @@
         '<td><span class="monitor-file-status monitor-file-'+row.status+'">'+icon(statusIcons[row.status]||'info')+esc(docLabels[row.status])+'</span></td>'+
         '<td class="monitor-file-requirements">'+esc(description)+'</td>'+
         '<td><button class="button small" type="button" data-action="open" data-id="'+esc(e.id)+
-        '" data-detail="files201">Inspect</button></td></tr>';
+        '" data-detail="files201" data-origin-label="'+esc(docLabels[row.status])+': '+esc(description)+'">Inspect</button></td></tr>';
     }).join('');
     return '<p class="monitor-provenance" role="note"><strong>Fictional tracker snapshot.</strong> '+
       total+' example employee records, '+summary.docs.length+
@@ -202,7 +202,8 @@
         '">All dates</button>':'')+'</div>'+
       (shown.length?shown.map(function(e){
         return '<button type="button" class="monitor-calendar-event" data-action="open" data-id="'+
-          esc(e.employee.id)+'" data-detail="'+(e.type==='checkin'||e.type==='employment'?'journey':'milestones')+'">'+
+          esc(e.employee.id)+'" data-detail="'+(e.type==='checkin'||e.type==='employment'?'journey':'milestones')+
+          '" data-date="'+esc(e.date)+'" data-origin-label="'+esc(e.title)+'">'+
           '<time datetime="'+e.date+'">'+esc(e.date.slice(8))+' '+
           esc(new Date(e.date+'T00:00:00Z').toLocaleDateString('en-PH',{month:'short',timeZone:'UTC'}))+'</time>'+
           '<span><b>'+esc(e.employee.name)+'</b><small>'+esc(e.title)+' · '+esc(e.provenance)+'</small></span>'+
