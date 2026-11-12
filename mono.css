@@ -494,7 +494,7 @@ body .landing-footer span{color:inherit}
   transition:background-color .16s ease
 }
 .overview-summary-grid button.overview-signal::after{
-  content:"↗";position:absolute;top:16px;right:16px;
+  content:none;display:none;
   color:var(--mono-faint);font-size:17px;line-height:1
 }
 .overview-summary-grid button.overview-signal:hover{background:var(--mono-hover)!important}
@@ -1833,5 +1833,116 @@ body :is(.monitor-filter,.queue-filter,.workspace-subnav a,
   body :is(.monitor-focus-item,.work-card,.monitor-calendar-event,
     .workspace-mainnav .workspace-mainnav-item):focus-visible{
     outline:3px solid Highlight!important
+  }
+}
+
+
+/* v3.4.2 — shared local SVG icons, not emoji or symbol-font assets.
+   All icons use the same 24px optical grid / 1.8px outline stroke.
+   Meaning stays in the adjacent text and accessible control label. */
+body .ui-icon{
+  display:inline-block;flex:0 0 auto;
+  width:1.15rem;height:1.15rem;vertical-align:middle;
+  stroke:currentColor;fill:none;pointer-events:none
+}
+body .workspace-mainnav .nav-icon .ui-icon,
+body .theme-icon .ui-icon,
+body .sidebar-toggle .ui-icon,
+body .mobile-top [data-action="mobile"] .ui-icon{
+  width:19px;height:19px
+}
+body .workspace-mainnav-chevron{
+  display:inline-flex;align-items:center;justify-content:center
+}
+body .workspace-mainnav-chevron .ui-icon{width:14px;height:14px}
+body .mobile-drawer-close>span,
+body .landing-primary-cta>span,
+body .employee-context-division>span{
+  display:inline-flex;align-items:center;justify-content:center
+}
+body .mobile-drawer-close .ui-icon,
+body .modal-close .ui-icon{width:19px;height:19px}
+body .modal-close{display:inline-flex;align-items:center;justify-content:center}
+body .landing-primary-cta .ui-icon{width:17px;height:17px}
+body .employee-context-division .ui-icon{width:15px;height:15px}
+body .employee-context-pager button{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px
+}
+body .employee-context-pager .ui-icon{width:16px;height:16px}
+body .employee-picker-trigger strong{
+  display:inline-flex;align-items:center;gap:5px
+}
+body .employee-picker-trigger strong .ui-icon{width:15px;height:15px}
+body .metric-icon{
+  display:inline-flex;align-items:center;justify-content:center
+}
+body .metric-icon .ui-icon{width:17px;height:17px}
+body .empty .big .ui-icon{width:28px;height:28px}
+body .reader-check-icon{
+  display:inline-flex;align-items:center;justify-content:center
+}
+body .reader-check-icon .ui-icon{width:16px;height:16px;stroke-width:2}
+body .overview-summary-grid button.overview-signal::after{
+  content:none!important;display:none!important
+}
+body .overview-summary-grid button.overview-signal .overview-signal-icon{
+  position:absolute;top:16px;right:16px;
+  display:inline-flex;align-items:center;justify-content:center;
+  width:30px;height:30px;border:1px solid var(--mono-border);
+  border-radius:9px;background:var(--mono-surface);
+  color:var(--mono-secondary)
+}
+body .overview-summary-grid button.overview-signal .overview-signal-icon .ui-icon{
+  width:16px;height:16px
+}
+body .monitor-division-arrow,
+body .monitor-focus-topline>span:last-child{
+  display:inline-flex;align-items:center;justify-content:center
+}
+body .monitor-division-arrow .ui-icon{width:17px;height:17px}
+body .monitor-focus-topline .ui-icon{
+  width:17px;height:17px;color:var(--mj-focus-accent)
+}
+body .monitor-file-heading{
+  display:flex;align-items:center;gap:9px;min-width:0;
+}
+body .monitor-file-symbol{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:31px;height:31px;flex:0 0 31px;
+  border-radius:9px;border:1px solid var(--mono-border);
+  background:var(--mono-surface);color:var(--mono-text)
+}
+body .monitor-file-symbol .ui-icon{width:17px;height:17px}
+body .monitor-file-status{display:inline-flex;align-items:center;gap:5px}
+body .monitor-file-status .ui-icon{width:13px;height:13px;stroke-width:2}
+body :is(.monitor-filterbar,.monitor-calendar-typebar) .monitor-filter{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px
+}
+body .monitor-filter-symbol{
+  display:inline-flex;align-items:center;justify-content:center
+}
+body .monitor-filter-symbol .ui-icon{width:14px;height:14px}
+body .monitor-calendar-controls .button{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px
+}
+body .monitor-calendar-controls .button .ui-icon{width:16px;height:16px}
+body .monitor-calendar-event-arrow .ui-icon{width:15px;height:15px}
+body .directory-filters .button:has(>.ui-icon),
+body .journey-board-toolbar .button:has(>.ui-icon),
+body .page-header .button:has(>.ui-icon),
+body .milestone-toolbar button:has(>.ui-icon){
+  display:inline-flex;align-items:center;justify-content:center;gap:6px
+}
+body .button .ui-icon{width:15px;height:15px}
+@media(max-width:420px){
+  body .overview-summary-grid button.overview-signal .overview-signal-icon{
+    top:11px;right:10px;width:27px;height:27px
+  }
+  body .monitor-file-heading{gap:7px}
+}
+@media(forced-colors:active){
+  body :is(.overview-signal-icon,.monitor-file-symbol){
+    background:Canvas!important;color:CanvasText!important;
+    border-color:CanvasText!important
   }
 }
