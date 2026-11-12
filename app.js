@@ -3,45 +3,18 @@
   'use strict';
   const seed = window.MJ_SEED;
   if (!seed) { document.getElementById('app').textContent='Sample data could not be loaded.'; return; }
-  const KEY='maddie-journey-demo-v3';
+  // Read-only UI: data comes exclusively from the immutable fictional fixture.
+  // Previous local demo edits are intentionally ignored, never deleted or overwritten.
   const $=function(id){return document.getElementById(id);};
   const clone=function(x){return JSON.parse(JSON.stringify(x));};
-  function upgradeData(source){
-    if(!source||![3,4,5,6].includes(source.version)||!Array.isArray(source.employees)||source.employees.length!==51)return clone(seed);
-    if(source.version===3){
-      const untouched=source.employees.filter(function(e){return e.division==='design'&&!e.modifiedAt&&!(e.audit||[]).length;});
-      untouched.forEach(function(e,i){if(i%2===1)e.division='designops';});
-    }
-    const byId=new Map(seed.employees.map(function(e){return [e.id,e];}));
-    source.employees.forEach(function(e){
-      const template=byId.get(e.id);if(!template)return;
-      if(typeof e.birthday!=='string')e.birthday=template.birthday;
-      for(const k of ['promotions','disciplinaryActions','attendanceAwards'])if(!Array.isArray(e[k]))e[k]=clone(template[k]);
-      if(!Array.isArray(e.audit))e.audit=[];
-      if(!Number.isInteger(e.orgLevel)||e.orgLevel<1||e.orgLevel>6)e.orgLevel=null;
-      if(typeof e.reportsTo!=='string')e.reportsTo=null;
-    });
-    // Populate missing hierarchy values per current division, preserving existing edits.
-    seed.divisions.forEach(function(d){
-      const people=source.employees.filter(function(e){return e.division===d.id;}).sort(function(a,b){return a.id.localeCompare(b.id);});
-      const base=people.length<7?[6,5,4,3,2,1]:[6,5,4,3,3,2,1];
-      people.forEach(function(e,i){if(e.orgLevel===null)e.orgLevel=base[i]||1;});
-      people.forEach(function(e,i){
-        const valid=people.find(function(p){return p.id===e.reportsTo&&p.id!==e.id&&p.orgLevel>e.orgLevel;});
-        if(!valid){const supervisor=people.slice(0,i).reverse().find(function(p){return p.orgLevel>e.orgLevel;});e.reportsTo=supervisor?supervisor.id:null;}
-      });
-    });
-    source.version=seed.version;return source;
-  }
-  let data;
+  const data=clone(seed);
+  const VIEWER_KEY='maddie-journey-viewer-v2';
+  let ui={tab:'welcome',viewer:'ceo',division:'all',activeDivision:'rmd',scope:'all',divisionPickerMode:'view',query:'',employee:data.employees[0].id,detail:'preview',employeeModalOpen:false,roleModal:false,divisionModal:false,employeePicker:false,pickerDivision:'rmd',frequency:'monthly',mobile:false,milestoneCategory:'birthday',milestoneDivision:'all',milestoneShowAll:false,milestonePicking:false,divisionTab:'summary',attentionFilter:'all',attentionShowAll:false,workView:'list',journeyView:'board',workspaceChosen:false,chooserCategory:'all'};
   try{
-    const raw=JSON.parse(localStorage.getItem(KEY));
-    data=upgradeData(raw);
-    if(raw&&data===raw)try{localStorage.setItem(KEY,JSON.stringify(data));}catch(err){}
-  }catch(err){data=clone(seed);}
-  data.viewers=clone(seed.viewers); data.divisions=clone(seed.divisions); data.stages=clone(seed.stages); data.kit=clone(seed.kit);
-  let ui={tab:'welcome',viewer:'giezelle',division:'all',activeDivision:'rmd',scope:'all',divisionPickerMode:'view',query:'',employee:data.employees[0].id,detail:'preview',employeeModalOpen:false,roleModal:false,divisionModal:false,employeePicker:false,pickerDivision:'rmd',frequency:'monthly',mobile:false,milestoneCategory:'birthday',milestoneDivision:'all',milestoneShowAll:false,milestonePicking:false,divisionTab:'summary',attentionFilter:'all',attentionShowAll:false,workView:'list'};
-  try {const saved=JSON.parse(sessionStorage.getItem('maddie-journey-ui')||'null');if(saved&&data.viewers.some(function(v){return v.id===saved.viewer;}))ui.viewer=saved.viewer;ui.scope='all';}catch(err){}
+    const savedId=localStorage.getItem(VIEWER_KEY);
+    if(data.viewers.some(function(v){return v.id===savedId;})){ui.viewer=savedId;ui.workspaceChosen=true;}
+  }catch(err){}
+  // Layout preferences are not employee records and may be stored locally.
   try{const remembered=sessionStorage.getItem('maddie-journey-workview');if(remembered==='board'||remembered==='list')ui.workView=remembered;}catch(err){}
   const now=function(){return new Date().toISOString().slice(0,10);};
   const safe=function(v){return String(v===undefined||v===null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
@@ -58,13 +31,17 @@
   }
   const roleCanHead=function(e){const v=viewer();return !!(e&&(v.role==='head'||v.role==='corp')&&(v.divisions||[]).includes(e.division));};
   const isHR=function(){return viewer().role==='hr';};
-  const canTrack=function(e){return isHR()||roleCanHead(e);};
-  const canScore=function(e,k){return (k==='values'||k==='behavior')?isHR():roleCanHead(e);};
-  const canReview=function(k){const r=viewer().role;return k==='corp'&&r==='corp';};
+  // No source editing, endorsements or employee data submission is permitted.
+  const canTrack=function(){return false;};
+  const canScore=function(){return false;};
+  const canReview=function(){return false;};
   const dateLabel=function(v){if(!v)return '—';const d=new Date(v+'T12:00:00');return isNaN(d.getTime())?safe(v):d.toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'});};
   const escVal=function(v){return safe(v);};
-  function persist(){try{localStorage.setItem(KEY,JSON.stringify(data));sessionStorage.setItem('maddie-journey-ui',JSON.stringify({viewer:ui.viewer,scope:ui.scope}));}catch(err){toast('Browser storage unavailable. Export your work to avoid losing changes.');}}
-  function audit(e,action){const entry={date:new Date().toISOString(),actor:viewer().name,action:action};e.modifiedAt=entry.date;e.audit.unshift(entry);e.audit=e.audit.slice(0,50);persist();}
+  function persist(){
+    try{if(ui.workspaceChosen)localStorage.setItem(VIEWER_KEY,ui.viewer);}
+    catch(err){/* Browsing remains available without local storage. */}
+  }
+  // No audit writes: this static reader has no record mutations.
   function toast(msg){let t=$('toast');if(!t){t=document.createElement('div');t.id='toast';t.className='toast';document.body.appendChild(t);}t.textContent=msg;setTimeout(function(){if(t.textContent===msg)t.remove();},3800);}
   function journeyPct(e){const bits=e.journey.flat();return Math.round(bits.filter(Boolean).length/Math.max(1,bits.length)*100);}
   function kitPct(e){return Math.round(e.kit.filter(Boolean).length/Math.max(1,e.kit.length)*100);}
