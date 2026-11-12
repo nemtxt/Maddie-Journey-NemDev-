@@ -8,7 +8,7 @@ const path=require('node:path');
 const root=path.resolve(__dirname,'..');
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 
-const files=['index.html','data.js','data-adapter.js','monitoring.js','app.js','operations.css','palette.css','landing.css','workspace.css','reader.css','refined.css','mono.css','motion.js'];
+const files=['index.html','data.js','data-adapter.js','icons.js','monitoring.js','app.js','operations.css','palette.css','landing.css','workspace.css','reader.css','refined.css','mono.css','motion.js'];
 const src=Object.fromEntries(files.map(name=>[name,read(name)]));
 const results=[];
 function check(name,fn){fn();results.push(name);console.log('PASS '+name);}
@@ -35,6 +35,7 @@ function boot(initial={},hash='',mutateFixture,configureRuntime){
   new Function('window',src['data.js'])(win);
   if(mutateFixture)mutateFixture(win.MJ_SEED);
   new Function('window',src['data-adapter.js'])(win);
+  new Function('window',src['icons.js'])(win);
   new Function('window',src['monitoring.js'])(win);
   if(configureRuntime)configureRuntime(win,doc);
   function TestBlob(chunks,options){this.text=chunks.join('');this.type=options.type;}
@@ -68,7 +69,7 @@ function boot(initial={},hash='',mutateFixture,configureRuntime){
 }
 
 check('Files parse; reader CSS is last and PNG/JPEG media are preserved',()=>{
-  new Function(src['data.js']);new Function(src['data-adapter.js']);new Function(src['monitoring.js']);new Function(src['app.js']);new Function(src['motion.js']);
+  new Function(src['data.js']);new Function(src['data-adapter.js']);new Function(src['icons.js']);new Function(src['monitoring.js']);new Function(src['app.js']);new Function(src['motion.js']);
   assert(src['index.html'].indexOf('reader.css')>src['index.html'].indexOf('workspace.css'));
   assert(src['landing.css'].includes('assets/madhalloween.jpg'));
   assert(!src['app.js'].includes('assets/madhouse-logo.png'));
