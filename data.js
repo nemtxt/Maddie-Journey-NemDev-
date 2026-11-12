@@ -70,7 +70,7 @@
       journeyNotes:{},kit:kitChecks,kitNotes:{},attendance:attendance, scores:scoring,
       promotions:index%8===0?[{id:'promo-'+i+'-1',date:dateFor(index,-14),from:'Associate',to:'Senior Associate',status:index%3===0?'Proposed':'Approved',note:'Fictional promotion example'}]:[],
       disciplinaryActions:index%12===0?[{id:'disc-'+i+'-1',date:dateFor(index,14),category:'Attendance policy',severity:'Advisory',status:index%2===0?'Resolved':'Under review',note:'Fictional HR case — not a real allegation'}]:[],
-      attendanceAwards:index%6===0?[{id:'award-'+i+'-1',period:'2026-10',status:'HR confirmed',note:'Fictional perfect-attendance recognition, not inferred from incomplete time records'}]:[],
+      attendanceAwards:(index%5===0&&index%7!==0)?[{id:'award-'+i+'-1',period:'2026-10',status:'HR confirmed',note:'Fictional perfect-attendance recognition, not inferred from incomplete time records'}]:[],
       kpiItems:[{title:'Division delivery quality',target:'Sample target · 90%',actual:String(70+(index*7)%31)+'%',verified:false},
                 {title:'On-time task completion',target:'Sample target · 95%',actual:String(65+(index*3)%36)+'%',verified:false}],
       kpiSource:'Demo placeholders — official 2026 KPI sheet not linked',kpiValidated:false,
