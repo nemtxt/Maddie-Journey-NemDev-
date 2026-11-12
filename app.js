@@ -606,7 +606,7 @@
     '<button class="modal-close" data-action="close" aria-label="Close employee preview" type="button">×</button></div>'+
     '<nav class="employee-modal-tabs" aria-label="Employee sections">'+tabs.map(function(a){return '<button type="button" class="employee-tab '+(t===a[0]?'active':'')+'" data-action="detail" data-tab="'+a[0]+'" aria-current="'+(t===a[0]?'page':'false')+'">'+a[1]+'</button>';}).join('')+'</nav>'+
     '<div class="employee-modal-body">'+(t==='preview'?'':employeeMini(e))+
-    (t==='info'?'<div class="panel" style="margin-bottom:15px"><div class="form-grid"><div><span class="field-label">Start date</span><strong>'+dateLabel(e.startDate)+'</strong></div><div><span class="field-label">Employee ID</span><strong>'+safe(e.id)+'</strong></div></div></div>':'')+
+    (t==='info'?'<div class="panel" style="margin-bottom:15px"><div class="form-grid"><div><span class="field-label">Start date</span><strong>'+dateLabel(e.startDate)+'</strong></div><div><span class="field-label">Employee ID</span><strong>'+safe(e.id)+'</strong></div><div><span class="field-label">Org level (sample)</span><strong>Level '+safe(e.orgLevel||'—')+'</strong></div><div><span class="field-label">Reports to (sample)</span><strong>'+safe((data.employees.find(function(p){return p.id===e.reportsTo;})||{}).name||'Department lead')+'</strong></div></div></div>':'')+
     detailContent(e,t)+'</div></section></div>';
   }
   function render(){const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,milestones:milestonesView,journey:journey,kit:kitView,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,sources:sourcesView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open':'')+'">'+sidebar()+'<main id="main-content" class="main" tabindex="-1">'+topnav()+(views[ui.tab]||overview)()+'<footer class="footer"><span>Maddie Journey · Prototype v1.6</span><span>51 fictional employees · Local browser storage · No live integrations</span></footer></main></div>'+(ui.roleModal?workspaceModal():ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.employeeModalOpen?employeeModal():'');document.title=title(ui.tab)+' · Maddie Journey';if(ui.employeeModalOpen||ui.roleModal||ui.divisionModal||ui.employeePicker){const modal=$('app').querySelector('[role="dialog"]');if(modal&&typeof modal.focus==='function')modal.focus({preventScroll:true});}}
@@ -620,7 +620,15 @@
     toast('Evaluation changed: previous review endorsements were reset.');
   }
   function changeField(el){const e=emp(),field=el.dataset.field;if(!e||!field)return;const val=el.value;
-    if(field.indexOf('profile.')===0){if(!isHR())return;const k=field.slice(8);if(!['name','jobTitle','email','startDate','birthday','division'].includes(k))return;if((k==='name'||k==='jobTitle')&&!val.trim()){toast('This field cannot be empty.');render();return;}if(k==='division'&&!data.divisions.some(function(d){return d.id===val;}))return;e[k]=val.slice(0,150);if(k==='division')invalidateEvaluation(e);audit(e,'Updated employee '+k);}
+    if(field.indexOf('profile.')===0){if(!isHR())return;const k=field.slice(8);if(!['name','jobTitle','email','startDate','birthday','division'].includes(k))return;if((k==='name'||k==='jobTitle')&&!val.trim()){toast('This field cannot be empty.');render();return;}if(k==='division'&&!data.divisions.some(function(d){return d.id===val;}))return;e[k]=val.slice(0,150);
+      if(k==='division'){
+        // A transferred demo employee must not retain a reporting line to another department.
+        e.orgLevel=3;
+        const localLead=data.employees.find(function(p){return p.id!==e.id&&p.division===val&&p.orgLevel>3;});
+        e.reportsTo=localLead?localLead.id:null;
+        invalidateEvaluation(e);
+      }
+      audit(e,'Updated employee '+k);}
     else if(field.indexOf('kpi.')===0){if(!roleCanHead(e))return;const parts=field.split('.'),i=Number(parts[1]),k=parts[2];if(!e.kpiItems[i]||!['target','actual'].includes(k))return;e.kpiItems[i][k]=val.slice(0,200);e.kpiItems[i].verified=false;e.kpiValidated=false;invalidateEvaluation(e);audit(e,'Updated demonstration KPI '+(i+1)+' '+k);}
     else if(field==='kpiSource'){if(!isHR())return;e.kpiSource=val.slice(0,400);e.kpiValidated=false;invalidateEvaluation(e);audit(e,'Updated KPI source note');}
     else if(field.indexOf('score.')===0){const k=field.split('.')[1];if(!canScore(e,k))return;const n=Number(val);if(val===''||!Number.isFinite(n)||n<0||n>100){toast('Scores must be between 0 and 100.');render();return;}e.scores[k]=Math.round(n*100)/100;invalidateEvaluation(e);audit(e,'Updated '+k+' evaluation score');}
