@@ -7,7 +7,9 @@
  * server-provided, permission-filtered view model in a PRIVATE deployment.
  * Claude account connectors are not accessible through browser JS by default.
  *
- * Contract: { version, divisions, viewers, stages, kit, employees }
+ * Contract: { version, divisions, viewers, stages, kit, documents201, employees }
+ * Each employee also carries files201 keyed by document ID (four sample statuses).
+ * The schema is version 2 to distinguish explicit document statuses from prior fixtures.
  * Each employee carries the IDs, journey, kit, KPI, review and milestone
  * properties consumed by app.js. Preserve employee IDs for cross-source joins.
  * Provider-to-contract transformations belong in the future backend, not here.
@@ -92,7 +94,7 @@
       note:'Fictional fixture only. No live connector records are loaded in this browser.'};
   }
   root.MJ_SOURCE_ADAPTER=Object.freeze({
-    contractVersion:1,mode:'sample',readOnly:true,
+    contractVersion:2,mode:'sample',readOnly:true,
     validateSnapshot:validate,getSnapshot:getSnapshot,
     getSources:getSources,getProvenance:getProvenance,getQualityReport:getQualityReport
   });
