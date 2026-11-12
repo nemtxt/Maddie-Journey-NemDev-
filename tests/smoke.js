@@ -1250,7 +1250,7 @@ check('Phase 7 direct 201 file triage opens the existing read-only employee read
   assert(matching);
   user.click('open',{id:matching.id,detail:'files201'});
   const modal=user.html();
-  assert(modal.includes('class="monitor-person-documents"'));
+  assert(modal.includes('class="panel monitor-person-documents"'));
   assert(modal.includes('201 Files Checklist'));
   assert(modal.includes('Fictional per-document statuses'));
   assert(!modal.includes('type="file"'));
