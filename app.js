@@ -7,15 +7,21 @@
     // Only static application strings; no provider content is interpolated.
     app.innerHTML='<main id="main-content" class="data-error-screen" tabindex="-1">'+
       '<section class="data-error-card" role="alert" aria-labelledby="data-error-title">'+
-      '<span class="boot-eyebrow">MADDIE JOURNEY / SAMPLE WORKSPACE</span>'+
+      '<span class="boot-eyebrow">MADDIE JOURNEY / '+(window.MJ_CONNECTED_PAYLOAD?'PRIVATE MONITORING':'SAMPLE WORKSPACE')+'</span>'+
       '<h1 id="data-error-title">'+heading+'</h1><p>'+message+'</p>'+
       '<a class="button primary" href="./">Reload dashboard</a>'+
-      '<p class="data-error-footnote">No live employee data was accessed or modified.</p>'+
+      '<p class="data-error-footnote">'+(window.MJ_CONNECTED_PAYLOAD?'Read-only service: no source records were modified.':'No live employee data was accessed or modified.')+'</p>'+
       '</section></main>';
     document.title='Sample unavailable · Maddie Journey';
   }
-  const seed = window.MJ_SEED;
-  if (!seed) {
+  const connectedPayload = window.MJ_CONNECTED_PAYLOAD || null;
+  const seed = connectedPayload ? null : window.MJ_SEED;
+  if (connectedPayload && !connectedPayload.available) {
+    // Never fall back to fictional records when a connected snapshot is unavailable.
+    showBootError('Connected snapshot unavailable','No authorized roster snapshot has been retrieved yet. Check provider states with the service administrator; sample records are not substituted.');
+    return;
+  }
+  if (!connectedPayload && !seed) {
     showBootError('Sample data unavailable','The fictional records did not load. Reload the sample workspace to try again.');
     return;
   }
@@ -28,11 +34,17 @@
   try{
     data=window.MJ_SOURCE_ADAPTER.getSnapshot();
   }catch(err){
-    showBootError('Sample data unavailable',
+    if(connectedPayload)showBootError('Connected snapshot invalid','The connected snapshot failed contract validation and was not displayed. No fictional records were substituted.');
+    else showBootError('Sample data unavailable',
       'The fictional monitoring snapshot could not be verified. No provider connection is required.');
     return;
   }
-  let ui={tab:'welcome',division:'all',activeDivision:'rmd',scope:'all',divisionPickerMode:'view',query:'',employeeSort:'name',employee:data.employees[0].id,detail:'preview',employeeModalOpen:false,divisionModal:false,employeePicker:false,pickerDivision:'rmd',frequency:'monthly',mobile:false,milestoneCategory:'birthday',milestoneDivision:'all',milestoneShowAll:false,milestonePicking:false,divisionTab:'summary',attentionFilter:'all',attentionShowAll:false,workView:'list',journeyView:'board',journeyShowAll:false,sidebarCollapsed:false,highlightMember:'',viewerIds:[],viewerOrigin:'',viewerContext:'',filesFilter:'missing',filesExpanded:false,calendarStart:'',calendarType:'all',calendarSelected:'',calendarExpanded:'',density:'comfortable',};
+  // Connected mode = authenticated private deployment with real, read-only source data.
+  const CONNECTED=window.MJ_SOURCE_ADAPTER.mode==='connected';
+  const firstDivision=data.divisions.some(function(d){return d.id==='rmd';})?'rmd':(data.divisions[0]||{id:''}).id;
+  if(!data.employees.length){showBootError(CONNECTED?'No active employees in snapshot':'Sample data unavailable',
+    CONNECTED?'The connected roster returned no active records. Review Data & Sources with the service administrator.':'The fictional records did not load.');return;}
+  let ui={tab:'welcome',division:'all',activeDivision:firstDivision,scope:'all',divisionPickerMode:'view',query:'',employeeSort:'name',employee:data.employees[0].id,detail:'preview',employeeModalOpen:false,divisionModal:false,employeePicker:false,pickerDivision:firstDivision,frequency:'monthly',mobile:false,milestoneCategory:'birthday',milestoneDivision:'all',milestoneShowAll:false,milestonePicking:false,divisionTab:'summary',attentionFilter:'all',attentionShowAll:false,workView:'list',journeyView:'board',journeyShowAll:false,sidebarCollapsed:false,highlightMember:'',viewerIds:[],viewerOrigin:'',viewerContext:'',filesFilter:'missing',filesExpanded:false,calendarStart:'',calendarType:'all',calendarSelected:'',calendarExpanded:'',density:'comfortable',};
   // UI preferences do not alter or store employee records.
   try{
     const remembered=sessionStorage.getItem('maddie-journey-workview');
@@ -102,7 +114,7 @@
   const emp=function(id){return data.employees.find(function(e){return e.id===(id||ui.employee);});};
   const div=function(id){return data.divisions.find(function(d){return d.id===id;})||{name:id,short:id,evaluators:[]};};
   const scopedEmployees=function(){return ui.scope==='all'?data.employees:data.employees.filter(function(e){return e.division===ui.scope;});};
-  const scopeLabel=function(){return ui.scope==='all'?'All 8 divisions':div(ui.scope).name;};
+  const scopeLabel=function(){return ui.scope==='all'?'All '+data.divisions.length+' divisions':div(ui.scope).name;};
   function ensureEmployeeScope(){
     const es=scopedEmployees();
     if(es.length&&!es.some(function(e){return e.id===ui.employee;}))ui.employee=es[0].id;
@@ -183,7 +195,8 @@
       '<div class="top-actions workspace-top-actions">'+
       '<button type="button" class="workspace-search" data-action="quick-search" aria-label="Find an employee" title="Search employees · Ctrl/Command + K">'+landingIcon('search')+'<span>Find employee</span></button>'+
       themeControl()+
-      '<button type="button" class="reader-source-status" data-action="nav" data-tab="sources" title="Inspect disconnected source providers" aria-label="View source status: fictional sample, no providers connected">Sample · Not connected</button>'+
+      (CONNECTED?'<button type="button" class="reader-source-status" data-action="nav" data-tab="sources" title="Inspect connected source providers" aria-label="View source status: connected read-only snapshot'+(connectedStale()?', stale':'')+'">'+(connectedStale()?'Connected · Stale':'Connected · Read-only')+'</button>':
+      '<button type="button" class="reader-source-status" data-action="nav" data-tab="sources" title="Inspect disconnected source providers" aria-label="View source status: fictional sample, no providers connected">Sample · Not connected</button>')+
       '</div></header>'+
       '<nav class="workspace-subnav" aria-label="'+safe(group.label)+' sections"><div class="workspace-subnav-links">'+
       group.tabs.map(function(t){const selected=current===t[0];return '<a href="#'+t[0]+'" data-nav="'+t[0]+'"'+(selected?' aria-current="page"':'')+' class="'+(selected?'active':'')+'">'+safe(t[1])+'</a>';}).join('')+
@@ -206,7 +219,7 @@
         '<span class="workspace-mainnav-chevron" aria-hidden="true">'+landingIcon('chevron-right')+'</span></a>';
       }).join('')+'</nav>'+
       '<div class="sidebar-bottom"><div class="reader-sidebar-status"><span class="data-provenance-dot"></span>'+
-      '<div><strong>Sample workspace</strong><small>51 people · 8 divisions</small></div></div>'+
+      '<div><strong>'+(CONNECTED?'Connected snapshot':'Sample workspace')+'</strong><small>'+data.employees.length+' people · '+data.divisions.length+' divisions'+(CONNECTED&&connectedStale()?' · stale':'')+'</small></div></div>'+
       '</div></div></aside>';
   }
   function title(t){if(t==='division')return div(ui.activeDivision).name;return {divisions:'Divisions',overview:'Overview',milestones:'Employee milestones',calendar:'Three-month calendar',files201:'201 Files Checklist',employees:'People directory',journey:'Employee journey',kit:'Welcome Maddie Kit',attendance:'Attendance analytics',kpi:'2026 KPI evaluations',approvals:'Reviews',sources:'Data sources',audit:'About this prototype'}[t]||'Overview';}
@@ -221,7 +234,7 @@
     return '<div class="page-header"><div><div class="eyebrow">'+safe(eyebrow)+
       '</div><h1>'+safe(heading)+'</h1><p>'+safe(description)+'</p></div>'+
       '<div class="actions">'+(actions||'')+densityControl()+'</div></div>'+
-      (ui.tab==='overview'?'':screenSummary());
+      (ui.tab==='overview'||(CONNECTED&&!window.MJ_SOURCE_ADAPTER.screenAvailability(ui.tab,'screen').available)?'':screenSummary());
   }
 
   /* Summaries use the same calculated sample records displayed in each screen. */
@@ -239,13 +252,27 @@
       const birthdays=all.filter(function(e){return daysToBirthday(e.birthday)<=30;}).length;
       const confirmed=all.reduce(function(n,e){return n+(e.attendanceAwards||[]).filter(function(a){return a.status==='HR confirmed';}).length;},0);
       cards=[['People tracked',all.length,'Across eight departments'],['Birthdays in 30 days',birthdays,'Fictional birthdays'],['Promotion records',all.reduce(function(n,e){return n+(e.promotions||[]).length;},0),'Recorded demo events'],['Perfect attendance awards',confirmed,'Explicit HR recognition only']];
+    }else if(ui.tab==='employees'&&CONNECTED){
+      const rec=window.MJ_SOURCE_ADAPTER.getReconciliation()||{roster:{}};
+      cards=[['Active roster records',all.length,'Airtable People · active statuses'],['Source departments',data.divisions.length,'From the Departments table'],
+        ['Records without Employee ID',rec.roster.activeMissingEmployeeId||0,'Keyed by Airtable record ID'],['Inactive records excluded',rec.roster.inactiveRecords||0,'Resigned, Terminated or AWOL']];
+    }else if(ui.tab==='sources'&&CONNECTED){
+      const srcs=window.MJ_SOURCE_ADAPTER.getSources(),rec=window.MJ_SOURCE_ADAPTER.getReconciliation()||{roster:{}};
+      cards=[['Connected providers',srcs.filter(function(x){return x.state==='connected'||x.state==='partial';}).length+' / '+srcs.length,'Verified on last retrieval'],
+        ['Active roster records',rec.roster.activeRecords||0,'Baseline '+(rec.roster.baseline||'—')+' · difference '+signed(rec.roster.baselineDifference||0)],
+        ['Open record issues',rec.openIssueCount||0,'Missing, duplicate or conflicting values'],
+        ['Snapshot freshness',connectedStale()?'Stale':'Current',freshnessText()]];
     }else if(ui.tab==='employees'){
       cards=[['Employee directory',all.length,'Fictional team members'],['Divisions',data.divisions.length,'Assigned evaluator groups'],['Average journey',meanOf(all,journeyPct)+'%','All stages'],['KPI sources to validate',all.filter(function(e){return !e.kpiValidated;}).length,'Official KPI data not connected']];
     }else if(ui.tab==='journey'){
       cards=[['Average completion',meanOf(all,journeyPct)+'%','All stages'],['Stage 1 completed',all.filter(function(e){return e.journey[0].every(Boolean);}).length,'Onboarding & setup'],['Stage 2 completed',all.filter(function(e){return e.journey[1].every(Boolean);}).length,'Onboarding & immersion'],['All 7 stages done',all.filter(function(e){return journeyPct(e)===100;}).length,'Journey complete']];
     }else if(ui.tab==='files201'){
       const r=window.MJ_MONITORING.fileSummary(data);
-      cards=[['People tracked',r.total,'Fictional employee records'],
+      cards=CONNECTED?[['People tracked',r.total,'Active roster records'],
+        ['Missing files',r.groups.missing.length,'At least one requirement without an attachment'],
+        ['Source unavailable',r.groups['source-unavailable'].length,'Only unsourced requirements remain'],
+        ['Complete',r.groups.complete.length,'Every requirement has an attachment on file']]:
+        [['People tracked',r.total,'Fictional employee records'],
         ['Complete',r.groups.complete.length,'All applicable documents recorded complete'],
         ['Missing files',r.groups.missing.length,'People with at least one missing document'],
         ['Not checked',r.groups['not-checked'].length,'People with unchecked requirements']];
@@ -267,10 +294,12 @@
       cards=[['Division Head endorsed',all.filter(function(e){return reviewStatus(e,'division')==='Endorsed';}).length,'Initial evaluation'],['Corporate Ops endorsed',all.filter(function(e){return reviewStatus(e,'corp')==='Endorsed';}).length,'Review & endorsement'],['CSO reviewed',all.filter(function(e){return reviewStatus(e,'cso')==='Endorsed';}).length,'Strategic review'],['COO approved',all.filter(function(e){return reviewStatus(e,'coo')==='Approved';}).length,'Final approval tracked']];
     }else if(ui.tab==='sources'){
       cards=[['Connected sources',0,'No live integrations configured'],['Demo employees',data.employees.length,'Fictional sample fixture'],['External sync','Off','Not available on GitHub Pages alone'],['Verified source records',0,'Awaiting secure integration']];
+    }else if(ui.tab==='audit'&&CONNECTED){
+      cards=[['Active roster records',data.employees.length,'Connected snapshot'],['Source departments',data.divisions.length,'Airtable Departments'],['Data submission','Disabled','Monitoring only'],['Provider access','Read-only','GET requests only']];
     }else if(ui.tab==='audit'){
       cards=[['Sample employees',data.employees.length,'Fictional roster'],['Divisions',data.divisions.length,'Department summaries'],['Data submission','Disabled','Monitoring only'],['Live source sync','Not connected','Secure integration required']];
     }
-    return cards.length?'<section class="screen-summary" aria-label="'+safe(title(ui.tab))+' summary"><div class="summary-heading"><span class="eyebrow">SCREEN SUMMARY</span><span class="muted micro">Calculated from sample data</span></div><div class="grid metrics">'+cards.map(function(c){return metricCard(c[0],c[1],c[2]);}).join('')+'</div></section>':'';
+    return cards.length?'<section class="screen-summary" aria-label="'+safe(title(ui.tab))+' summary"><div class="summary-heading"><span class="eyebrow">SCREEN SUMMARY</span><span class="muted micro">'+(CONNECTED?'Calculated from the connected snapshot':'Calculated from sample data')+'</span></div><div class="grid metrics">'+cards.map(function(c){return metricCard(c[0],c[1],c[2]);}).join('')+'</div></section>':'';
   }
   function divisionEvaluatorNames(d){return d.evaluators.map(function(id){const v=data.viewers.find(function(p){return p.id===id;});return v?v.name:id;}).join(' / ');}
   // Department hierarchy is fictional: the reporting lines demonstrate chart behavior.
@@ -679,7 +708,7 @@
       const searchable=[e.name,e.id,e.jobTitle,e.email,div(e.division).name,div(e.division).short].join(' ').toLocaleLowerCase();
       return !term||searchable.includes(term);
     });
-    const metric=ui.employeeSort==='journey'?journeyPct:ui.employeeSort==='kit'?kitPct:ui.employeeSort==='kpi'?score:null;
+    const metric=CONNECTED?null:ui.employeeSort==='journey'?journeyPct:ui.employeeSort==='kit'?kitPct:ui.employeeSort==='kpi'?score:null;
     matches.sort(function(a,b){
       if(metric){const delta=metric(a)-metric(b);if(delta)return delta;}
       if(ui.employeeSort==='division'){const delta=div(a.division).name.localeCompare(div(b.division).name);if(delta)return delta;}
@@ -688,7 +717,8 @@
     return matches;
   }
   function filters(){
-    const sorts=[{value:'name',label:'Name A–Z'},{value:'division',label:'Division A–Z'},
+    const sorts=CONNECTED?[{value:'name',label:'Name A–Z'},{value:'division',label:'Division A–Z'}]:
+      [{value:'name',label:'Name A–Z'},{value:'division',label:'Division A–Z'},
       {value:'journey',label:'Journey: needs attention'},{value:'kit',label:'Welcome Kit: needs attention'},
       {value:'kpi',label:'KPI: lowest first'}];
     return '<div class="filters directory-filters"><label class="directory-search-label">'+
@@ -699,7 +729,25 @@
       '<span class="directory-clear-slot">'+(ui.query?button('Clear search','clear-search','','small'):'')+'</span>'+
       '<span class="directory-results-count" aria-live="polite">'+filtered().length+' of '+scopedEmployees().length+' employees</span></div>';
   }
-  function employees(){return header('PEOPLE DIRECTORY','All Maddies','Browse your selected division or all 51 fictional employees across 8 departments.',button('Export visible CSV','export-csv','','small'))+'<section class="panel no-pad"><div style="padding:20px 20px 0">'+filters()+'</div>'+employeesTable(filtered())+'</section>';}
+  function employees(){
+    if(CONNECTED)return header('PEOPLE DIRECTORY / CONNECTED ROSTER','All Maddies','Browse the '+data.employees.length+' active roster records across '+data.divisions.length+' source departments. Read-only; export is disabled for confidential records.','')+
+      '<section class="panel no-pad"><div style="padding:20px 20px 0">'+filters()+'</div>'+connectedEmployeesTable(filtered())+'</section>';
+    return header('PEOPLE DIRECTORY','All Maddies','Browse your selected division or all 51 fictional employees across 8 departments.',button('Export visible CSV','export-csv','','small'))+'<section class="panel no-pad"><div style="padding:20px 20px 0">'+filters()+'</div>'+employeesTable(filtered())+'</section>';}
+  // Connected roster columns show only sourced facts; unsourced modules are never shown as 0%.
+  function connectedEmployeesTable(list){
+    if(!list.length)return '<div class="empty report-empty" role="status"><strong>No employees match these filters.</strong></div>';
+    return '<div class="table-wrap"><table class="table connected-roster-table">'+
+      '<caption class="sr-only">Connected roster: '+list.length+' of '+scopedEmployees().length+' active records, sorted by '+safe(ui.employeeSort)+'.</caption>'+
+      '<thead><tr><th scope="col">Employee</th><th scope="col">Division</th><th scope="col">Employment status</th>'+
+      '<th scope="col">Hire date</th><th scope="col">Record checks</th><th scope="col">Details</th></tr></thead><tbody>'+
+      list.map(function(e){
+        const issues=(e.provenance&&e.provenance.conflicts||[]).filter(function(c){return c.kind!=='employee-id-format';});
+        return '<tr><th scope="row"><strong>'+safe(e.name)+'</strong><small>'+safe(e.id)+'</small></th>'+
+          '<td>'+safe(div(e.division).short)+'</td><td>'+pill(e.employmentStatus)+'</td><td>'+dateLabel(e.startDate)+'</td>'+
+          '<td>'+(issues.length?'<span class="tag warn">'+issues.length+' to review</span>':'<span class="tag ok">No conflicts found</span>')+'</td>'+
+          '<td><button class="button small" type="button" data-action="open" data-id="'+safe(e.id)+'" data-detail="info">Inspect</button></td></tr>';
+      }).join('')+'</tbody></table></div>';
+  }
   /* Compact per-division summary and actionable roster reused by each operational tracker. */
   function trackerRoster(kind){
     const titles={journey:'Journey',kit:'Welcome Kit',attendance:'Attendance',kpi:'KPI evaluation',approvals:'Review status'};
@@ -809,7 +857,8 @@
       '<p class="report-source-note">Stage share uses '+total+' selected employees as the denominator. Checklist task completion uses all recorded tasks; later stages may contain completed tasks even if an earlier stage remains incomplete.</p></section>';
   }
   function files201View(){
-    return header('DOCUMENT MONITORING / FICTIONAL DATA','201 Files Checklist',
+    return header(CONNECTED?'DOCUMENT MONITORING / CONNECTED TRACKER':'DOCUMENT MONITORING / FICTIONAL DATA','201 Files Checklist',
+      CONNECTED?'Who is missing what, from Airtable tracker attachments. An attachment on file is not HR approval; Drive folders are not linked.':
       'See exactly who is missing what, by employee and document. Monitoring only; no source folders are connected.','')+
       window.MJ_MONITORING.fileView(data,ui);
   }
@@ -1080,7 +1129,79 @@
       '<p class="muted micro tracker-footnote">Division Head → Corporate Operations → CSO → COO is the configured review order, not proof of chronological completion. All statuses are fictional and read-only.</p>'+trackerRoster('approvals')+
       '<details class="panel compact-details"><summary>See complete review queue</summary>'+approvalsTable()+'</details>';
   }
+  const ISSUE_LABELS={'missing-employee-id':'Missing Employee ID','invalid-employee-id':'Invalid Employee ID','employee-id-format':'ID stored without zero padding',
+    'duplicate-employee-id':'Duplicate Employee ID','unknown-status':'Unknown employment status','missing-department':'No department linked',
+    'missing-hire-date':'No hire date','hire-date-conflict':'Hire date fields disagree','missing-separation-date':'Resigned without separation date',
+    'status-date-conflict':'Active status with separation date','date-order-conflict':'Regularized after separation'};
+  const COVERAGE_SOURCES={roster:'Airtable · People',divisions:'Airtable · Departments',files201:'Airtable · People attachments (Drive not linked)',
+    attendance:'Airtable · Tardiness/Leave Tracker (no approval field)',journey:'None verified',kit:'None verified',kpi:'None verified',
+    reviews:'None verified (evaluation form table has 0 records)',milestones:'None verified',calendar:'Google Calendar',followups:'None verified'};
+  function connectedSourcesView(){
+    const sources=window.MJ_SOURCE_ADAPTER.getSources(),prov=window.MJ_SOURCE_ADAPTER.getProvenance();
+    const rec=window.MJ_SOURCE_ADAPTER.getReconciliation()||{roster:{},issues:[]},coverage=window.MJ_SOURCE_ADAPTER.getCoverage()||{};
+    const labels=data.coverageLabels||{},r=rec.roster||{},fresh=prov.freshness||{};
+    const stamp=function(v){return v?manilaStamp(v):'—';};
+    const cards=sources.map(function(x){
+      return '<article class="panel source-card"><div class="source-card-top"><h2>'+safe(x.name)+'</h2>'+
+        '<span class="source-state source-state-'+safe(x.state)+'">'+safe(x.label||x.state)+'</span></div>'+
+        '<p>'+safe(x.kind)+'</p><dl class="source-card-meta">'+
+        '<div>Scope: <strong>'+safe(x.scope)+'</strong></div>'+
+        '<div>Last successful retrieval: <strong>'+safe(stamp(x.lastSuccessfulRetrieval))+'</strong></div>'+
+        '<div>Source modified: <strong>'+safe(x.sourceModified?stamp(x.sourceModified):'Not provided by source')+'</strong></div>'+
+        (x.recordCount!==null&&x.recordCount!==undefined?'<div>Records retrieved: <strong>'+safe(x.recordCount)+'</strong>'+
+          (x.validRecords!==null&&x.validRecords!==undefined?' · valid IDs <strong>'+safe(x.validRecords)+'</strong>':'')+
+          (x.invalidRecords?' · needing review <strong>'+safe(x.invalidRecords)+'</strong>':'')+
+          (x.conflicts?' · conflicts <strong>'+safe(x.conflicts)+'</strong>':'')+'</div>':'')+
+        ((x.datasets||[]).length?'<div>Datasets: '+x.datasets.map(function(d){return safe(d.name)+' '+(d.ok?'('+safe(d.records)+')':'— failed');}).join(' · ')+'</div>':'')+
+        (x.lastError?'<div>'+(x.state==='not-implemented'?'Status':'Last error')+': <strong>'+safe(x.lastError)+'</strong></div>':'')+
+        '</dl></article>';
+    }).join('');
+    const covRows=Object.keys(COVERAGE_SOURCES).map(function(k){
+      const state=coverage[k]||'not-sourced';
+      return '<tr><th scope="row">'+safe(k.charAt(0).toUpperCase()+k.slice(1))+'</th><td><span class="source-state source-state-'+
+        (state==='connected'?'connected':state==='partial'?'partial':state==='error'?'error':'not-implemented')+'">'+safe(labels[state]||state)+'</span></td><td>'+safe(COVERAGE_SOURCES[k])+'</td></tr>';
+    }).join('');
+    const statusRows=Object.keys(r.statusCounts||{}).sort().map(function(k){return '<span>'+safe(k)+' <b>'+safe(r.statusCounts[k])+'</b></span>';}).join('');
+    const byKind={};(rec.issues||[]).forEach(function(i){byKind[i.kind]=(byKind[i.kind]||0)+1;});
+    const kindRows=Object.keys(byKind).sort().map(function(k){return '<tr><th scope="row">'+safe(ISSUE_LABELS[k]||k)+'</th><td>'+byKind[k]+'</td></tr>';}).join('');
+    const nameFor=function(i){const e=data.employees.find(function(x){return x.provenance&&x.provenance.recordId===i.recordId;});return e?e.name:'Inactive record';};
+    const issueRows=(rec.issues||[]).filter(function(i){return i.kind!=='employee-id-format';}).map(function(i){
+      return '<tr><th scope="row">'+safe(nameFor(i))+'<small>'+safe(i.employeeId||'No Employee ID')+'</small></th><td><span class="tag '+(i.severity==='high'?'bad':'warn')+'">'+safe(i.severity)+'</span></td>'+
+        '<td>'+safe(ISSUE_LABELS[i.kind]||i.kind)+'</td><td>'+safe(i.detail)+'</td></tr>';
+    }).join('');
+    const m=rec.masterlist;
+    const links=function(label,l){return l?'<div><strong>'+l.total+'</strong><small>'+label+' · '+l.linkedActive+' active, '+l.linkedInactive+' inactive, '+l.orphans+' unlinked</small></div>':'';};
+    return header('DATA CONNECTIONS / CONNECTED','Data sources','Actual provider states, freshness and reconciliation for the connected snapshot. Retrieval success is not HR verification.')+
+      '<div class="source-banner"><span class="source-banner-icon">i</span><div><strong>Connected mode · read-only'+(fresh.stale?' · stale snapshot':'')+'</strong>'+
+      '<p>'+safe(prov.note)+' '+safe(fresh.note||'')+' Signed in as '+safe(prov.viewer&&prov.viewer.email||'—')+'.</p></div></div>'+
+      '<section class="source-grid">'+cards+'</section>'+
+      '<section class="panel"><div class="panel-head"><div><h2>Module coverage</h2><p>Screens render figures only for connected or partially sourced modules</p></div></div>'+
+      '<div class="table-wrap"><table class="table reconcile-table"><caption class="sr-only">Source coverage by monitoring module</caption><thead><tr><th scope="col">Module</th><th scope="col">State</th><th scope="col">Source</th></tr></thead><tbody>'+covRows+'</tbody></table></div></section>'+
+      '<section class="panel source-quality"><div class="panel-head"><div><h2>Employee cohort reconciliation</h2>'+
+      '<p>Airtable roster against the '+safe(r.baseline)+'-person organizational baseline. Records are never added or removed to match it.</p></div>'+
+      '<span class="source-quality-state '+(r.baselineDifference===0?'good':'warning')+'">'+(r.baselineDifference===0?'Matches baseline':'Differs from baseline by '+signed(r.baselineDifference))+'</span></div>'+
+      '<div class="source-quality-stats"><div><strong>'+safe(r.totalRecords)+'</strong><small>Roster records</small></div>'+
+      '<div><strong>'+safe(r.activeRecords)+'</strong><small>Active cohort (denominator)</small></div>'+
+      '<div><strong>'+safe(r.inactiveRecords)+'</strong><small>Inactive, excluded from totals</small></div>'+
+      '<div><strong>'+safe(r.missingEmployeeId)+'</strong><small>Without Employee ID ('+safe(r.activeMissingEmployeeId)+' active)</small></div>'+
+      '<div><strong>'+safe(r.duplicateEmployeeIds)+'</strong><small>Duplicate Employee IDs</small></div>'+
+      '<div><strong>'+safe(r.unknownStatusRecords)+'</strong><small>Unknown status</small></div></div>'+
+      '<div class="monitor-file-counts">'+statusRows+'</div>'+
+      (m?'<h3>Sheets masterlist comparison</h3><div class="source-quality-stats"><div><strong>'+m.matchedIds+'</strong><small>IDs in both</small></div>'+
+        '<div><strong>'+m.onlyInRoster.length+'</strong><small>Only in Airtable</small></div><div><strong>'+m.onlyInSheet.length+'</strong><small>Only in masterlist</small></div>'+
+        '<div><strong>'+m.statusMismatch.length+'</strong><small>Status disagreements (Airtable authoritative)</small></div></div>':
+        '<p class="muted micro">Sheets masterlist comparison is not available: the provider is not connected.</p>')+
+      '<h3>Linked tracker records</h3><div class="source-quality-stats">'+links('Attendance entries',rec.attendanceLinks)+links('Development monitoring',rec.developmentLinks)+'</div>'+
+      '<ul class="connected-issues">'+(rec.notes||[]).map(function(n){return '<li>'+safe(n)+'</li>';}).join('')+'</ul></section>'+
+      '<section class="panel"><div class="panel-head"><div><h2>Record issues</h2><p>Missing, duplicate and conflicting values, shown instead of silently resolved</p></div></div>'+
+      '<div class="table-wrap"><table class="table reconcile-table"><caption class="sr-only">Record issue counts by kind</caption><thead><tr><th scope="col">Issue</th><th scope="col">Records</th></tr></thead><tbody>'+
+      (kindRows||'<tr><td colspan="2">No record issues detected.</td></tr>')+'</tbody></table></div>'+
+      (issueRows?'<details class="panel compact-details"><summary>See every record issue</summary><div class="table-wrap"><table class="table reconcile-table"><caption class="sr-only">Record issues</caption>'+
+        '<thead><tr><th scope="col">Record</th><th scope="col">Severity</th><th scope="col">Issue</th><th scope="col">Detail</th></tr></thead><tbody>'+issueRows+'</tbody></table></div></details>':'')+
+      '</section>';
+  }
   function sourcesView(){
+    if(CONNECTED)return connectedSourcesView();
     const catalog=window.MJ_SOURCE_ADAPTER.getSources();
     const provenance=window.MJ_SOURCE_ADAPTER.getProvenance();
     const quality=window.MJ_SOURCE_ADAPTER.getQualityReport();
@@ -1113,6 +1234,14 @@
       '<p class="muted micro">Do not place real employee data, private account documents, email content, tokens or credentials in public GitHub Pages assets. No user account system is needed for this prototype.</p></section>';
   }
   function activity(){
+    if(CONNECTED)return header('DATA & GOVERNANCE','About this monitoring view',
+      'Maddie Journey is a reader. Source systems retain ownership of every record.',button('Data sources','nav','data-tab="sources"','small'))+
+      '<section class="panel"><h2>How the connected view works</h2><div class="reader-policy-list">'+
+      '<div><strong>Read-only retrieval</strong><p>The private server reads authorized Airtable and Google sources with GET requests only. Nothing is edited, approved, sent or scheduled from here.</p></div>'+
+      '<div><strong>Authenticated access</strong><p>Only Google accounts on the server allowlist can open this view. Data is delivered without caching and is never published to GitHub Pages.</p></div>'+
+      '<div><strong>Facts, not estimates</strong><p>Screens without a verified source show what is missing instead of figures. Conflicts and missing values are listed on Data &amp; Sources.</p></div>'+
+      '<div><strong>Minimum necessary data</strong><p>Compensation, government ID numbers, bank details, addresses and disciplinary case content are never requested from the sources.</p></div>'+
+      '</div></section>';
     return header('DATA & GOVERNANCE','About this prototype',
       'Maddie Journey is a reader and monitoring interface. Source systems retain ownership of all records.',
       button('Data sources','nav','data-tab="sources"','small'))+
@@ -1373,8 +1502,13 @@
       approvals:'Review steps and dates are fictional snapshots, not a verified chronology or approval action.',
       info:'Employee profile attributes are fictional and are not synchronized with a personnel directory.'
     };
+    const connectedNotes={
+      info:'Values come from the Airtable roster record shown below. Retrieval does not mean HR has verified the record.',
+      files201:'Statuses come from Airtable tracker attachments. An attachment on file is evidence, not HR approval; Drive folders are not linked.'
+    };
+    const text=CONNECTED?(connectedNotes[section]||'This section has no verified connected source; nothing is estimated.'):(notes[section]||notes.preview);
     return '<div class="employee-evidence-note" role="note">'+landingIcon('info')+
-      '<span>'+safe(notes[section]||notes.preview)+'</span></div>';
+      '<span>'+safe(text)+'</span></div>';
   }
   function readerRecordCue(e){
     const origin=modalOrigin||{};
@@ -1441,9 +1575,29 @@
           '">'+a[1]+'</button>';
       }).join('')+'</nav>'+
     '<div class="employee-modal-body" id="employee-panel" role="tabpanel" aria-labelledby="employee-tab-'+t+'" tabindex="0">'+
-    employeeContextNote(t)+(t==='preview'?'':employeeMini(e))+
-    (t==='info'?'<div class="panel" style="margin-bottom:15px"><div class="form-grid"><div><span class="field-label">Start date</span><strong>'+dateLabel(e.startDate)+'</strong></div><div><span class="field-label">Employee ID</span><strong>'+safe(e.id)+'</strong></div><div><span class="field-label">Org level (sample)</span><strong>Level '+safe(e.orgLevel||'—')+'</strong></div><div><span class="field-label">Reports to (sample)</span><strong>'+safe((data.employees.find(function(p){return p.id===e.reportsTo;})||{}).name||'Department lead')+'</strong></div></div></div>':'')+
-    detailContent(e,t)+'</div></section></div>';
+    employeeContextNote(t)+(t==='preview'||CONNECTED?'':employeeMini(e))+
+    (t==='info'&&!CONNECTED?'<div class="panel" style="margin-bottom:15px"><div class="form-grid"><div><span class="field-label">Start date</span><strong>'+dateLabel(e.startDate)+'</strong></div><div><span class="field-label">Employee ID</span><strong>'+safe(e.id)+'</strong></div><div><span class="field-label">Org level (sample)</span><strong>Level '+safe(e.orgLevel||'—')+'</strong></div><div><span class="field-label">Reports to (sample)</span><strong>'+safe((data.employees.find(function(p){return p.id===e.reportsTo;})||{}).name||'Department lead')+'</strong></div></div></div>':'')+
+    connectedDetail(e,t)+'</div></section></div>';
+  }
+  function connectedDetail(e,t){
+    if(!CONNECTED)return detailContent(e,t);
+    const gate=window.MJ_SOURCE_ADAPTER.screenAvailability(t,'detail');
+    if(!gate.available)return unsourcedPanel(gate.missing,'This section');
+    if(t==='info')return connectedProvenance(e);
+    return detailContent(e,t);
+  }
+  function connectedProvenance(e){
+    const p=e.provenance||{},issues=p.conflicts||[];
+    return '<section class="panel connected-provenance"><div class="panel-head"><div><h2>Source record</h2>'+
+      '<p>Every value below comes from one roster record. Retrieval is not HR verification.</p></div></div>'+
+      '<div class="form-grid"><div><span class="field-label">Employment status</span><strong>'+safe(e.employmentStatus)+'</strong></div>'+
+      '<div><span class="field-label">Regularization date</span><strong>'+dateLabel(e.regularizationDate)+'</strong></div>'+
+      '<div><span class="field-label">Provider</span><strong>'+safe(p.dataset||p.provider||'—')+'</strong></div>'+
+      '<div><span class="field-label">Source record</span><strong>'+safe(p.recordId||'—')+'</strong></div>'+
+      '<div><span class="field-label">Employee ID as stored</span><strong>'+safe(p.employeeIdRaw||'Not recorded')+'</strong></div>'+
+      '<div><span class="field-label">Retrieved</span><strong>'+safe(p.retrievedAt?manilaStamp(p.retrievedAt):'—')+'</strong></div></div>'+
+      (issues.length?'<h3>Record checks</h3><ul class="connected-issues">'+issues.map(function(i){return '<li><span class="tag '+(i.severity==='high'?'bad':'warn')+'">'+safe(i.severity)+'</span> '+safe(i.detail)+'</li>';}).join('')+'</ul>':
+        '<p class="muted micro">No missing, duplicate or conflicting roster values were detected for this record.</p>')+'</section>';
   }
   function landingIcon(name){return window.MJ_ICONS&&typeof window.MJ_ICONS.svg==='function'?window.MJ_ICONS.svg(name):'';}
   function landingView(){
@@ -1459,7 +1613,7 @@
       '<p class="landing-hero-copy">One read-only view of people, onboarding, performance and milestones.</p>'+
       '<div class="landing-hero-actions"><a href="#overview" data-nav="overview" class="landing-primary-cta">Enter workspace <span aria-hidden="true">'+landingIcon('arrow-right')+'</span></a></div></div></section>'+
       '<footer class="landing-footer"><span>MADHOUSE DESIGN STUDIO</span>'+
-      '<span>Fictional data · Demonstration only</span></footer></main></div>';
+      '<span>'+(CONNECTED?'Connected snapshot · Read-only':'Fictional data · Demonstration only')+'</span></footer></main></div>';
   }
   function enhanceScrollableTables(){
     const root=$('app');if(!root||typeof root.querySelectorAll!=='function')return;
@@ -1504,7 +1658,36 @@
       if(motion&&typeof motion[method]==='function')motion[method](kind);
     }catch(err){/* Decorative motion never blocks navigation. */}
   }
-  function render(){if(ui.tab==='welcome'){$('app').innerHTML=landingView();document.title='Maddie Journey · Madhouse Design Studio';optionalMotion('refresh','welcome');return;}const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,milestones:milestonesView,calendar:calendarView,journey:journey,kit:kitView,files201:files201View,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,sources:sourcesView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open ':'')+(ui.sidebarCollapsed?'sidebar-collapsed ':'')+(ui.density==='compact'?'density-compact':'density-comfortable')+'"'+(ui.employeeModalOpen||ui.divisionModal||ui.employeePicker?' inert aria-hidden="true"':'')+'>'+sidebar()+'<button type="button" class="workspace-scrim" aria-label="Close navigation" tabindex="-1" aria-hidden="true" data-action="mobile"></button><main id="main-content" class="main" tabindex="-1"'+(ui.mobile?' inert':'')+'>'+topnav()+(views[ui.tab]||overview)()+'<footer class="footer"><span>Maddie Journey · Prototype v3.7</span><span>Fictional snapshot · No connected sources</span></footer></main></div>'+(ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.employeeModalOpen?employeeModal():'');document.title=title(ui.tab)+' · Maddie Journey';enhanceScrollableTables();optionalMotion('refresh',ui.tab);if(ui.employeeModalOpen||ui.divisionModal||ui.employeePicker){const modal=$('app').querySelector('[role="dialog"]');if(modal&&typeof modal.focus==='function')modal.focus({preventScroll:true});}}
+  // In connected mode a screen renders only when its module has a verified source;
+  // otherwise it states exactly which source is missing instead of computing figures.
+  const MODULE_NAMES={journey:'Journey stage tracker',kpi:'Approved KPI scorecards',kit:'Welcome Kit tracker',milestones:'Verified milestone records',
+    calendar:'Google Calendar (read-only)','calendar-events':'Calendar events and verified milestones in the monitoring snapshot',reviews:'Review workflow records','attendance-verified':'Attendance approval/verification',roster:'Airtable roster',files201:'201 tracker'};
+  function unsourcedPanel(missing,context){
+    return '<section class="panel connected-unsourced" role="note" aria-label="Source not connected"><span class="eyebrow">NO VERIFIED SOURCE</span>'+
+      '<h2>'+safe(context)+' is not shown</h2><p>The connected snapshot has no verified source for: <strong>'+safe(missing.map(function(m){return MODULE_NAMES[m]||m;}).join(', '))+'</strong>. '+
+      'Figures are withheld rather than estimated, and fictional records are never substituted.</p>'+
+      '<p class="muted micro">See Data &amp; Sources for provider states and the remaining integration steps.</p>'+
+      button('Open Data & Sources','nav','data-tab="sources"','small')+'</section>';
+  }
+  function guardedView(tab,views){
+    if(CONNECTED){
+      const gate=window.MJ_SOURCE_ADAPTER.screenAvailability(tab,'screen');
+      if(!gate.available)return header('CONNECTED MONITORING',title(tab),'This screen is waiting for an authorized source.','')+unsourcedPanel(gate.missing,title(tab));
+    }
+    return (views[tab]||overview)();
+  }
+  function connectedStale(){const p=window.MJ_SOURCE_ADAPTER.getProvenance();return !!(p.freshness&&p.freshness.stale);}
+  function freshnessText(){
+    const p=window.MJ_SOURCE_ADAPTER.getProvenance();
+    if(!p.freshness)return 'Retrieved '+(p.asOf?manilaStamp(p.asOf):'—');
+    return (p.freshness.stale?'Stale · ':'')+'Retrieved '+manilaStamp(p.freshness.retrievedAt);
+  }
+  function manilaStamp(iso){
+    try{return new Date(iso).toLocaleString('en-PH',{timeZone:'Asia/Manila',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+' (Manila)';}
+    catch(err){return String(iso||'—');}
+  }
+  function signed(n){return n>0?'+'+n:String(n);}
+  function render(){if(ui.tab==='welcome'){$('app').innerHTML=landingView();document.title='Maddie Journey · Madhouse Design Studio';optionalMotion('refresh','welcome');return;}const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,milestones:milestonesView,calendar:calendarView,journey:journey,kit:kitView,files201:files201View,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,sources:sourcesView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open ':'')+(ui.sidebarCollapsed?'sidebar-collapsed ':'')+(ui.density==='compact'?'density-compact':'density-comfortable')+'"'+(ui.employeeModalOpen||ui.divisionModal||ui.employeePicker?' inert aria-hidden="true"':'')+'>'+sidebar()+'<button type="button" class="workspace-scrim" aria-label="Close navigation" tabindex="-1" aria-hidden="true" data-action="mobile"></button><main id="main-content" class="main" tabindex="-1"'+(ui.mobile?' inert':'')+'>'+topnav()+guardedView(ui.tab,views)+(CONNECTED?'<footer class="footer"><span>Maddie Journey · v3.8 private monitoring · read-only</span><span>'+safe(freshnessText())+' · <a href="/logout">Sign out</a></span></footer>':'<footer class="footer"><span>Maddie Journey · Prototype v3.8</span><span>Fictional snapshot · No connected sources</span></footer>')+'</main></div>'+(ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.employeeModalOpen?employeeModal():'');document.title=title(ui.tab)+' · Maddie Journey';enhanceScrollableTables();optionalMotion('refresh',ui.tab);if(ui.employeeModalOpen||ui.divisionModal||ui.employeePicker){const modal=$('app').querySelector('[role="dialog"]');if(modal&&typeof modal.focus==='function')modal.focus({preventScroll:true});}}
   function openDivision(id,view,focusId){
     if(!data.divisions.some(function(d){return d.id===id;}))return;
     ui.scope=id;ui.activeDivision=id;
@@ -1663,6 +1846,7 @@
     }
     if(name==='close'||name==='viewer-return'){closeReader();return;}
     if(name==='detail'){if(!['preview','milestones','kpi','journey','kit','files201','attendance','approvals','info'].includes(button.dataset.tab))return;ui.detail=button.dataset.tab;render();const selected=$('app').querySelector('.employee-modal-tabs .employee-tab.active');if(selected&&typeof selected.focus==='function'){selected.focus({preventScroll:true});if(typeof selected.scrollIntoView==='function')selected.scrollIntoView({block:'nearest',inline:'nearest'});}return;}
+    if(name==='export-csv'&&CONNECTED){toast('Export is disabled for confidential connected records.');return;}
     if(name==='export-csv'){const rows=[['Employee ID','Name','Division','Role','Start date','Journey %','Welcome kit %','KPI score %','Performance rating','Final approval']].concat(filtered().map(function(x){return [x.id,x.name,div(x.division).name,x.jobTitle,x.startDate,journeyPct(x),kitPct(x),score(x),rating(score(x)),x.review.coo.status];}));download('maddie-journey-directory-visible.csv','text/csv;charset=utf-8',toCSV(rows));return;}
     if(name==='attendance-csv'){const rows=[['Employee ID','Employee','Division','Date','Type','Approval','Verified','Reason','Supervisor remarks']];scopedEmployees().forEach(function(x){x.attendance.forEach(function(r){rows.push([x.id,x.name,div(x.division).name,r.date,r.type,r.approval,r.verified?'Yes':'No',r.reason,r.remarks]);});});download('maddie-journey-attendance.csv','text/csv;charset=utf-8',toCSV(rows));return;}
   }

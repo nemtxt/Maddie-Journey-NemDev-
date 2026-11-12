@@ -2238,3 +2238,24 @@ body .member-picker-modal .picker-person-score .ui-icon{width:16px;height:16px}
 @media(forced-colors:active){
   body .member-picker-modal .picker-department.active{outline:2px solid Highlight;outline-offset:-2px}
 }
+
+/* v3.8 connected mode (private deployment only). Reuses existing tokens; the
+   textual label remains authoritative and color only supports it. */
+body .monitor-file-source-unavailable{background:var(--mj-pastel-sky)}
+body .monitor-file-conflict{background:var(--mj-pastel-lilac);border-color:var(--mj-pastel-stroke)}
+body .monitor-file-detail-table th small{display:block;font-weight:400;color:var(--muted);margin-top:2px}
+body .connected-unsourced{max-width:720px}
+body .connected-unsourced h2{margin:6px 0 8px;font-size:var(--mj-type-section)}
+body .connected-unsourced p{margin:0 0 12px}
+body .connected-issues{margin:8px 0 0;padding-left:18px}
+body .connected-issues li{margin:0 0 6px}
+body .source-card-meta{display:grid;gap:4px;margin:10px 0 0;font-size:var(--mj-type-caption);color:var(--muted)}
+body .source-card-meta strong{color:var(--ink);font-weight:600}
+body .source-state{display:inline-flex;align-items:center;gap:6px;font-size:var(--mj-type-caption);font-weight:600;
+  padding:3px 9px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
+body .source-state-connected{background:var(--mj-pastel-sage)}
+body .source-state-partial{background:var(--mj-pastel-peach)}
+body .source-state-permission-limited,body .source-state-error{background:var(--mj-pastel-blush);border-color:var(--mj-pastel-stroke)}
+body .source-state-not-configured,body .source-state-not-implemented{background:var(--mono-soft)}
+body .reconcile-table td,body .reconcile-table th{vertical-align:top}
+@media(forced-colors:active){body .source-state{border:1px solid CanvasText}}
