@@ -15,7 +15,7 @@ Maddie Journey is a **reader, organizer, summary dashboard, and monitoring track
 
 ## How to use
 
-1. Open the landing page and select **Enter dashboard**, or open any deep link such as \`#overview\`, \`#employees\`, \`#journey\`, or \`#division/media\`. All fictional records are accessible immediately: **no login, role choice, or first-visit popup**.
+1. Open the landing page and select **Enter dashboard**, or open any deep link such as `#overview\`, \`#employees\`, \`#journey\`, or \`#division/media\`. All fictional records are accessible immediately: **no login, role choice, or first-visit popup**.
 2. The **left sidebar** contains five main areas: Dashboard, People, Journey, Performance, and Data & Sources. Select one to access its default screen.
 3. The **top contextual tabs** change to the relevant subpages, making secondary navigation predictable and reducing sidebar clutter.
 4. Use Search, division filters, Board/Table modes, employee modal previews, and Light/Dark theme to navigate without changing source data.
@@ -65,10 +65,10 @@ This demonstration is deliberately **open to all visitors**. Do not publish real
 
 ## Run and deploy
 
-1. Open \`index.html\` locally in a modern browser, or use VS Code Live Server.
-2. Run \`node tests/smoke.js\` in the repository root. The tests use only built-in Node modules.
-3. Open **GitHub → Settings → Pages** and select **GitHub Actions** as the build/deployment source if not already enabled.
-4. Commits to \`main\` trigger the repository's test-and-deploy workflow. Verify both its test result and the Pages deployment in **Actions** before treating the live site as updated.
+1. Open `index.html` locally in a modern browser, or use VS Code Live Server.
+2. Run `node tests/smoke.js` in the repository root. Tests use only built-in Node modules.
+3. The configured GitHub Pages publisher runs under **Actions → pages build and deployment**.
+4. The custom `.github/workflows/pages.yml` workflow runs **validation tests only** on commits to `main`. This avoids two deployment jobs competing for the same Pages artifact or environment. Confirm validation and Pages publishing independently before treating the live site as updated.
 
 The automated tests check JavaScript parsing, 51-person fixture, open-access navigation, five primary sections, contextual top tabs, Journey board and table, all eight division pages, source transparency, inert old edit actions, and preservation of source data. **Automated DOM/browser screenshot comparison across physical Windows, Mac, Android and iOS devices is not covered by the smoke tests.**
 
@@ -83,7 +83,7 @@ The automated tests check JavaScript parsing, 51-person fixture, open-access nav
 | \`operations.css\` / \`palette.css\` | Existing tracker and Madhouse color system |
 | \`landing.css\` | Original-image landing layout |
 | \`workspace.css\` | White admin dashboard structure and reference-inspired list/board styles |
-| \`reader.css\` | **v2.0** single navigation, first-visit chooser, Journey Kanban, read-only detail layouts |
+| \`reader.css\` | **v2.1** five-section sidebar, contextual sub-navigation, Journey Kanban and read-only detail layouts |
 | \`tests/smoke.js\` | Dependency-free Node regression tests |
 | \`assets/madhouse-logo.png\` | Original user-provided PNG |
 | \`assets/madhalloween.jpg\` | Original user-provided JPEG |
