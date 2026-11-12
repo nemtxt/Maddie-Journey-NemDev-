@@ -357,6 +357,19 @@ check('Escape closes the mobile navigation drawer',()=>{
   assert(!user.html().includes('layout menu-open'));
 });
 
+check('Attendance exposes both weekly and monthly read-only breakdowns',()=>{
+  user.navigate('attendance');
+  assert(user.html().includes('class="panel compact-details attendance-breakdown"'));
+  assert(user.html().includes('data-ui="frequency"'));
+  assert(user.html().includes('Weekly and monthly summary'));
+  user.setFilter('frequency','weekly');
+  assert(user.html().includes('value="weekly" selected'));
+  user.setFilter('frequency','monthly');
+  assert(user.html().includes('value="monthly" selected'));
+  assert(user.html().includes('Late arrivals'));
+  assert(user.html().includes('Approved leaves'));
+});
+
 check('Every rendered screen uses handled action names',()=>{
   const handlers=new Set([...src['app.js'].matchAll(/if\(name==='([^']+)'\)/g)].map(m=>m[1]));
   for(const tab of ['overview','divisions','employees','milestones','journey','kit','attendance','kpi','approvals','sources','audit']){
