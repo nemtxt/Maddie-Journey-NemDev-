@@ -32,12 +32,13 @@
       'The fictional monitoring snapshot could not be verified. No provider connection is required.');
     return;
   }
-  let ui={tab:'welcome',division:'all',activeDivision:'rmd',scope:'all',divisionPickerMode:'view',query:'',employeeSort:'name',employee:data.employees[0].id,detail:'preview',employeeModalOpen:false,divisionModal:false,employeePicker:false,pickerDivision:'rmd',frequency:'monthly',mobile:false,milestoneCategory:'birthday',milestoneDivision:'all',milestoneShowAll:false,milestonePicking:false,divisionTab:'summary',attentionFilter:'all',attentionShowAll:false,workView:'list',journeyView:'board',journeyShowAll:false,sidebarCollapsed:false,highlightMember:'',viewerIds:[],viewerOrigin:'',filesFilter:'missing',filesExpanded:false,calendarStart:'',calendarType:'all',calendarSelected:'',calendarExpanded:'',};
+  let ui={tab:'welcome',division:'all',activeDivision:'rmd',scope:'all',divisionPickerMode:'view',query:'',employeeSort:'name',employee:data.employees[0].id,detail:'preview',employeeModalOpen:false,divisionModal:false,employeePicker:false,pickerDivision:'rmd',frequency:'monthly',mobile:false,milestoneCategory:'birthday',milestoneDivision:'all',milestoneShowAll:false,milestonePicking:false,divisionTab:'summary',attentionFilter:'all',attentionShowAll:false,workView:'list',journeyView:'board',journeyShowAll:false,sidebarCollapsed:false,highlightMember:'',viewerIds:[],viewerOrigin:'',filesFilter:'missing',filesExpanded:false,calendarStart:'',calendarType:'all',calendarSelected:'',calendarExpanded:'',density:'comfortable',};
   // UI preferences do not alter or store employee records.
   try{
     const remembered=sessionStorage.getItem('maddie-journey-workview');
     if(remembered==='board'||remembered==='list')ui.workView=remembered;
     ui.sidebarCollapsed=localStorage.getItem('maddie-journey-sidebar-collapsed')==='true';
+    ui.density=localStorage.getItem('maddie-journey-density')==='compact'?'compact':'comfortable';
   }catch(err){}
   // Return focus to the action that opened a dialog after its view is dismissed.
   let modalOrigin=null;
@@ -169,7 +170,20 @@
       '</div></div></aside>';
   }
   function title(t){if(t==='division')return div(ui.activeDivision).name;return {divisions:'Divisions',overview:'Overview',milestones:'Employee milestones',calendar:'Three-month calendar',files201:'201 Files Checklist',employees:'People directory',journey:'Employee journey',kit:'Welcome Maddie Kit',attendance:'Attendance analytics',kpi:'2026 KPI evaluations',approvals:'Reviews',sources:'Data sources',audit:'About this prototype'}[t]||'Overview';}
-  function header(eyebrow,heading,description,actions){return '<div class="page-header"><div><div class="eyebrow">'+safe(eyebrow)+'</div><h1>'+safe(heading)+'</h1><p>'+safe(description)+'</p></div><div class="actions">'+(actions||'')+'</div></div>'+(ui.tab==='overview'?'':screenSummary());}
+  function densityControl(){
+    const compact=ui.density==='compact';
+    return '<button type="button" class="button small density-toggle'+(compact?' active':'')+
+      '" data-action="toggle-density" aria-pressed="'+compact+
+      '" aria-label="'+(compact?'Use comfortable monitoring row spacing':'Use compact monitoring row spacing')+
+      '" title="Table and list spacing only">'+landingIcon(compact?'grid':'list')+
+      '<span>'+(compact?'Comfortable rows':'Compact rows')+'</span></button>';
+  }
+  function header(eyebrow,heading,description,actions){
+    return '<div class="page-header"><div><div class="eyebrow">'+safe(eyebrow)+
+      '</div><h1>'+safe(heading)+'</h1><p>'+safe(description)+'</p></div>'+
+      '<div class="actions">'+(actions||'')+densityControl()+'</div></div>'+
+      (ui.tab==='overview'?'':screenSummary());
+  }
 
   /* Summaries use the same calculated sample records displayed in each screen. */
   function meanOf(list,calculate){return list.length?Math.round(list.reduce(function(n,e){return n+calculate(e);},0)/list.length):0;}
@@ -1219,7 +1233,7 @@
       if(motion&&typeof motion[method]==='function')motion[method](kind);
     }catch(err){/* Decorative motion never blocks navigation. */}
   }
-  function render(){if(ui.tab==='welcome'){$('app').innerHTML=landingView();document.title='Maddie Journey · Madhouse Design Studio';optionalMotion('refresh','welcome');return;}const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,milestones:milestonesView,calendar:calendarView,journey:journey,kit:kitView,files201:files201View,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,sources:sourcesView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open ':'')+(ui.sidebarCollapsed?'sidebar-collapsed':'')+'">'+sidebar()+'<button type="button" class="workspace-scrim" aria-label="Close navigation" tabindex="-1" aria-hidden="true" data-action="mobile"></button><main id="main-content" class="main" tabindex="-1"'+(ui.mobile?' inert':'')+'>'+topnav()+(views[ui.tab]||overview)()+'<footer class="footer"><span>Maddie Journey · Prototype v3.4.2</span><span>Fictional snapshot · No connected sources</span></footer></main></div>'+(ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.employeeModalOpen?employeeModal():'');document.title=title(ui.tab)+' · Maddie Journey';enhanceScrollableTables();optionalMotion('refresh',ui.tab);if(ui.employeeModalOpen||ui.divisionModal||ui.employeePicker){const modal=$('app').querySelector('[role="dialog"]');if(modal&&typeof modal.focus==='function')modal.focus({preventScroll:true});}}
+  function render(){if(ui.tab==='welcome'){$('app').innerHTML=landingView();document.title='Maddie Journey · Madhouse Design Studio';optionalMotion('refresh','welcome');return;}const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,milestones:milestonesView,calendar:calendarView,journey:journey,kit:kitView,files201:files201View,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,sources:sourcesView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open ':'')+(ui.sidebarCollapsed?'sidebar-collapsed ':'')+(ui.density==='compact'?'density-compact':'density-comfortable')+'">'+sidebar()+'<button type="button" class="workspace-scrim" aria-label="Close navigation" tabindex="-1" aria-hidden="true" data-action="mobile"></button><main id="main-content" class="main" tabindex="-1"'+(ui.mobile?' inert':'')+'>'+topnav()+(views[ui.tab]||overview)()+'<footer class="footer"><span>Maddie Journey · Prototype v3.5</span><span>Fictional snapshot · No connected sources</span></footer></main></div>'+(ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.employeeModalOpen?employeeModal():'');document.title=title(ui.tab)+' · Maddie Journey';enhanceScrollableTables();optionalMotion('refresh',ui.tab);if(ui.employeeModalOpen||ui.divisionModal||ui.employeePicker){const modal=$('app').querySelector('[role="dialog"]');if(modal&&typeof modal.focus==='function')modal.focus({preventScroll:true});}}
   function openDivision(id,view,focusId){
     if(!data.divisions.some(function(d){return d.id===id;}))return;
     ui.scope=id;ui.activeDivision=id;
@@ -1259,6 +1273,11 @@
     if(name==='toggle-sidebar'){ui.sidebarCollapsed=!ui.sidebarCollapsed;try{localStorage.setItem('maddie-journey-sidebar-collapsed',String(ui.sidebarCollapsed));}catch(err){}render();focusActionAfterRender(button);return;}
     if(name==='nav'){navigate(button.dataset.tab);return;}
     if(name==='set-theme'){setTheme(button.dataset.themeValue);return;}
+    if(name==='toggle-density'){
+      ui.density=ui.density==='compact'?'comfortable':'compact';
+      try{localStorage.setItem('maddie-journey-density',ui.density);}catch(err){}
+      render();focusActionAfterRender(button);return;
+    }
     if(name==='quick-search'){navigate('employees');const search=$('app')&&$('app').querySelector('[data-ui="query"]');if(search&&typeof search.focus==='function')search.focus();return;}
     if(name==='clear-search'){ui.query='';render();const search=$('app')&&$('app').querySelector('[data-ui="query"]');if(search&&typeof search.focus==='function')search.focus();return;}
     if(name==='work-view'){
