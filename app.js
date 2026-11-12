@@ -62,8 +62,8 @@
   function themeControl(){
     const t=currentTheme();
     return '<div class="theme-control" role="group" aria-label="Appearance — choose light or dark mode">'+
-      '<button type="button" class="theme-choice'+(t==='light'?' active':'')+'" data-action="set-theme" data-theme-value="light" aria-pressed="'+(t==='light')+'" aria-label="Use light appearance"><span class="theme-icon" aria-hidden="true">☀</span><span>Light</span></button>'+
-      '<button type="button" class="theme-choice'+(t==='dark'?' active':'')+'" data-action="set-theme" data-theme-value="dark" aria-pressed="'+(t==='dark')+'" aria-label="Use dark appearance"><span class="theme-icon" aria-hidden="true">☾</span><span>Dark</span></button>'+
+      '<button type="button" class="theme-choice'+(t==='light'?' active':'')+'" data-action="set-theme" data-theme-value="light" aria-pressed="'+(t==='light')+'" aria-label="Use light appearance"><span class="theme-icon" aria-hidden="true">' + landingIcon('sun') + '</span><span>Light</span></button>'+
+      '<button type="button" class="theme-choice'+(t==='dark'?' active':'')+'" data-action="set-theme" data-theme-value="dark" aria-pressed="'+(t==='dark')+'" aria-label="Use dark appearance"><span class="theme-icon" aria-hidden="true">' + landingIcon('moon') + '</span><span>Dark</span></button>'+
       '</div>';
   }
   function setTheme(next){
@@ -858,6 +858,8 @@
   }
   function landingIcon(name){
     const drawings={
+      sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+      moon:'<path d="M20.5 14A8.5 8.5 0 0 1 10 3.5 8.5 8.5 0 1 0 20.5 14Z"/>',
       panel:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/>',
       menu:'<path d="M4 6h16M4 12h16M4 18h16"/>',
       people:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
