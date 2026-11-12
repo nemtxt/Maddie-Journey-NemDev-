@@ -769,9 +769,9 @@
   }
   function landingView(){
     const audience=[
-      {label:'HR',detail:'People, records and workforce tracking',role:'hr',theme:'pink',icon:'people'},
-      {label:'Division Heads',detail:'Department performance and team overview',role:'head',theme:'yellow',icon:'hierarchy'},
-      {label:'Executive overview',detail:'CEO, COO and CSO · organizational insights',role:'executive',theme:'blue',icon:'crown'}
+      {label:'People & Milestones',detail:'Explore employee summaries, attendance and milestones',target:'employees',theme:'pink',icon:'people'},
+      {label:'Division Workspaces',detail:'Compare teams, org charts and employee progress',target:'divisions',theme:'yellow',icon:'hierarchy'},
+      {label:'Organization Overview',detail:'Monitor organization-wide people and performance metrics',target:'overview',theme:'blue',icon:'crown'}
     ];
     const feature=[
       {name:'Summaries',detail:'Key insights at a glance',target:'overview',theme:'pink',icon:'chart'},
@@ -796,7 +796,7 @@
       '<section class="landing-audiences" aria-labelledby="landing-audiences-title"><div class="landing-section-heading"><h2 id="landing-audiences-title">Explore the dashboard</h2>'+
       '<p>Open the screens you need, without selecting a role or signing in.</p></div>'+
       '<div class="landing-audience-grid">'+audience.map(function(a){
-        return '<a href="#'+({hr:'employees',head:'divisions',executive:'overview'}[a.role])+'" class="landing-audience-card" data-nav="'+({hr:'employees',head:'divisions',executive:'overview'}[a.role])+'">'+
+        return '<a href="#'+a.target+'" class="landing-audience-card" data-nav="'+a.target+'">'+
         '<span class="landing-audience-icon tone-'+a.theme+'" aria-hidden="true">'+landingIcon(a.icon)+'</span>'+
         '<span class="landing-audience-copy"><strong>'+safe(a.label)+'</strong><small>'+safe(a.detail)+'</small></span>'+
         '<span class="landing-card-chevron" aria-hidden="true">›</span></a>';
