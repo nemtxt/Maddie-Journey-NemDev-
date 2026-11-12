@@ -265,6 +265,93 @@
   function detailContent(e,t){if(t==='journey')return '<div class="panel"><div class="panel-head"><h2>Seven-stage checklist</h2><span class="tag info">'+journeyPct(e)+'% done</span></div>'+stageCards(e)+'</div>';if(t==='kit')return '<div class="panel"><div class="panel-head"><h2>Welcome Maddie Kit</h2><span class="tag info">'+kitPct(e)+'% ready</span></div>'+kitSection(e)+'</div>';if(t==='attendance')return '<section class="panel">'+attendanceSummary(e)+'<div class="hr"></div>'+attendanceRows(e)+'</section>';if(t==='kpi')return kpiDetail(e);if(t==='approvals')return approvalsDetail(e);if(t==='milestones')return milestoneDetail(e);if(t==='preview')return previewCharts(e);if(t==='info')return '<section class="panel"><h2>Employee information</h2><p class="muted micro" style="margin:6px 0 15px">Profile details and department assignment</p>'+profileForm(e)+'</section>';return '';}
   function profileForm(e){const edit=isHR();return '<details class="panel" style="margin-bottom:14px"><summary style="font-size:12px;font-weight:800;cursor:pointer">Employee information '+(edit?'· HR editable':'· view only')+'</summary><div class="form-grid" style="margin-top:18px"><div><label class="field-label">Full name</label>'+input('profile.name',e.name,{disabled:!edit})+'</div><div><label class="field-label">Job title</label>'+input('profile.jobTitle',e.jobTitle,{disabled:!edit})+'</div><div><label class="field-label">Demo email</label>'+input('profile.email',e.email,{disabled:!edit,type:'email'})+'</div><div><label class="field-label">Start date</label>'+input('profile.startDate',e.startDate,{disabled:!edit,type:'date'})+'</div><div class="span2"><label class="field-label">Assigned division</label>'+select('profile.division',e.division,data.divisions.map(function(d){return {label:d.name,value:d.id};}),!edit)+'</div></div></details>';}
 
+
+  /* Milestones: distinct positive events and confidential HR records. All demo data. */
+  function todayStamp(){const d=new Date();return Date.UTC(d.getFullYear(),d.getMonth(),d.getDate());}
+  function daysToBirthday(ymd){
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(ymd||''))return 9999;
+    const parts=ymd.split('-').map(Number),today=new Date(todayStamp()),year=today.getUTCFullYear();
+    let next=Date.UTC(year,parts[1]-1,parts[2]);if(next<todayStamp())next=Date.UTC(year+1,parts[1]-1,parts[2]);
+    return Math.round((next-todayStamp())/86400000);
+  }
+  function anniversaryInfo(e){
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(e.startDate||''))return {years:0,days:9999,next:''};
+    const d=new Date(e.startDate+'T00:00:00Z'),today=new Date(todayStamp());
+    let completed=today.getUTCFullYear()-d.getUTCFullYear();
+    const thisYear=Date.UTC(today.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate());
+    if(todayStamp()<thisYear)completed--;
+    completed=Math.max(0,completed);
+    let next=Date.UTC(today.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate());
+    if(next<todayStamp())next=Date.UTC(today.getUTCFullYear()+1,d.getUTCMonth(),d.getUTCDate());
+    return {years:completed,days:Math.round((next-todayStamp())/86400000),next:new Date(next).toISOString().slice(0,10)};
+  }
+  const milestoneKinds=[
+    {id:'birthday',name:'Birthdays',description:'Upcoming celebrations'},
+    {id:'tenure',name:'Tenure',description:'Service anniversaries'},
+    {id:'hiring',name:'Hiring',description:'Start dates and new joiners'},
+    {id:'promotion',name:'Promotions',description:'Career movement'},
+    {id:'perfect',name:'Perfect attendance',description:'HR-confirmed recognition only'},
+    {id:'discipline',name:'Disciplinary actions',description:'Confidential HR case log'}
+  ];
+  function milestoneEvents(kind,team){
+    const rows=[];
+    team.forEach(function(e){
+      if(kind==='birthday'&&e.birthday)rows.push({e: e,when:e.birthday,sort:daysToBirthday(e.birthday),status:daysToBirthday(e.birthday)===0?'Today':daysToBirthday(e.birthday)+' days away',detail:'Birthday · '+safe(dateLabel(e.birthday))});
+      if(kind==='tenure'&&e.startDate){const a=anniversaryInfo(e);rows.push({e:e,when:a.next,sort:a.days,status:a.years+' years of service',detail:'Next anniversary · '+dateLabel(a.next)});}
+      if(kind==='hiring'&&e.startDate){const gap=Math.floor((todayStamp()-Date.parse(e.startDate+'T00:00:00Z'))/86400000);rows.push({e:e,when:e.startDate,sort:-Date.parse(e.startDate),status:gap<0?'Upcoming hire':gap<=90?'Recent hire':'Onboarded',detail:'Hired · '+dateLabel(e.startDate)});}
+      if(kind==='promotion')(e.promotions||[]).forEach(function(p){rows.push({e:e,record:p,when:p.date,sort:-Date.parse(p.date||'1970-01-01'),status:p.status,detail:(p.from||'Previous role')+' → '+(p.to||'New role')});});
+      if(kind==='perfect')(e.attendanceAwards||[]).forEach(function(p){rows.push({e:e,record:p,when:p.period||'',sort:-(Number((p.period||'1970-01').replace('-',''))||0),status:p.status,detail:'Recognized attendance · '+(p.period||'Period pending')});});
+      if(kind==='discipline'&&isHR())(e.disciplinaryActions||[]).forEach(function(p){rows.push({e:e,record:p,when:p.date,sort:-Date.parse(p.date||'1970-01-01'),status:p.status,detail:p.category+' · '+p.severity});});
+    });
+    return rows.sort(function(a,b){return a.sort-b.sort;});
+  }
+  function filteredMilestoneTeam(){return ui.milestoneDivision==='all'?data.employees:data.employees.filter(function(e){return e.division===ui.milestoneDivision;});}
+  function milestonesView(){
+    const kind=milestoneKinds.find(function(k){return k.id===ui.milestoneCategory;})||milestoneKinds[0];
+    const staff=filteredMilestoneTeam(),rows=milestoneEvents(kind.id,staff),restricted=kind.id==='discipline'&&!isHR();
+    const visible=ui.milestoneShowAll?rows:rows.slice(0,12);
+    const roster=restricted?'<div class="milestone-private"><b>HR-managed information</b><p>Disciplinary case details are shown only in the HR demo workspace. All divisions and other milestones remain available.</p></div>':
+      (visible.length?visible.map(function(row){
+        return '<div class="milestone-person">'+avatar(row.e.name)+'<div class="milestone-person-name"><b>'+safe(row.e.name)+'</b><small>'+safe(div(row.e.division).short)+' · '+safe(row.detail)+'</small></div>'+
+        '<span class="milestone-status">'+safe(row.status||'Recorded')+'</span>'+
+        button('View','open','data-id="'+safe(row.e.id)+'" data-detail="milestones"','small')+'</div>';
+      }).join(''):'<div class="empty">No sample records in this category for the selected department.</div>');
+    return header('PEOPLE MOMENTS','Employee milestones','One category at a time. Browse birthdays, service history, recognitions and HR records.',button('Employee directory','nav','data-tab="employees"','small'))+
+      '<div class="milestone-toolbar"><div><h2>Choose a category</h2><p class="muted micro">Select what you need to review today.</p></div><button class="button" type="button" data-action="milestone-division">'+safe(ui.milestoneDivision==='all'?'All 8 divisions':div(ui.milestoneDivision).short)+' <span aria-hidden="true">⌄</span></button></div>'+
+      '<div class="milestone-tabs" role="group" aria-label="Milestone categories">'+milestoneKinds.map(function(k){
+        return '<button type="button" class="milestone-tab '+(k.id===kind.id?'active':'')+'" data-action="milestone-category" data-kind="'+k.id+'" aria-pressed="'+(k.id===kind.id)+'">'+safe(k.name)+'</button>';
+      }).join('')+'</div>'+
+      '<section class="panel milestone-results"><div class="panel-head"><div><h2>'+safe(kind.name)+'</h2><p>'+safe(kind.description)+' · '+(restricted?'HR-only details':rows.length+' records')+'</p></div>'+
+      ((kind.id==='promotion'&&(isHR()||viewer().role==='head'||viewer().role==='corp'))||(isHR()&&(kind.id==='perfect'||kind.id==='discipline'))?
+         button('Record event','choose-milestone-employee','','small primary'):'')+'</div>'+
+      '<div class="milestone-people">'+roster+'</div>'+
+      (!restricted&&rows.length>12?'<div class="milestone-list-footer">'+button(ui.milestoneShowAll?'Show fewer':'Show all '+rows.length,'milestone-more','','small')+'</div>':'')+
+      '<div class="milestone-help">'+(kind.id==='perfect'?'Perfect attendance is recorded only when HR explicitly confirms the award; it is not inferred from incomplete time entries.':kind.id==='discipline'?'All cases are fictional. Real disciplinary records require secure, audited access.':'All names, dates and milestones are sample data, not real employee records.')+'</div></section>';
+  }
+  function recordListHTML(e,kind){
+    const collection=kind==='promotion'?e.promotions:kind==='perfect'?e.attendanceAwards:e.disciplinaryActions;
+    if(kind==='discipline'&&!isHR())return '<p class="muted micro">Confidential HR records are not available in this preview.</p>';
+    return collection.length?collection.map(function(r){
+      const name=kind==='promotion'?(r.from+' → '+r.to):kind==='perfect'?('Attendance · '+r.period):(r.category+' · '+r.severity);
+      const date=kind==='perfect'?(r.period||'—'):dateLabel(r.date);
+      const canEdit=isHR()||(kind==='promotion'&&roleCanHead(e)&&r.status!=='Approved');
+      return '<div class="milestone-mini-row"><div><b>'+safe(name)+'</b><small>'+safe(date)+' · '+safe(r.status)+'</small></div>'+
+        (canEdit?button('Edit','milestone-edit','data-kind="'+kind+'" data-employee="'+safe(e.id)+'" data-id="'+safe(r.id)+'"','small'):'')+'</div>';
+    }).join(''):'<p class="muted micro">No recorded examples yet.</p>';
+  }
+  function milestoneDetail(e){
+    const ten=anniversaryInfo(e),canCareer=isHR()||roleCanHead(e),a=attend(e);
+    return '<div class="milestone-profile">'+
+      '<div class="milestone-profile-highlights"><div><span class="muted micro">Birthday</span><strong>'+dateLabel(e.birthday)+'</strong><small>'+ (daysToBirthday(e.birthday)===9999?'Not provided':daysToBirthday(e.birthday)+' days until next')+'</small></div>'+
+      '<div><span class="muted micro">Hiring date</span><strong>'+dateLabel(e.startDate)+'</strong><small>'+ten.years+' completed service years</small></div>'+
+      '<div><span class="muted micro">Next anniversary</span><strong>'+dateLabel(ten.next)+'</strong><small>In '+ten.days+' days</small></div></div>'+
+      '<section class="panel"><div class="heading-line"><h3>Promotions & career growth</h3>'+(canCareer?button('Add promotion','milestone-edit','data-kind="promotion" data-employee="'+safe(e.id)+'"','small'):'')+'</div>'+
+      recordListHTML(e,'promotion')+'</section>'+
+      '<section class="panel"><div class="heading-line"><h3>Perfect attendance recognition</h3>'+(isHR()?button('Add award','milestone-edit','data-kind="perfect" data-employee="'+safe(e.id)+'"','small'):'')+'</div>'+
+      '<p class="muted micro" style="margin-bottom:10px">Awards require explicit HR confirmation; sparse attendance entries cannot establish perfect attendance.</p>'+recordListHTML(e,'perfect')+'</section>'+
+      '<section class="panel"><div class="heading-line"><h3>Disciplinary actions</h3>'+(isHR()?button('Add case','milestone-edit','data-kind="discipline" data-employee="'+safe(e.id)+'"','small'):'')+'</div>'+
+      recordListHTML(e,'discipline')+'</section></div>';
+  }
   function roleChoiceGroup(title,description,roles){
     return '<section class="role-choice-section"><div class="role-choice-heading"><h3>'+safe(title)+'</h3><p>'+safe(description)+'</p></div><div class="role-choice-grid">'+roles.map(function(v){
       const departments=(v.divisions||[]).map(function(id){return div(id).short;}).join(' + ');
