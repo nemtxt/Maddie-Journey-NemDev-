@@ -233,3 +233,65 @@
   .employee-picker-trigger>strong{font-size:10px}
   .member-picker-modal{max-height:calc(100dvh - 16px)}
 }
+
+
+/* v1.3 — one consistent centered modal pattern and cross-screen division context */
+.top-actions{min-width:0}
+.scope-trigger{display:inline-flex;align-items:center;justify-content:space-between;gap:9px;height:42px;max-width:240px;min-width:145px;padding:6px 12px;border:1px solid #e3e0dc;border-radius:11px;background:#fff;color:#303239;font-size:11px;font-weight:800;text-align:left;transition:border-color .16s,background .16s;white-space:nowrap}
+.scope-trigger:hover{border-color:#e5a790;background:#fffaf8}
+.scope-dot{color:#e27c60;font-size:17px;flex-shrink:0}
+.scope-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.scope-arrow{font-size:16px;color:#a5a3a8}
+.scope-tracker{margin:15px 0 18px;padding:19px}
+.scope-tracker .panel-head{align-items:center;margin-bottom:15px}
+.scope-division-rows{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.scope-division-row{display:grid;grid-template-columns:minmax(110px,1.3fr) minmax(55px,1fr) 40px auto;gap:10px;align-items:center;border:1px solid #edebe7;border-radius:11px;padding:10px 12px;background:#fdfcfb;min-width:0}
+.scope-division-row b,.scope-member-row b{display:block;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.scope-division-row small,.scope-member-row small{display:block;font-size:10px;color:#9b9da1}
+.scope-division-row strong,.scope-member-row strong{font:800 12px Manrope;text-align:right}
+.scope-division-row .progress>span{background:#826fda}
+.scope-member-rows{display:grid;gap:0}
+.scope-member-row{display:flex;align-items:center;gap:11px;padding:11px 2px;border-bottom:1px solid #efeeeb}
+.scope-member-row:last-child{border-bottom:0}
+.scope-member-row .avatar{width:35px;height:35px;border-radius:10px}
+.scope-member-name{min-width:0;flex:1}
+.scope-member-progress{width:110px;flex-shrink:0}
+.scope-member-row strong{min-width:60px}
+.scope-member-row .button{min-width:58px}
+.record-overlay{z-index:55}
+.attendance-edit-modal{width:min(570px,100%);max-height:min(90dvh,810px)}
+.attendance-edit-modal .workspace-modal-scroll{padding-top:22px}
+.attendance-record-form{gap:16px}
+.attendance-record-actions{border-top:1px solid #efedeb;margin-top:1px;padding-top:17px;display:flex;justify-content:flex-end;gap:10px}
+.attendance-edit-modal .textarea{min-height:88px}
+.attendance-edit-modal .check-row{display:flex;gap:8px;border-bottom:0;background:#f6f5f2;border-radius:9px;padding:11px 12px}
+.record-overlay .workspace-modal{box-shadow:0 25px 90px #0b101950}
+.no-incidents{height:3px!important;background:#ece9e5!important}
+@media(max-width:1250px){.scope-division-rows{grid-template-columns:1fr}.scope-division-row{grid-template-columns:minmax(100px,1.2fr) minmax(70px,1fr) 40px auto}}
+@media(max-width:760px){
+  .top-actions{gap:6px}
+  .scope-trigger{min-width:110px;max-width:145px;flex:1;padding:7px 9px;height:40px;gap:5px}
+  .scope-dot{font-size:14px}
+  .workspace-trigger{min-width:0;max-width:165px;padding:4px 6px}
+  .workspace-trigger-copy{max-width:105px}
+  .workspace-trigger-copy b{font-size:10px;max-width:105px}
+  .workspace-trigger-copy small{font-size:9px}
+  .workspace-chevron{font-size:12px}
+  .scope-tracker{padding:14px}
+  .scope-division-row{grid-template-columns:minmax(94px,1.3fr) minmax(50px,1fr) 35px auto;gap:7px;padding:10px 8px}
+  .scope-division-row .button{font-size:10px;padding:7px}
+  .scope-member-progress{width:52px}
+  .scope-member-row{gap:7px}
+  .scope-member-row .button{min-width:0;padding:7px}
+  .scope-member-row strong{font-size:10px;min-width:48px}
+  .scope-member-row .avatar{width:30px;height:30px}
+  .attendance-edit-modal{max-height:calc(100dvh - 16px)}
+  .attendance-edit-modal .workspace-modal-scroll{padding:15px;min-height:0}
+  .attendance-record-actions .button{flex:1}
+}
+@media(max-width:370px){
+  .scope-trigger{max-width:117px;min-width:96px}
+  .workspace-trigger-copy{max-width:88px}
+  .workspace-trigger-copy b{max-width:88px}
+  .topbar{height:66px}
+}
