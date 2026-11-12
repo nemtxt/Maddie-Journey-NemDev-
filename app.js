@@ -1010,7 +1010,29 @@
       '<div><span class="field-label">Division Head recommendation</span><p>'+safe(e.comments.division||'No sample notes')+'</p></div></div></section>';
   }
 
-  function approvalsTable(){return '<section class="panel" style="margin-top:18px"><div class="panel-head"><div><h2>Company-wide review queue</h2><p>Employees in '+safe(scopeLabel())+' and current approval milestones</p></div></div><div class="table-wrap"><table class="table"><thead><tr><th>Employee</th><th>Division</th><th>Division Head</th><th>Corporate Ops</th><th>CSO</th><th>COO</th><th></th></tr></thead><tbody>'+scopedEmployees().map(function(e){return '<tr><td>'+linkedEmployee(e)+'</td><td>'+safe(div(e.division).short)+'</td><td>'+pill(reviewStatus(e,'division'))+'</td><td>'+pill(reviewStatus(e,'corp'))+'</td><td>'+pill(reviewStatus(e,'cso'))+'</td><td>'+pill(reviewStatus(e,'coo'))+'</td><td>'+button('Preview','open','data-id="'+safe(e.id)+'" data-detail="approvals"','small')+'</td></tr>';}).join('')+'</tbody></table></div></section>';}
+  function approvalsTable(){
+    const staff=scopedEmployees();
+    return '<section class="panel" style="margin-top:18px">'+
+      '<div class="panel-head"><div><h2>Company-wide review queue</h2>'+
+      '<p>Employees in '+safe(scopeLabel())+' and current approval milestones</p>'+
+      '</div></div><div class="table-wrap"><table class="table">'+
+      '<caption class="sr-only">Review queue for '+staff.length+
+      ' selected fictional employees; current recorded status at each configured reviewer step.'+
+      '</caption><thead><tr><th scope="col">Employee</th>'+
+      '<th scope="col">Division</th><th scope="col">Division Head</th>'+
+      '<th scope="col">Corporate Ops</th><th scope="col">CSO</th>'+
+      '<th scope="col">COO</th><th scope="col">Details</th></tr></thead><tbody>'+
+      staff.map(function(e){
+        return '<tr><th scope="row">'+linkedEmployee(e)+'</th>'+
+          '<td>'+safe(div(e.division).short)+'</td>'+
+          '<td>'+pill(reviewStatus(e,'division'))+'</td>'+
+          '<td>'+pill(reviewStatus(e,'corp'))+'</td>'+
+          '<td>'+pill(reviewStatus(e,'cso'))+'</td>'+
+          '<td>'+pill(reviewStatus(e,'coo'))+'</td>'+
+          '<td>'+button('Preview','open','data-id="'+safe(e.id)+
+          '" data-detail="approvals"','small')+'</td></tr>';
+      }).join('')+'</tbody></table></div></section>';
+  }
   function approvalsView(){
     return header('PERFORMANCE','Reviews','Monitor endorsement stages by division. Open an employee for the detailed evaluation and approval history.',button('Browse divisions','nav','data-tab="divisions"','small'))+
       '<p class="muted micro tracker-footnote">Division Head → Corporate Operations → CSO → COO is the configured review order, not proof of chronological completion. All statuses are fictional and read-only.</p>'+trackerRoster('approvals')+
