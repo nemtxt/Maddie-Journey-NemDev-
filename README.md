@@ -1,93 +1,85 @@
-# Maddie Journey — Open Monitoring Prototype v2.1
+# Maddie Journey — Read-only Prototype v2.2
 
 **Madhouse Design Studio · People & Culture**
 
-[Open the GitHub Pages prototype](https://nemtxt.github.io/Maddie-Journey-NemDev-/) · [Repository](https://github.com/nemtxt/Maddie-Journey-NemDev-)
+[Open prototype](https://nemtxt.github.io/Maddie-Journey-NemDev-/) · [GitHub repository](https://github.com/nemtxt/Maddie-Journey-NemDev-) · [Claude connector handoff](docs/CLAUDE_CONNECTORS_HANDOFF.md)
 
-## Purpose
+## Project goal
 
-Maddie Journey is a **reader, organizer, summary dashboard, and monitoring tracker** for HR (People & Culture), Division Heads and executive observers (CEO, COO and CSO). **It does not create, edit, validate, endorse, approve, or send employee records to other systems.**
+Maddie Journey is a **reader, organizer, summary and monitoring dashboard**, not a system for recording or submitting employee information. It is used to preview division, Journey, attendance, KPI, milestone and review data originally maintained in external systems.
 
-- The frontend is **HTML, CSS and vanilla JavaScript** deployed to **GitHub Pages**.
-- The current data fixture contains **exactly 51 fictional employees in eight divisions**, intended for demonstration.
-- The **original Madhouse Design Studio PNG logo** and **original Madhalloween JPEG photograph** are retained as separate assets. The third-party screenshot reference guides the layout, not branding.
-- **Light / Dark** appearance is supported; the aesthetic is primarily neutral white with restrained pink, pastel yellow and blue accents.
+**This GitHub phase uses only fictional sample data:** 51 employees across eight divisions. There is no account creation, login, role chooser, employee editing, approval submission or live source synchronization.
 
-## How to use
+The intended external data sources for the **later Claude-connected development phase** are Airtable, Google Sheets, Google Drive, Google Docs and email. Claude account connectors are not automatically accessible as a browser API from public GitHub Pages.
 
-1. Open the landing page and select **Enter dashboard** or one of the direct feature cards, or open any deep link such as `#overview\`, \`#employees\`, \`#journey\`, or \`#division/media\`. All fictional records are accessible immediately: **no login, role choice, or first-visit popup**.
-2. The **left sidebar** contains five main areas: Dashboard, People, Journey, Performance, and Data & Sources. Select one to access its default screen.
-3. The **top contextual tabs** change to the relevant subpages, making secondary navigation predictable and reducing sidebar clutter.
-4. Use Search, division filters, Board/Table modes, employee modal previews, and Light/Dark theme to navigate without changing source data.
-5. On mobile, the compact **Menu** button opens the primary sidebar. Dismiss it by tapping the backdrop. The top tabs remain horizontally scrollable.
+## Interface
 
-## Navigation
+The responsive frontend uses HTML, CSS and vanilla JavaScript, with the original Madhouse Design Studio PNG logo and the original Madhalloween JPEG event photograph. The user-provided white dashboard reference informs the composition, with a restrained pink, pastel-yellow, pastel-blue and lavender palette.
 
-| Main sidebar destination | Top sub-navigation | Main purpose |
-|---|---|---|
-| Dashboard | Overview · Divisions | Organization metrics, worklist and eight-division comparison |
-| People | Directory · Milestones | Employee records, birthdays, tenure, promotions, recognition and other fictional milestones |
-| Journey | Journey board · Welcome Kit · Attendance | Seven-stage Kanban, onboarding kit and attendance summary |
-| Performance | KPI scorecards · Reviews | Weighted KPI previews and executive review history |
-| Data & Sources | Data sources · About the prototype | Provider status, assignments, scope and privacy boundaries |
+### Navigation
 
-**Division detail:** Selecting an individual division opens a centered, integrated workspace with its own Summary, Board, List and Org chart view tabs. These are within the selected division, not a sixth primary navigation destination.
+| Left sidebar | Contextual top navigation |
+| --- | --- |
+| Dashboard | Overview · Divisions |
+| People | Directory · Milestones |
+| Journey | Journey Board · Welcome Kit · Attendance |
+| Performance | KPI Scorecards · Reviews |
+| Data & Sources | Data Sources · About the Prototype |
 
-### Journey Kanban
+All 11 screens are available to anyone using the fictional sample prototype. A division also offers its own Summary, Board, List and Org Chart tabs. Employee cards open centered view-only previews.
 
-Journey has **seven onboarding stages plus one Completed column**.
+### v2.2 overview improvements
 
-- Each sample employee appears **exactly once**, grouped under the **first stage that is not fully complete**. Completed employees occupy the final column.
-- The employee card shows their name, division, job title, progress in that stage and overall completion.
-- The **Board** view scrolls horizontally; the **Table** view lists all matching employees, their current stage, completed stages and total progress.
-- Choose a division to narrow either view, or return to all eight divisions.
-- The stage checklist in an employee modal is **a non-interactive visual status list**; cards cannot be dragged to change data.
-- All data is **fictional**; a stage labeled "Complete" does not confirm that official onboarding documents have been approved in a real source system.
+- **Pastel overview metrics:** sample employees, average Journey progress, incomplete Welcome Kits and KPI verification needs.
+- **Division cards:** eight horizontally browsable pastel cards with member count, assigned evaluator names and calculated Journey progress. Each opens its division workspace.
+- **Journey-by-stage chart:** counts from each employee's first incomplete stage, with a final Completed category; this does not fabricate a historical trend.
+- **Upcoming milestones:** real calculations on fictional birthdays and service anniversaries, with employee preview links.
+- **Follow-ups:** existing List/Board tracker, populated from the same local fixture.
+- **Consistent mobile layouts:** single sidebar, useful top tabs, compact theme controls, responsive tables and centered preview dialogs.
 
-### Other previews
+### Seven-stage Journey
 
-- **Division page:** Summary / Board / List / Org chart. Department boards are derived from Journey, Welcome Kit and sample review states.
-- **Employees:** Filter/search, compare, view centered profile and optional CSV export of the displayed fictional snapshot.
-- **KPI:** Weighted score, recorded objectives, target/actual values, verification notes and comments **without forms**.
-- **Attendance:** Incidents, trends and recorded verification flags **without new/edit record actions**.
-- **Reviews:** Existing sample timeline and fictional compensation figures **without endorsement or approval buttons**.
-- **Milestones and Welcome Kit:** Read-only events, item statuses and source notes.
+The Journey monitoring screen contains **seven stages plus Completed**, with one card per employee grouped by the first incomplete stage. The Board scrolls horizontally; Table view shows all matching members and aggregate progress. All status rows are non-editable.
 
-## Sources and privacy
+## Read-only source adapter
 
-Maddie Journey is **not** a second HR database. Airtable, Google Sheets, Google Docs, Google Drive and email are the intended original sources. **None are connected to the current GitHub Pages prototype.** Claude account connectors do not automatically provide a callable API to static browser JavaScript.
+The script loading order is:
 
-For later real-data integration, use a controlled synchronization service or authenticated backend that reads authorized provider records, matches employee IDs, validates data and returns **permission-filtered** snapshots with source/time provenance. Keep API keys, secrets, OAuth tokens and private employee information off the public GitHub Pages site.
+1. data.js — fictional fixture
+2. data-adapter.js — read-only snapshot and data-source contract
+3. app.js — rendering, navigation, metrics and employee previews
 
-**No employee data is saved or updated by the v2.1 frontend.** All fictional records are read from \`data.js\` on each load. Older locally edited demonstration data under \`maddie-journey-demo-v3\` is **ignored but not erased**. Only theme and optional temporary board/list preferences are remembered locally. CSV exports are read-only copies of fictional data and do not mutate the fixture.
+data-adapter.js exposes getSnapshot(), getSources(), getProvenance() and validateSnapshot(snapshot). It currently returns a defensive copy of the fictional fixture and marks all five planned providers **Not connected**. There are **no network calls or provider tokens**.
 
-This demonstration is deliberately **open to all visitors**. Do not publish real employee or compensation records in the public fixture. A later production integration requires authentication, server-enforced permissions and an appropriate data-governance review.
+The later connected-account phase can implement source normalization against the same frontend view model, but the private data delivery mechanism must be authenticated and controlled. Read the [Claude connector handoff](docs/CLAUDE_CONNECTORS_HANDOFF.md) for provider responsibilities, data contract and security boundaries.
 
-## Run and deploy
+**GitHub Pages is public. Never commit real employee information, payroll or disciplinary records, private documents/emails, passwords, API tokens or connector secrets.** Open access is suitable only for fictional demo data; any real-data deployment needs access-controlled delivery and appropriate permissions.
 
-1. Open `index.html` locally in a modern browser, or use VS Code Live Server.
-2. Run `node tests/smoke.js` in the repository root. Tests use only built-in Node modules.
-3. The configured GitHub Pages publisher runs under **Actions → pages build and deployment**.
-4. The custom `.github/workflows/pages.yml` workflow runs **validation tests only** on commits to `main`. This avoids two deployment jobs competing for the same Pages artifact or environment. Confirm validation and Pages publishing independently before treating the live site as updated.
+## Run and verify
 
-The automated tests check JavaScript parsing, 51-person fixture, open-access navigation, five primary sections, contextual top tabs, Journey board and table, all eight division pages, source transparency, inert old edit actions, and preservation of source data. **Automated DOM/browser screenshot comparison across physical Windows, Mac, Android and iOS devices is not covered by the smoke tests.**
+- Open index.html in a modern browser or use VS Code Live Server.
+- Run: node tests/smoke.js
+- On main, the custom GitHub Actions validation workflow runs the regression tests. GitHub Pages uses its separate publishing workflow.
+- Confirm both test and Pages workflow statuses under GitHub Actions. Physical Windows/macOS/Android/iOS layout review is separate from these Node smoke tests.
 
-## Source structure
+## Source files
 
-| Path | Function |
-|---|---|
-| \`index.html\` | Static GitHub Pages entry and stylesheet order |
-| \`data.js\` | 51 fictional employee fixtures, division/evaluator assignment, Journey and Kit definitions |
-| \`app.js\` | View-only rendering, navigation, filtering, previews and unrestricted read-only access |
-| \`styles.css\` / \`theme.css\` | Existing base styles and Light/Dark system |
-| \`operations.css\` / \`palette.css\` | Existing tracker and Madhouse color system |
-| \`landing.css\` | Original-image landing layout |
-| \`workspace.css\` | White admin dashboard structure and reference-inspired list/board styles |
-| \`reader.css\` | **v2.1** five-section sidebar, contextual sub-navigation, Journey Kanban and read-only detail layouts |
-| \`tests/smoke.js\` | Dependency-free Node regression tests |
-| \`assets/madhouse-logo.png\` | Original user-provided PNG |
-| \`assets/madhalloween.jpg\` | Original user-provided JPEG |
+| Path | Responsibility |
+| --- | --- |
+| index.html | Entry point and ordered CSS/JS assets |
+| data.js | 51 fictional employee records and complete 8-division fixtures |
+| data-adapter.js | Read-only source boundary, provider status and snapshot validation |
+| app.js | Single-page UI, division overview, summary calculations and previews |
+| styles.css / theme.css | Base and theme styles |
+| operations.css / palette.css | Org chart, tracking and historical brand styles |
+| landing.css | Landing page and source photo |
+| workspace.css / reader.css | Global workspace, primary/secondary navigation and read-only views |
+| refined.css | v2.2 polished reference-inspired dashboard, cards and responsive summaries |
+| tests/smoke.js | Regression tests for navigation, adapters, fixtures and read-only operation |
+| docs/CLAUDE_CONNECTORS_HANDOFF.md | Future connector development instructions |
+| assets/madhouse-logo.png | Original user-supplied PNG |
+| assets/madhalloween.jpg | Original user-supplied JPEG |
 
-### Known limitations
+## Remaining phase
 
-This is a **complete sample-data monitoring prototype**, not a production HR integration. Real accounts, authentication/authorization, connector data, reliable live synchronization, source timestamps, error handling for live sources and usability verification with actual users remain outside the current release.
+**Not yet implemented:** real Airtable/Google/email source retrieval, connector authorization, private read-only synchronization, permission-filtered real records, true provider timestamps and physical-device visual QA. The public site is a functional **sample-data UI prototype**, not a live HR data system.
