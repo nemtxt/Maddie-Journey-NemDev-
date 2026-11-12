@@ -1279,4 +1279,81 @@ check('Phase 7 monitoring links change view but never modify underlying sample d
   }
   assert.equal(JSON.stringify(user.win.MJ_SEED.employees),original);
 });
+check('Pastel tokens have readable text contrast in light and dark appearance',()=>{
+  const css=src['mono.css'];
+  const hexes=['#fff0f5','#edf6ff','#edf9f1','#f4efff','#fff6e9',
+    '#2b1c25','#1b2937','#1c2c25','#272139','#30281e'];
+  for(const h of hexes)assert(css.includes(h),h);
+  const luminance=h=>{
+    const rgb=[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)/255);
+    const linear=rgb.map(v=>v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4));
+    return linear[0]*.2126+linear[1]*.7152+linear[2]*.0722;
+  };
+  const contrast=(a,b)=>{
+    const x=luminance(a),y=luminance(b);
+    return (Math.max(x,y)+.05)/(Math.min(x,y)+.05);
+  };
+  for(const h of hexes.slice(0,5))assert(contrast('#171717',h)>=4.5,h+' light');
+  for(const h of hexes.slice(5))assert(contrast('#f7f7f7',h)>=4.5,h+' dark');
+  assert(contrast('#a82759','#fff0f5')>=4.5);
+  assert(contrast('#f278aa','#2b1c25')>=4.5);
+});
+check('Pastel document categories follow actual fictional requirement groups',()=>{
+  user.navigate('files201');
+  const snapshot=user.win.MJ_SOURCE_ADAPTER.getSnapshot();
+  const html=user.html();
+  const cards=html.match(/<article class="monitor-file-card" data-group="[^"]+">/g)||[];
+  assert.equal(cards.length,snapshot.documents201.length);
+  for(const doc of snapshot.documents201){
+    assert(['Employment','Contracts','Personal','Government'].includes(doc.group));
+    assert(cards.some(c=>c.includes('data-group="'+doc.group+'"')));
+  }
+  const css=src['mono.css'];
+  for(const group of ['Employment','Contracts','Personal','Government']){
+    assert(css.includes('data-group="'+group+'"'));
+  }
+  assert(html.includes('No documents can be uploaded or edited here'));
+});
+check('Pastel color mapping is meaningful across overview, calendar and attention',()=>{
+  user.navigate('overview');
+  const overview=user.html();
+  for(const tone of ['pink','blue','yellow','violet']){
+    assert(overview.includes('tone-'+tone+' overview-signal'),tone);
+    assert(src['mono.css'].includes('button.overview-signal.tone-'+tone));
+  }
+  for(const kind of ['attendance','documents','kpi','onboarding','reviews']){
+    assert(src['mono.css'].includes('.work-lane-'+kind+' .work-lane-head'),kind);
+  }
+  user.navigate('calendar');
+  const h=user.html();
+  assert(h.includes('monitor-calendar-three'));
+  assert(src['monitoring.js'].includes('monitor-calendar-count type-'));
+  for(const kind of ['checkin','employment','change','milestone']){
+    assert(src['mono.css'].includes('.monitor-calendar-month-summary .type-'+kind));
+    assert(src['mono.css'].includes('.monitor-calendar-dot.type-'+kind));
+  }
+});
+check('Hover transitions are pointer-aware and support keyboard, touch and reduced motion',()=>{
+  const css=src['mono.css'];
+  assert(css.includes('@media(hover:hover) and (pointer:fine)'));
+  for(const target of [
+    '.overview-summary-grid button.overview-signal:hover',
+    '.monitor-focus-item:hover',
+    '.monitor-calendar-date.has-events:hover',
+    '.monitor-files-grid .monitor-file-card:hover',
+    '.monitor-files-table tbody tr:hover',
+    '.work-card:hover'
+  ])assert(css.includes(target),target);
+  assert(css.includes('transform:translateY(-2px)'));
+  assert(css.includes('transition:background-color .15s ease'));
+  assert(css.includes('body .monitor-focus-item:focus-visible'));
+  assert(css.includes('body .monitor-calendar-date.today'));
+  assert(css.includes('@media(prefers-reduced-motion:reduce)'));
+  assert(css.includes('transform:none!important'));
+  assert(css.includes('@media(forced-colors:active)'));
+  assert(css.includes('background:Canvas!important'));
+  const entire=src['app.js']+src['monitoring.js'];
+  assert(!entire.includes('data-action="save-file"'));
+  assert(!entire.includes('type="file"'));
+});
 console.log('\n'+results.length+' smoke tests passed. Physical-device visual QA is separate.');
