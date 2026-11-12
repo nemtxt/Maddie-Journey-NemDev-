@@ -78,12 +78,17 @@
       '<div class="monitor-files-grid">'+docCards+'</div></section>'+
       '<section class="panel monitor-missing"><div class="panel-head"><div>'+
       '<h2>Who is missing what</h2><p>Named employees and the exact document requirements recorded as outstanding</p></div>'+
-      '<span class="monitor-section-note">'+display.length+' employees in this view</span></div>'+
+      '<span class="monitor-section-note">'+display.length+' employees in this view · '+
+      visible.length+' shown</span></div>'+
       '<div class="monitor-filterbar" role="group" aria-label="201 document status filters">'+tabs+'</div>'+
-      '<div class="table-wrap"><table class="table monitor-files-table"><thead><tr>'+
+      '<div class="table-wrap"><table class="table monitor-files-table">'+
+      '<caption class="sr-only">201 Files checklist: '+visible.length+' shown of '+
+      display.length+' employees matching '+esc(active)+' status.</caption><thead><tr>'+
       '<th scope="col">Employee</th><th scope="col">Status</th><th scope="col">Specific documents</th>'+
       '<th scope="col">Details</th></tr></thead><tbody>'+
-      (people||'<tr><td colspan="4">No employees match this sample status.</td></tr>')+
+      (people||'<tr><td class="report-empty-cell" colspan="4">'+
+        'No employees are recorded in this status for the fictional sample. Other categories remain available.'+
+        '</td></tr>')+
       '</tbody></table></div>'+
       (display.length>12?'<div class="monitor-list-footer"><button type="button" class="button small" '+
         'data-action="files-more">'+(ui.filesExpanded?'Show fewer':'Show all '+display.length)+'</button></div>':'')+
@@ -94,7 +99,9 @@
     return '<section class="panel monitor-person-documents"><div class="panel-head"><div>'+
       '<h2>201 Files Checklist</h2><p>Fictional per-document statuses · not verified against an official file folder</p></div>'+
       '<span class="monitor-file-status monitor-file-'+status.status+'">'+icon(statusIcons[status.status]||'info')+esc(docLabels[status.status])+'</span></div>'+
-      '<div class="table-wrap"><table class="table monitor-file-detail-table"><thead><tr>'+
+      '<div class="table-wrap"><table class="table monitor-file-detail-table">'+
+      '<caption class="sr-only">All '+docs.length+' fictional document requirements for '+
+      esc(e.name)+'</caption><thead><tr>'+
       '<th scope="col">Requirement</th><th scope="col">Recorded status</th></tr></thead><tbody>'+
       docs.map(function(d){
         const state=e.files201[d.id];
