@@ -1,4 +1,4 @@
-/* Maddie Journey v2.6 — dependency-free read-only smoke checks.
+/* Maddie Journey v2.7 — dependency-free read-only smoke checks.
    Run from repository root: node tests/smoke.js
    Simulated interactions; browser/device visual QA is separate. */
 'use strict';
@@ -492,5 +492,39 @@ check('Logo-free landing and attention-first dashboard are structurally sound',(
   assert(user.html().indexOf('overview-followups')<user.html().indexOf('overview-division-rail'));
   assert(!user.html().includes('sidebar-official-logo'));
   assert(user.html().includes('brand-product-name'));
+});
+check('Four monitoring signals route to existing read-only screens',()=>{
+  user.navigate('overview');
+  const part=user.html().split('class="overview-summary-grid"')[1].split('</section>')[0];
+  assert.equal((part.match(/class="overview-summary-tile tone-[^"]+ overview-signal"/g)||[]).length,4);
+  for(const tab of ['employees','journey','kit','kpi'])assert(part.includes('data-action="nav" data-tab="'+tab+'"'));
+});
+check('Triage list counts unique people and retains category coverage',()=>{
+  user.navigate('overview');
+  user.click('work-view',{mode:'list'});
+  user.click('attention-filter',{kind:'all'});
+  user.click('attention-more');
+  const full=user.html();
+  const ids=full.split('class="work-list-row"').slice(1).map(part=>part.split('data-action="open" data-id="')[1]?.split('"')[0]).filter(Boolean);
+  assert(ids.length>8);
+  assert.equal(new Set(ids).size,ids.length);
+  const count=full.split('class="queue-count" aria-live="polite">')[1]?.split('</span>')[0]?.match(/[0-9]+/g);
+  assert(count&&count.length===2);
+  assert.equal(ids.length,Number(count[0]));
+  assert(Number(count[1])>=ids.length);
+  user.click('attention-filter',{kind:'kpi'});
+  user.click('attention-more');
+  const kpiIds=user.html().split('class="work-list-row"').slice(1).map(part=>part.split('data-action="open" data-id="')[1]?.split('"')[0]).filter(Boolean);
+  assert.equal(new Set(kpiIds).size,kpiIds.length);
+  assert.equal(kpiIds.length,user.win.MJ_SEED.employees.filter(e=>!e.kpiValidated).length);
+});
+check('Keyboard focus is restored after in-place priority filter change',()=>{
+  const fresh=boot({},'#overview');
+  let focused=0;
+  fresh.doc.querySelectorAll=selector=>selector==='[data-action]'?
+    [{dataset:{action:'attention-filter',kind:'kpi'},focus(){focused++;}}]:[];
+  fresh.click('attention-filter',{kind:'kpi'});
+  assert.equal(focused,1);
+  assert(fresh.html().includes('aria-pressed="true">KPI'));
 });
 console.log('\n'+results.length+' smoke tests passed. Physical-device visual QA is separate.');

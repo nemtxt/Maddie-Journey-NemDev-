@@ -1,4 +1,4 @@
-# Maddie Journey — Read-only Prototype v2.6
+# Maddie Journey — Read-only Prototype v2.7
 
 **Madhouse Design Studio · People & Culture**
 
@@ -76,6 +76,14 @@ The final design tokens and overrides are in **mono.css**. New features should u
 - The 51-person fictional sample remains read-only, with no login or input/edit forms. External source connectors remain disconnected.
 - Black/white theme, restrained pink accent, and optional reduced-motion-aware Anime.js remain.
 
+### v2.7 — Person-first monitoring controls
+
+- All four summary indicators are keyboard-operable shortcuts to their existing directory, Journey, Welcome Kit and KPI screens.
+- The default **Needs attention** List displays one highest-priority item per person, eliminating repeated names while keeping underlying signals accessible under category filters.
+- Badge totals count unique people; the queue separately displays the number of people and underlying sample signals. Board shows one person per category and may show a person in different categories where appropriate.
+- Expanded List and Board views now show all matching people without the former 30-row or nine-card ceiling.
+- In-place filter switches restore keyboard focus after rendering; the mobile menu locks page scrolling while open. No new page, login or source-edit forms were added.
+
 ### Seven-stage Journey
 
 The Journey monitoring screen contains **seven stages plus Completed**, with one card per employee grouped by the first incomplete stage. The Board scrolls horizontally; Table view shows all matching members and aggregate progress. All status rows are non-editable.
@@ -99,7 +107,7 @@ The later connected-account phase can implement source normalization against the
 - Open index.html in a modern browser or use VS Code Live Server.
 - Run: node tests/smoke.js
 - On main, the custom GitHub Actions validation workflow runs the regression tests. Anime.js and the Inter web font are optional third-party CDN resources; UI navigation and sample data do not depend on their availability. GitHub Pages uses its separate publishing workflow.
-- Confirm both test and Pages workflow statuses under GitHub Actions. The automated suite currently includes 33 cases; physical Windows/macOS/Android/iOS visual acceptance remains separate.
+- Confirm both test and Pages workflow statuses under GitHub Actions. The automated suite currently includes 36 cases; physical Windows/macOS/Android/iOS visual acceptance remains separate.
 
 ## Source files
 

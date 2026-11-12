@@ -484,3 +484,43 @@ body .landing-footer span{color:inherit}
 @media(prefers-reduced-motion:reduce){
   body .landing-shell,body .landing-shell *{scroll-behavior:auto!important}
 }
+
+/* v2.7 — Monitoring indicators are accessible, direct drill-down controls. */
+.overview-summary-grid button.overview-signal{
+  appearance:none;-webkit-appearance:none;position:relative;display:flex;
+  flex-direction:column;align-items:flex-start;justify-content:center;
+  width:100%;min-width:0;margin:0;text-align:left;
+  font-family:inherit;color:var(--mono-text);cursor:pointer;
+  transition:background-color .16s ease
+}
+.overview-summary-grid button.overview-signal::after{
+  content:"↗";position:absolute;top:16px;right:16px;
+  color:var(--mono-faint);font-size:17px;line-height:1
+}
+.overview-summary-grid button.overview-signal:hover{background:var(--mono-hover)!important}
+.overview-summary-grid button.overview-signal:focus-visible{
+  outline:3px solid var(--mono-accent)!important;outline-offset:-3px!important;z-index:1
+}
+.overview-monitor-grid .work-queue .panel-head{align-items:flex-start;flex-wrap:wrap}
+.overview-monitor-grid .work-queue-tools{flex-shrink:1;flex-wrap:wrap;justify-content:flex-start}
+.overview-monitor-grid .work-queue .queue-count{
+  background:var(--mono-soft);border:1px solid var(--mono-border);
+  color:var(--mono-secondary);font-variant-numeric:tabular-nums;white-space:normal
+}
+.overview-monitor-grid .queue-filters{flex-wrap:wrap;overflow:visible}
+.overview-monitor-grid .queue-filter{min-height:36px}
+.overview-monitor-grid .work-list-table{overflow-x:auto;overscroll-behavior-x:contain}
+@media(max-width:760px){
+  body:has(.layout.menu-open){overflow:hidden}
+  .layout.menu-open .workspace-sidepanel{height:100%;overflow-y:auto;overscroll-behavior:contain}
+  .overview-summary-grid button.overview-signal{min-height:126px;padding:18px 16px}
+  .overview-summary-grid button.overview-signal::after{top:12px;right:12px}
+}
+@media(max-width:420px){
+  .overview-summary-grid button.overview-signal{min-height:118px;padding:14px 12px}
+  .overview-summary-grid button.overview-signal strong{font-size:clamp(25px,7.8vw,34px)}
+  .overview-summary-grid button.overview-signal>span{padding-right:15px}
+}
+@media(prefers-reduced-motion:reduce){
+  .overview-summary-grid button.overview-signal{transition:none}
+}
