@@ -3,13 +3,15 @@ name: Maddie Journey - Validate Prototype
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: maddie-journey-validation
+  group: maddie-journey-validation-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
