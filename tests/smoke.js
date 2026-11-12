@@ -1,4 +1,4 @@
-/* Maddie Journey v1.8 — dependency-free smoke tests.
+/* Maddie Journey v1.9 — dependency-free smoke tests.
    Run from the repository root: node tests/smoke.js
    These are simulated interaction tests, not browser visual tests. */
 'use strict';
@@ -14,6 +14,7 @@ const html=read('index.html');
 const css=read('operations.css');
 const landingCss=read('landing.css');
 const paletteCss=read('palette.css');
+const workspaceCss=read('workspace.css');
 const executed=[];
 
 function test(name,body){body();executed.push(name);console.log('PASS',name);}
@@ -53,6 +54,9 @@ test('Source files parse and load order is correct',()=>{
   assert(html.indexOf('theme.css')<html.indexOf('operations.css'));
   assert(html.indexOf('operations.css')<html.indexOf('palette.css'));
   assert(html.indexOf('palette.css')<html.indexOf('landing.css'));
+  assert(html.indexOf('landing.css')<html.indexOf('workspace.css'));
+  assert(workspaceCss.includes('.work-board')&&workspaceCss.includes('.work-list-table'));
+  assert(workspaceCss.includes('.workspace-rail')&&workspaceCss.includes('.workspace-scrim'));
   assert(css.includes('.org-tier')&&css.includes('.queue-filter'));
   assert(landingCss.includes('assets/madhalloween.jpg'));
   assert(!landingCss.includes('.webp')&&!html.includes('.webp'));
@@ -131,6 +135,51 @@ test('All eleven navigation screens render',()=>{
     app.click('nav',{tab});
     assert(app.html().includes('<h1>'),tab);
   }
+});
+
+test('Global search and two-level navigation remain functional',()=>{
+  app.click('nav',{tab:'overview'});
+  assert(app.html().includes('class="workspace-rail"'));
+  assert(app.html().includes('data-action="quick-search"'));
+  app.click('quick-search');
+  assert(app.html().includes('data-ui="query"'));
+  assert(app.html().includes('class="workspace-topbar"'));
+});
+
+test('Follow-up tracker switches between list and board without losing items',()=>{
+  app.click('nav',{tab:'overview'});
+  app.click('work-view',{mode:'board'});
+  assert(app.html().includes('class="work-board"'));
+  assert(app.html().includes('work-lane-kpi'));
+  assert(app.html().includes('work-lane-onboarding'));
+  assert(app.html().includes('data-detail="kpi"'));
+  app.click('work-view',{mode:'list'});
+  assert(app.html().includes('class="work-list-table"'));
+  assert(app.html().includes('data-mode="list" aria-pressed="true"'));
+});
+
+test('Every department has board, list, and hierarchy previews',()=>{
+  for(const d of app.win.MJ_SEED.divisions){
+    app.click('goto-division',{division:d.id});
+    const count=app.win.MJ_SEED.employees.filter(e=>e.division===d.id).length;
+    app.click('division-tab',{tab:'board'});
+    assert(app.html().includes('class="department-board"'),d.id);
+    assert.equal((app.html().match(/class="department-person-card"/g)||[]).length,count);
+    app.click('division-tab',{tab:'list'});
+    assert(app.html().includes('class="table department-table"'),d.id);
+    assert.equal((app.html().match(/<td><span class="work-type work-stage-/g)||[]).length,count);
+    app.click('division-tab',{tab:'chart'});
+    assert(app.html().includes('class="org-canvas"'),d.id);
+  }
+});
+
+test('Mobile navigation opens and closes with accessible backdrop',()=>{
+  app.click('nav',{tab:'overview'});
+  app.click('mobile');
+  assert(app.html().includes('layout menu-open'));
+  assert(app.html().includes('class="workspace-scrim"'));
+  app.click('mobile');
+  assert(!app.html().includes('layout menu-open'));
 });
 
 test('Airtable and Google providers are never shown as live',()=>{
