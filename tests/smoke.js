@@ -148,6 +148,7 @@ test('Global search and two-level navigation remain functional',()=>{
 
 test('Follow-up tracker switches between list and board without losing items',()=>{
   app.click('nav',{tab:'overview'});
+  app.click('attention-filter',{kind:'all'});
   app.click('work-view',{mode:'board'});
   assert(app.html().includes('class="work-board"'));
   assert(app.html().includes('work-lane-kpi'));
