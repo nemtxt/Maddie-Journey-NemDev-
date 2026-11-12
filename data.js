@@ -95,5 +95,16 @@
     }
     if(stage==='coo'){e.approvedPct=e.proposedPct;e.effectiveDate='2026-12-01';}
   });
-  window.MJ_SEED={version:5,divisions:divisions,viewers:viewers,stages:stages,kit:kit,employees:employees};
+  // Fictional organizational hierarchy for preview only. Never a verified reporting line.
+  const demoTiers=[6,5,4,3,3,2,1];
+  divisions.forEach(function(d){
+    const team=employees.filter(function(e){return e.division===d.id;});
+    team.forEach(function(e,i){
+      const tier=team.length<7?[6,5,4,3,2,1][i]||1:demoTiers[i]||1;
+      const supervisor=team.slice(0,i).reverse().find(function(other){return other.orgLevel>tier;});
+      e.orgLevel=tier;
+      e.reportsTo=supervisor?supervisor.id:null;
+    });
+  });
+  window.MJ_SEED={version:6,divisions:divisions,viewers:viewers,stages:stages,kit:kit,employees:employees};
 })();
