@@ -35,6 +35,31 @@
         person.kit.length===snapshot.kit.length;
     });
   }
+  function getQualityReport(){
+    const snapshot=root.MJ_SEED;
+    const divisions=new Set(snapshot.divisions.map(function(d){return d.id;}));
+    const employeeIds=new Set();
+    const issues=[];
+    snapshot.employees.forEach(function(person,index){
+      const id=person&&person.id||'employee-'+(index+1);
+      if(!person||typeof person.id!=='string'||employeeIds.has(person.id))issues.push(id+': missing or duplicate employee ID');
+      if(person&&typeof person.id==='string')employeeIds.add(person.id);
+      if(!person||!divisions.has(person.division))issues.push(id+': unknown division');
+      if(!person||typeof person.name!=='string'||!person.name.trim())issues.push(id+': name missing');
+      if(!person||!Array.isArray(person.journey)||person.journey.length!==snapshot.stages.length||
+         !person.journey.every(function(row,i){return Array.isArray(row)&&row.length===snapshot.stages[i].items.length;})){
+        issues.push(id+': incomplete Journey structure');
+      }
+      if(!person||!Array.isArray(person.kit)||person.kit.length!==snapshot.kit.length)issues.push(id+': incomplete Welcome Kit structure');
+    });
+    const ids=new Set(snapshot.employees.map(function(p){return p&&p.id;}));
+    snapshot.employees.forEach(function(person){
+      if(person&&person.reportsTo&&!ids.has(person.reportsTo))issues.push(person.id+': supervisor reference missing');
+    });
+    return {mode:'sample',recordCount:snapshot.employees.length,divisionCount:snapshot.divisions.length,
+      uniqueEmployeeIds:employeeIds.size,stageCount:snapshot.stages.length,kitItemCount:snapshot.kit.length,
+      structureValid:issues.length===0,issueCount:issues.length,issues:issues};
+  }
   function getSnapshot(){
     if(!validate(root.MJ_SEED))throw new Error('Maddie Journey sample fixture is invalid');
     return clone(root.MJ_SEED);
@@ -54,6 +79,6 @@
   root.MJ_SOURCE_ADAPTER=Object.freeze({
     contractVersion:1,mode:'sample',readOnly:true,
     validateSnapshot:validate,getSnapshot:getSnapshot,
-    getSources:getSources,getProvenance:getProvenance
+    getSources:getSources,getProvenance:getProvenance,getQualityReport:getQualityReport
   });
 })(window);
