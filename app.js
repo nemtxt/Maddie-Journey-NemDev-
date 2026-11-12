@@ -252,43 +252,94 @@
       metricCard('Welcome Kit ready',meanOf(staff,kitPct)+'%','Equipment, tools and access')+
       metricCard('Final approvals',done+' / '+n,(n-done)+' pending or in progress')+'</div>';
   }
+
+  function attentionItems(team,role){
+    const items=[];
+    const create=function(e,group,label,detail,weight){
+      items.push({e:e,group:group,label:label,detail:detail,weight:weight});
+    };
+    team.forEach(function(e){
+      const a=attend(e),pending=e.attendance.filter(function(r){return !r.verified;}).length;
+      if(a.concerns>0)create(e,'attendance',a.concerns+' verified attendance concern'+(a.concerns===1?'':'s'),'attendance',100+a.concerns);
+      if(pending>0&&role==='hr')create(e,'attendance',pending+' attendance entr'+(pending===1?'y':'ies')+' awaiting verification','attendance',94+pending);
+      if(!e.kpiValidated)create(e,'kpi','KPI source not validated','kpi',80);
+      if(reviewStatus(e,'division')!=='Endorsed'&&role!=='hr')create(e,'reviews','Division evaluation pending','approvals',72);
+      if(kitPct(e)<100)create(e,'onboarding','Welcome Kit '+kitPct(e)+'% complete','kit',58+(100-kitPct(e))/100);
+      if(journeyPct(e)<100)create(e,'onboarding','Journey '+journeyPct(e)+'% complete','journey',46+(100-journeyPct(e))/100);
+    });
+    return items.sort(function(a,b){return b.weight-a.weight||a.e.name.localeCompare(b.e.name);});
+  }
+  function attentionPanel(team,role){
+    const all=attentionItems(team,role);
+    const categories=[['all','All'],['attendance','Attendance'],['kpi','KPI'],['onboarding','Onboarding'],['reviews','Reviews']];
+    const active=categories.some(function(x){return x[0]===ui.attentionFilter;})?ui.attentionFilter:'all';
+    const rows=active==='all'?all:all.filter(function(x){return x.group===active;});
+    const limit=ui.attentionShowAll?Math.min(24,rows.length):6;
+    return '<section class="panel work-queue"><div class="panel-head"><div><h2>Needs attention</h2><p>Priority-ordered sample follow-ups — not verified live tasks or deadlines</p></div><span class="queue-count">'+rows.length+' items</span></div>'+
+      '<div class="queue-filters" role="group" aria-label="Filter action list">'+categories.map(function(c){
+        const count=c[0]==='all'?all.length:all.filter(function(x){return x.group===c[0];}).length;
+        return '<button type="button" data-action="attention-filter" data-kind="'+c[0]+'" class="queue-filter'+(active===c[0]?' active':'')+'" aria-pressed="'+(active===c[0])+'">'+c[1]+' <span>'+count+'</span></button>';
+      }).join('')+'</div>'+
+      '<div class="queue-list">'+(rows.length?rows.slice(0,limit).map(function(item){
+        return '<div class="queue-row">'+avatar(item.e.name)+'<div class="queue-person"><strong>'+safe(item.e.name)+'</strong><small>'+safe(div(item.e.division).short)+' · '+safe(item.label)+'</small></div>'+
+          button('Open','open','data-id="'+safe(item.e.id)+'" data-detail="'+item.detail+'"','small')+'</div>';
+      }).join(''):'<div class="empty">No matching sample follow-ups in this category.</div>')+'</div>'+
+      (rows.length>6?'<div class="queue-footer">'+button(ui.attentionShowAll?'Show fewer':'Show more','attention-more','','small')+'</div>':'')+'</section>';
+  }
+  function divisionPulseTable(divisions){
+    return '<section class="panel pulse-panel"><div class="panel-head"><div><h2>Division snapshot</h2><p>Eight departments with consistent sample progress measures</p></div>'+
+      button('All divisions','nav','data-tab="divisions"','small')+'</div><div class="table-wrap"><table class="table pulse-table"><thead><tr>'+
+      '<th scope="col">Division</th><th scope="col">People</th><th scope="col">Onboarding</th><th scope="col">Welcome Kit</th><th scope="col">Reviews pending</th><th scope="col"></th></tr></thead><tbody>'+
+      divisions.map(function(d){
+        const team=data.employees.filter(function(e){return e.division===d.id;});
+        const pending=team.filter(function(e){return reviewStatus(e,'division')!=='Endorsed';}).length;
+        return '<tr><td><strong>'+safe(d.name)+'</strong></td><td>'+team.length+'</td><td>'+meanOf(team,journeyPct)+'%</td><td>'+meanOf(team,kitPct)+'%</td><td>'+pending+'</td>'+
+          '<td>'+button('View','goto-division','data-division="'+safe(d.id)+'"','small')+'</td></tr>';
+      }).join('')+'</tbody></table></div></section>';
+  }
+  function dataProvenanceStrip(){
+    return '<div class="data-provenance"><span class="data-provenance-dot" aria-hidden="true"></span>'+
+      '<div><strong>Sample data</strong><span>Stored in this browser · No live Airtable or Google sync</span></div>'+
+      button('Source details','nav','data-tab="sources"','small')+'</div>';
+  }
   function roleHome(){
-    const v=viewer();
-    if(isHR()){
-      const attention=scopedEmployees().filter(function(e){return kitPct(e)<100;}).sort(function(a,b){return kitPct(a)-kitPct(b);}).slice(0,4);
-      return header('PEOPLE & CULTURE','HR workspace','Employee support, onboarding and HR evaluation tools — choose what you want to work on.',button('Browse employees','nav','data-tab="employees"','primary'))+
-      metrics()+
-      '<div class="home-action-grid">'+
-        '<section class="home-action"><div class="home-action-icon">◎</div><h2>Employees & milestones</h2><p>Find a person, then view birthdays, tenure or employee records.</p><div class="actions">'+button('Employees','nav','data-tab="employees"','small primary')+button('Milestones','nav','data-tab="milestones"','small')+'</div></section>'+
-        '<section class="home-action"><div class="home-action-icon">◷</div><h2>Onboarding & Welcome Kit</h2><p>Track joining requirements, equipment and account setup.</p><div class="actions">'+button('Journey','nav','data-tab="journey"','small')+button('Welcome Kit','nav','data-tab="kit"','small')+'</div></section>'+
-        '<section class="home-action"><div class="home-action-icon">◩</div><h2>Attendance monitoring</h2><p>Verify entries and review monthly attendance patterns.</p>'+button('Open attendance','nav','data-tab="attendance"','primary')+'</section>'+
-        '<section class="home-action"><div class="home-action-icon">◈</div><h2>HR performance scoring</h2><p>Evaluate Values Alignment and Job Behavior, with fixed weights.</p>'+button('Open scorecards','nav','data-tab="kpi"','primary')+'</section>'+
-      '</div><section class="panel"><div class="panel-head"><div><h2>Welcome kits needing attention</h2><p>Preview an employee to continue their onboarding.</p></div>'+button('All departments','nav','data-tab="divisions"','small')+'</div><div class="quick-list">'+attention.map(function(e){return '<div class="quick-item">'+avatar(e.name)+'<div class="grow"><b>'+safe(e.name)+'</b><p>'+safe(div(e.division).short)+' · Kit '+kitPct(e)+'% complete</p></div>'+button('Preview','open','data-id="'+safe(e.id)+'" data-detail="preview"','small')+'</div>';}).join('')+'</div></section>';
-    }
-    if(['head','corp'].includes(v.role)){
-      const own=assignedDivisionIds().filter(function(id){return ui.scope==='all'||id===ui.scope;}),members=data.employees.filter(function(e){return own.includes(e.division);});
-      const pending=members.filter(function(e){return reviewStatus(e,'division')!=='Endorsed';}).slice(0,6);
-      return header('DEPARTMENT EVALUATION','My evaluation workspace','Quick access to your assigned divisions and employees. Charts open in a popup.',button('Open divisions','nav','data-tab="divisions"','primary'))+
-      '<div class="grid metrics">'+
-        metricCard('Assigned members',members.length,'Across '+own.length+' departments')+
-        metricCard('KPI average',meanOf(members,score)+'%','Sample weighted scores')+
-        metricCard('Evaluations pending',members.filter(function(e){return reviewStatus(e,'division')!=='Endorsed';}).length,'Division Head review not endorsed')+
-        metricCard('Journey completion',meanOf(members,journeyPct)+'%','Department onboarding progress')+'</div>'+
-      '<div class="home-division-grid">'+own.map(function(id){return divisionCard(div(id));}).join('')+'</div>'+
-      '<section class="panel"><div class="panel-head"><div><h2>Employees to review</h2><p>Open a preview or jump straight into their KPI evaluation.</p></div>'+button('All team members','nav','data-tab="divisions"','small')+'</div>'+
-      '<div class="member-grid compact-member-grid">'+pending.map(employeeCard).join('')+'</div>'+(pending.length?'':'<p class="muted">All assigned division evaluations are endorsed in the demo.</p>')+'</section>';
-    }
-    return null;
+    const v=viewer(),role=v.role;
+    const isManager=role==='head'||role==='corp';
+    const team=isManager?data.employees.filter(function(e){return (v.divisions||[]).includes(e.division);}):data.employees;
+    const divs=isManager?data.divisions.filter(function(d){return (v.divisions||[]).includes(d.id);}):data.divisions;
+    const pending=team.filter(function(e){return reviewStatus(e,'division')!=='Endorsed';}).length;
+    const a=team.reduce(function(n,e){return n+attend(e).concerns;},0);
+    const openKit=team.filter(function(e){return kitPct(e)<100;}).length;
+    const unvalidated=team.filter(function(e){return !e.kpiValidated;}).length;
+    const heading=isManager?'My departments':role==='hr'?'People & Culture overview':'Organization overview';
+    const desc=isManager?'Track the departments you evaluate, and open only the records you need.':
+      'Eight divisions, one clear overview. Every value shown is fictional sample data.';
+    const cards=isManager?[
+      ['Team members',team.length,'Across '+divs.length+' assigned divisions'],
+      ['Evaluations pending',pending,'Division review not endorsed'],
+      ['KPI sources to verify',unvalidated,'Official sources not linked'],
+      ['Average onboarding',meanOf(team,journeyPct)+'%','Across seven stages']
+    ]:[
+      ['Employees',team.length,'Eight fictional divisions'],
+      ['Kits incomplete',openKit,'Open onboarding requirements'],
+      ['Attendance concerns',a,'Verified, unexcused incidents'],
+      ['KPI sources to verify',unvalidated,'Live sources not connected']
+    ];
+    return header('DASHBOARD',heading,desc,button('Browse divisions','nav','data-tab="divisions"','small'))+
+      '<section class="grid metrics summary-metrics">'+cards.map(function(c){return metricCard(c[0],c[1],c[2]);}).join('')+'</section>'+
+      dataProvenanceStrip()+
+      '<div class="dashboard-main"><div>'+attentionPanel(team,role)+'</div><div class="dashboard-side">'+
+      '<section class="panel next-step-panel"><h2>Quick access</h2><p>Choose a destination. You can return here at any time.</p>'+
+      '<div class="next-step-actions">'+button('Employee directory','nav','data-tab="employees"','small')+
+      button('Milestones','nav','data-tab="milestones"','small')+
+      button('KPI scorecards','nav','data-tab="kpi"','small')+
+      button('Attendance','nav','data-tab="attendance"','small')+'</div></section>'+
+      '<section class="panel overview-brief"><h2>Evaluation progress</h2><div class="division-stat-line"><span>Pending division reviews</span><b>'+pending+'</b></div>'+
+      '<div class="division-stat-line"><span>Average Welcome Kit completion</span><b>'+meanOf(team,kitPct)+'%</b></div>'+
+      '<div class="division-stat-line"><span>Average journey completion</span><b>'+meanOf(team,journeyPct)+'%</b></div></section></div></div>'+
+      divisionPulseTable(divs);
   }
-  function overview(){
-    const persona=roleHome();if(persona)return persona;
-    const leaders=data.divisions.filter(function(d){return ui.scope==='all'||d.id===ui.scope;}).map(function(d){const es=scopedEmployees().filter(function(e){return e.division===d.id;});return '<div class="bar-line"><span>'+safe(d.short)+'</span>'+progress(Math.round(es.reduce(function(a,e){return a+journeyPct(e);},0)/es.length))+'<strong>'+Math.round(es.reduce(function(a,e){return a+journeyPct(e);},0)/es.length)+'%</strong></div>';}).join('');
-    const concern=scopedEmployees().slice().sort(function(a,b){return attend(b).concerns-attend(a).concerns;}).filter(function(e){return attend(e).concerns>0;}).slice(0,4);
-    const soon=scopedEmployees().filter(function(e){return journeyPct(e)<45;}).slice(0,4);
-    return header('A CLEARER WAY TO WORK','Good to see you.','Onboarding, attendance, KPI reviews and approvals across eight divisions, with fictional employees.',button('View directory','nav','data-tab="employees"','primary'))
-    +metrics()+quickDivisionAccess()+'<div class="grid dashboard-grid"><section class="panel"><div class="panel-head"><div><h2>Onboarding across divisions</h2><p>Average completion of all journey-stage requirements</p></div>'+pill('Demo')+'</div>'+leaders+'</section><section class="panel"><div class="panel-head"><div><h2>Management snapshot</h2><p>Verified attendance records only</p></div></div><div class="grid" style="grid-template-columns:1fr 1fr;gap:12px"><div class="soft"><span class="muted micro">Employees with late records</span><h2>'+scopedEmployees().filter(function(e){return attend(e).lates>0;}).length+'</h2></div><div class="soft"><span class="muted micro">Employees with absences</span><h2>'+scopedEmployees().filter(function(e){return attend(e).absences>0;}).length+'</h2></div><div class="soft"><span class="muted micro">No lates or absences</span><h2>'+scopedEmployees().filter(function(e){return attend(e).clean;}).length+'</h2></div><div class="soft"><span class="muted micro">Pending final approval</span><h2>'+scopedEmployees().filter(function(e){return reviewStatus(e,'coo')!=='Approved';}).length+'</h2></div></div><div class="hr"></div><div class="callout"><strong>Role preview:</strong> Switch evaluators in the upper-right corner to test each part of the approval process. Role restrictions here are UI simulations, not real authorization.</div></section></div>'
-    +'<div class="grid subgrid"><section class="panel"><div class="panel-head"><div><h2>Onboarding needs attention</h2><p>Employees with lower sample journey completion</p></div>'+button('Open journey','nav','data-tab="journey"','small')+'</div><div class="quick-list">'+soon.map(function(e){return '<div class="quick-item">'+avatar(e.name)+'<div class="grow"><b>'+safe(e.name)+'</b><p>'+safe(div(e.division).short)+' · '+journeyPct(e)+'% completed</p></div>'+button('Open','open','data-id="'+e.id+'"','small')+'</div>';}).join('')+'</div></section><section class="panel"><div class="panel-head"><div><h2>Attendance signals</h2><p>Unexcused or unapproved verified incidents</p></div>'+button('See analytics','nav','data-tab="attendance"','small')+'</div><div class="quick-list">'+concern.map(function(e){return '<div class="quick-item">'+avatar(e.name)+'<div class="grow"><b>'+safe(e.name)+'</b><p>'+safe(div(e.division).short)+' · '+attend(e).concerns+' concern(s)</p></div>'+button('Review','open','data-id="'+e.id+'" data-detail="attendance"','small')+'</div>';}).join('')+'</div></section></div>';
-  }
+  function overview(){return roleHome();}
   function employeesTable(list,mode){if(!list.length)return '<div class="empty"><span class="big">⌕</span>No employees match these filters.</div>';
     return '<div class="table-wrap"><table class="table"><thead><tr><th>Employee</th><th>Division</th><th>Journey</th><th>Kit issued</th><th>KPI score</th><th>Actions</th></tr></thead><tbody>'+list.map(function(e){return '<tr><td><div class="name-cell">'+avatar(e.name)+'<div><strong>'+safe(e.name)+'</strong><small>'+safe(e.id)+' · '+safe(e.jobTitle)+'</small></div></div></td><td>'+safe(div(e.division).short)+'</td><td><div class="progress-wrapper">'+progress(journeyPct(e))+'<span>'+journeyPct(e)+'%</span></div></td><td>'+kitPct(e)+'%</td><td><strong>'+score(e).toFixed(1)+'%</strong><small>'+rating(score(e))+'</small></td><td>'+button('Preview','open','data-id="'+e.id+'" data-detail="'+(mode||'preview')+'"','small')+'</td></tr>';}).join('')+'</tbody></table></div>';}
   function filtered(){return scopedEmployees().filter(function(e){return !ui.query||(e.name+' '+e.id+' '+e.jobTitle+' '+div(e.division).name).toLowerCase().includes(ui.query.toLowerCase());});}
@@ -355,6 +406,26 @@
     return header('PERFORMANCE','Reviews','Monitor endorsement stages by division. Open an employee for the detailed evaluation and approval history.',button('Browse divisions','nav','data-tab="divisions"','small'))+
       '<p class="muted micro tracker-footnote">Division Head → Corporate Operations → CSO → COO. Executive observer previews cannot approve records.</p>'+trackerRoster('approvals')+
       '<details class="panel compact-details"><summary>See complete review queue</summary>'+approvalsTable()+'</details>';
+  }
+  function sourcesView(){
+    const sources=[
+      {name:'Airtable',purpose:'Employee roster, assignment and structured tracker records',data:'People and operations'},
+      {name:'Google Sheets',purpose:'KPI workbooks, calculated targets and division reporting',data:'KPI and evaluation'},
+      {name:'Google Drive',purpose:'Document files, supporting evidence and shared folders',data:'Documents and attachments'},
+      {name:'Google Docs',purpose:'Evaluation forms, onboarding documents and written reviews',data:'Documents and forms'},
+      {name:'Email',purpose:'Approval correspondence, notifications and follow-ups',data:'Communication'}
+    ];
+    return header('INTEGRATION READINESS','Data sources','A transparent view of where official data will come from. No live connections are configured in this browser.')+
+      '<div class="source-banner"><span class="source-banner-icon">i</span><div><strong>Preview mode — no external synchronization</strong>'+
+      '<p>The 51 employee records and all dashboard metrics are fictional. GitHub Pages cannot use Claude account connectors directly as a browser API.</p></div></div>'+
+      '<section class="source-grid">'+sources.map(function(s){
+        return '<article class="panel source-card"><div class="source-card-top"><h2>'+safe(s.name)+'</h2><span class="source-unlinked">Not connected</span></div>'+
+          '<p>'+safe(s.purpose)+'</p><div class="source-card-bottom"><span>'+safe(s.data)+'</span><span>No last sync</span></div></article>';
+      }).join('')+'</section>'+
+      '<section class="panel source-policy"><h2>How this dashboard should use connected records</h2>'+
+      '<p>Official records remain in Airtable and Google Workspace. A secure integration can supply validated, permission-filtered summaries to this interface. Until that exists, exports and in-browser edits are only prototype examples.</p>'+
+      '<div class="source-policy-steps"><span>1. Read authorized sources</span><span>2. Match employee IDs</span><span>3. Validate records</span><span>4. Show source and sync time</span></div>'+
+      '<p class="muted micro">Do not put passwords, API tokens or confidential HR records in this public repository or GitHub Pages.</p></section>';
   }
   function activity(){const logs=[];scopedEmployees().forEach(function(e){(e.audit||[]).forEach(function(a){logs.push({date:a.date,employee:e.name,actor:a.actor,action:a.action});});});logs.sort(function(a,b){return b.date.localeCompare(a.date);});return header('WORKSPACE SETTINGS','Activity & data','Review local changes and manage your demonstration dataset.',button('Download JSON backup','export','','primary'))+'<div class="grid dashboard-grid"><section class="panel"><h2>Data controls</h2><p class="muted micro" style="margin:8px 0 17px">Edits are saved to this browser only. They do not automatically sync across devices or evaluators.</p><div class="actions">'+button('Export all data (JSON)','export','','small')+button('Import backup','import','','small')+button('Download employee CSV','export-csv','','small')+button('Reset 51 sample employees','reset','','small danger')+'</div><input type="file" id="import-file" accept=".json,application/json" hidden><div class="hr"></div><div class="callout orange"><strong>Privacy & security:</strong> This is a public-repository prototype with simulated role permissions. It is not suitable for live employee, confidential compensation, or authentication data. Use a secure backend and verified access controls before any production rollout.</div></section><section class="panel"><h2>Assigned evaluators</h2><p class="muted micro" style="margin:7px 0 16px">Current roster per project instruction</p>'+data.divisions.map(function(d){return '<div class="quick-item"><div class="grow"><b>'+safe(d.name)+'</b><p>'+safe(d.evaluators.map(function(id){const v=data.viewers.find(function(p){return p.id===id;});return v?v.name:id;}).join(' / '))+'</p></div></div>';}).join('')+'<div class="hr"></div><p class="muted micro">HR: GIEZELLE · KURT</p></section></div><section class="panel"><div class="panel-head"><div><h2>Local activity log</h2><p>Actions recorded in this browser by the selected demo viewer</p></div><span class="tag info">'+logs.length+' events</span></div><div class="audit-list">'+(logs.length?logs.slice(0,60).map(function(a){return '<div class="audit-row"><span class="avatar">↗</span><div><p><strong>'+safe(a.actor)+'</strong> · '+safe(a.action)+'</p><small>'+safe(a.employee)+' · '+safe(new Date(a.date).toLocaleString('en-PH'))+'</small></div></div>';}).join(''):'<div class="empty">No edits recorded yet. Edit any sample entry to see its audit trail.</div>')+'</div></section>';}
   function detailContent(e,t){if(t==='journey')return '<div class="panel"><div class="panel-head"><h2>Seven-stage checklist</h2><span class="tag info">'+journeyPct(e)+'% done</span></div>'+stageCards(e)+'</div>';if(t==='kit')return '<div class="panel"><div class="panel-head"><h2>Welcome Maddie Kit</h2><span class="tag info">'+kitPct(e)+'% ready</span></div>'+kitSection(e)+'</div>';if(t==='attendance')return '<section class="panel"><div class="heading-line"><h2>Attendance records</h2>'+(isHR()?button('Add record','new-record','','small primary'):'')+'</div>'+attendanceSummary(e)+'<div class="hr"></div>'+attendanceRows(e)+'</section>';if(t==='kpi')return kpiDetail(e);if(t==='approvals')return approvalsDetail(e);if(t==='milestones')return milestoneDetail(e);if(t==='preview')return previewCharts(e);if(t==='info')return '<section class="panel"><h2>Employee information</h2><p class="muted micro" style="margin:6px 0 15px">Profile details and department assignment</p>'+profileForm(e)+'</section>';return '';}
