@@ -143,7 +143,7 @@ test('Global search and two-level navigation remain functional',()=>{
   assert(app.html().includes('data-action="quick-search"'));
   app.click('quick-search');
   assert(app.html().includes('data-ui="query"'));
-  assert(app.html().includes('class="workspace-topbar"'));
+  assert(app.html().includes('class="topbar workspace-topbar"'))
 });
 
 test('Follow-up tracker switches between list and board without losing items',()=>{
