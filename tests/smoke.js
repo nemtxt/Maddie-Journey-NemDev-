@@ -1115,4 +1115,70 @@ check('Calendar and 201 deep links open on fresh page load',()=>{
     assert(!instance.html().includes('Who is using the dashboard?'));
   }
 });
+check('201 document percentages use applicable counts, not all employees when N/A',()=>{
+  const source=user.win.MJ_SOURCE_ADAPTER.getSnapshot();
+  const module=user.win.MJ_MONITORING;
+  const doc=source.documents201.find(d=>d.id==='regularization-contract');
+  assert(doc);
+  const status=source.employees.map(e=>e.files201[doc.id]);
+  const na=status.filter(v=>v==='not-applicable').length;
+  const complete=status.filter(v=>v==='complete').length;
+  const missing=status.filter(v=>v==='missing').length;
+  const unchecked=status.filter(v=>v==='not-checked').length;
+  assert(na>0);
+  assert.equal(na+complete+missing+unchecked,51);
+  const html=module.fileView(source,{filesFilter:'missing',filesExpanded:false});
+  assert(html.includes(doc.label+'</h3><strong>'+complete+' <small>/ '+(51-na)+' applicable complete</small>'));
+  assert(!html.includes(doc.label+'</h3><strong>'+complete+' <small>/ 51 applicable complete</small>'));
+});
+check('201 adapter rejects missing and unknown status records',()=>{
+  const adapter=user.win.MJ_SOURCE_ADAPTER;
+  assert.equal(adapter.contractVersion,2);
+  const missing=adapter.getSnapshot();
+  delete missing.employees[0].files201.nda;
+  assert(!adapter.validateSnapshot(missing));
+  const unsupported=adapter.getSnapshot();
+  unsupported.employees[0].files201.nda='verified-officially';
+  assert(!adapter.validateSnapshot(unsupported));
+  const safe=adapter.getSnapshot();
+  assert(adapter.validateSnapshot(safe));
+  assert.equal(user.win.MJ_SEED.employees.length,51);
+});
+check('Three-month calendar handles leap February and year boundary dates',()=>{
+  const api=user.win.MJ_MONITORING;
+  assert.equal(api.monthShift('2026-12',1),'2027-01');
+  assert.equal(api.monthShift('2027-01',-2),'2026-11');
+  const data=user.win.MJ_SOURCE_ADAPTER.getSnapshot();
+  data.employees[0].startDate='2027-11-30';
+  const events=api.events(data,'2028-02');
+  const leap=events.find(e=>e.employee.id===data.employees[0].id&&
+    e.type==='checkin'&&e.title==='Third-month check-in');
+  assert(leap);
+  assert.equal(leap.date,'2028-02-29');
+  const html=api.calendarView(data,{calendarStart:'2028-02',calendarType:'all',
+    calendarSelected:'',calendarExpanded:''});
+  assert(html.includes('February 2028'));
+  assert(html.includes('March 2028'));
+  assert(html.includes('April 2028'));
+  assert(html.includes('class="monitor-calendar-date-number">29</span>'));
+});
+check('New monitoring styles keep single font, three-to-one calendar layout and no editable records',()=>{
+  const css=src['mono.css'];
+  assert(css.includes('body .monitor-files-grid'));
+  assert(css.includes('body .monitor-calendar-three'));
+  assert(css.includes('grid-template-columns:repeat(3,minmax(0,1fr))'));
+  assert(css.includes('@media(max-width:1180px)'));
+  assert(css.includes('@media(max-width:760px)'));
+  assert(css.includes('@media(max-width:350px)'));
+  assert(css.includes('body button.monitor-calendar-date{min-height:44px}'));
+  const html=src['index.html'];
+  assert(html.indexOf('data-adapter.js')<html.indexOf('monitoring.js'));
+  assert(html.indexOf('monitoring.js')<html.indexOf('app.js'));
+  for(const tab of ['calendar','files201']){
+    const fresh=boot({},'#'+tab);
+    assert(!fresh.html().includes('type="file"'));
+    assert(!fresh.html().includes('type="checkbox"'));
+    assert(!fresh.html().includes('Save changes'));
+  }
+});
 console.log('\n'+results.length+' smoke tests passed. Physical-device visual QA is separate.');
