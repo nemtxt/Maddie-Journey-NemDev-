@@ -1,4 +1,4 @@
-/* Maddie Journey v2.1 — dependency-free read-only smoke checks.
+/* Maddie Journey v2.2 — dependency-free read-only smoke checks.
    Run from repository root: node tests/smoke.js
    Simulated interactions; browser/device visual QA is separate. */
 'use strict';
@@ -8,7 +8,7 @@ const path=require('node:path');
 const root=path.resolve(__dirname,'..');
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 
-const files=['index.html','data.js','app.js','operations.css','palette.css','landing.css','workspace.css','reader.css'];
+const files=['index.html','data.js','data-adapter.js','app.js','operations.css','palette.css','landing.css','workspace.css','reader.css','refined.css'];
 const src=Object.fromEntries(files.map(name=>[name,read(name)]));
 const results=[];
 function check(name,fn){fn();results.push(name);console.log('PASS '+name);}
@@ -32,6 +32,7 @@ function boot(initial={},hash=''){
   const loc={hash};
   const store={getItem(k){return Object.prototype.hasOwnProperty.call(mem,k)?mem[k]:null;},setItem(k,v){mem[k]=v;}};
   new Function('window',src['data.js'])(win);
+  new Function('window',src['data-adapter.js'])(win);
   new Function('window','document','localStorage','sessionStorage','location','setTimeout',src['app.js'])(win,doc,store,store,loc,()=>{});
   return{
     win,doc,mem,loc,html:()=>mount.innerHTML,
@@ -50,7 +51,7 @@ function boot(initial={},hash=''){
 }
 
 check('Files parse; reader CSS is last and PNG/JPEG media are preserved',()=>{
-  new Function(src['data.js']);new Function(src['app.js']);
+  new Function(src['data.js']);new Function(src['data-adapter.js']);new Function(src['app.js']);
   assert(src['index.html'].indexOf('reader.css')>src['index.html'].indexOf('workspace.css'));
   assert(src['landing.css'].includes('assets/madhalloween.jpg'));
   assert(src['app.js'].includes('assets/madhouse-logo.png'));
@@ -58,6 +59,35 @@ check('Files parse; reader CSS is last and PNG/JPEG media are preserved',()=>{
 });
 
 const user=boot();
+check('Source adapter returns safe copies and reports all five integrations as disconnected',()=>{
+  const a=user.win.MJ_SOURCE_ADAPTER;
+  assert(a&&a.mode==='sample'&&a.readOnly);
+  assert.equal(a.getSources().length,5);
+  assert(a.getSources().every(x=>x.state==='not-connected'&&x.lastSynced===null));
+  assert.equal(a.getProvenance().recordCount,51);
+  const copy=a.getSnapshot();
+  assert.equal(copy.employees.length,51);
+  assert(a.validateSnapshot(copy));
+  copy.employees[0].name='Accidental change';
+  assert(user.win.MJ_SEED.employees[0].name!=='Accidental change');
+  assert(!a.validateSnapshot({divisions:[],employees:[{id:'fake',division:'missing'}],stages:[],kit:[]}));
+  assert(src['index.html'].indexOf('data-adapter.js')>src['index.html'].indexOf('data.js'));
+  assert(src['index.html'].indexOf('data-adapter.js')<src['index.html'].indexOf('app.js'));
+});
+
+check('Reference-inspired dashboard has real summaries, all division cards and milestones',()=>{
+  user.navigate('overview');
+  const html=user.html();
+  assert(html.includes('overview-summary-grid'));
+  assert(html.includes('overview-division-rail'));
+  assert.equal((html.match(/class="overview-division-card tone-/g)||[]).length,8);
+  assert.equal((html.match(/class="overview-stage-row"/g)||[]).length,8);
+  assert(html.includes('overview-milestone-list'));
+  assert(html.includes('overview-followups'));
+  assert(!html.includes('Hours Studied'));
+  assert(src['index.html'].indexOf('refined.css')>src['index.html'].indexOf('reader.css'));
+});
+
 check('No access gate, saved persona, chooser or editable source controls remain',()=>{
   for(const absent of ['workspaceModal(', 'workspaceChosen', 'data-action="select-viewer"', 'data-action="choose-workspace"', 'maddie-journey-viewer-v2', 'function changeField(', 'function openRecordEditor(']){
     assert(!src['app.js'].includes(absent),absent);
