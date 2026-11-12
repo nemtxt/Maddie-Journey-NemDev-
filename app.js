@@ -255,8 +255,8 @@
     }
     const max=Math.max(1,...months.map(function(m){return m.late+m.absence;}));
     return '<div class="attendance-chart" role="img" aria-label="Last six months of verified lateness and absence data">'+months.map(function(m){
-      const h=Math.max(3,Math.round((m.late+m.absence)*100/max));
-      return '<div class="attendance-chart-month" title="'+safe(m.name)+': '+m.late+' late, '+m.absence+' absences"><span class="attendance-chart-track"><span class="attendance-chart-fill" style="height:'+h+'%;"></span></span><small>'+safe(m.name)+'</small></div>';
+      const count=m.late+m.absence,h=count?Math.max(3,Math.round(count*100/max)):0;
+      return '<div class="attendance-chart-month" title="'+safe(m.name)+': '+m.late+' late, '+m.absence+' absences"><span class="attendance-chart-track">'+(count?'<span class="attendance-chart-fill" style="height:'+h+'%;"></span>':'')+'</span><small>'+safe(m.name)+'</small></div>';
     }).join('')+'</div>';
   }
   function previewCharts(e){
@@ -293,7 +293,7 @@
     (t==='info'?'<div class="panel" style="margin-bottom:15px"><div class="form-grid"><div><span class="field-label">Start date</span><strong>'+dateLabel(e.startDate)+'</strong></div><div><span class="field-label">Employee ID</span><strong>'+safe(e.id)+'</strong></div></div></div>':'')+
     detailContent(e,t)+'</div></section></div>';
   }
-  function render(){const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,journey:journey,kit:kitView,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open':'')+'">'+sidebar()+'<main class="main">'+topnav()+(views[ui.tab]||overview)()+'<footer class="footer"><span>Maddie Journey · Prototype v1.0</span><span>51 fictional employees · Local browser storage · No live integrations</span></footer></main></div>'+(ui.roleModal?workspaceModal():ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.drawer?drawer():'');document.title=title(ui.tab)+' · Maddie Journey';}
+  function render(){const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,journey:journey,kit:kitView,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open':'')+'">'+sidebar()+'<main class="main">'+topnav()+(views[ui.tab]||overview)()+'<footer class="footer"><span>Maddie Journey · Prototype v1.2</span><span>51 fictional employees · Local browser storage · No live integrations</span></footer></main></div>'+(ui.roleModal?workspaceModal():ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.drawer?drawer():'');document.title=title(ui.tab)+' · Maddie Journey';if(ui.drawer||ui.roleModal||ui.divisionModal||ui.employeePicker){const modal=$('app').querySelector('[role="dialog"]');if(modal&&typeof modal.focus==='function')modal.focus({preventScroll:true});}}
   function openDivision(id){if(!data.divisions.some(function(d){return d.id===id;}))return;ui.activeDivision=id;ui.tab='division';ui.drawer=false;ui.roleModal=false;ui.divisionModal=false;ui.employeePicker=false;ui.mobile=false;ui.query='';ui.division='all';if(location.hash!=='#division/'+id)location.hash='#division/'+id;window.scrollTo({top:0,behavior:'instant'});render();}
   function navigate(tab){if(tab==='division'){openDivision(ui.activeDivision);return;}ui.tab=tab;ui.drawer=false;ui.roleModal=false;ui.divisionModal=false;ui.employeePicker=false;ui.mobile=false;ui.query='';ui.division='all';if(location.hash!=='#'+tab)location.hash='#'+tab;window.scrollTo({top:0,behavior:'instant'});render();}
   function invalidateEvaluation(e){
@@ -336,7 +336,7 @@
   function toCSV(rows){return rows.map(function(row){return row.map(function(x){return '"'+String(x===null||x===undefined?'':x).replace(/"/g,'""')+'"';}).join(',');}).join('\r\n');}
   function download(filename,mime,text){const blob=new Blob([text],{type:mime});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},2500);}
   function action(name,button){const e=emp();if(name==='mobile'){ui.mobile=!ui.mobile;render();return;}
-    if(name==='choose-workspace'){ui.roleModal=true;ui.divisionModal=false;ui.drawer=false;render();return;}
+    if(name==='choose-workspace'){ui.roleModal=true;ui.divisionModal=false;ui.employeePicker=false;ui.drawer=false;render();return;}
     if(name==='select-viewer'){if(!data.viewers.some(function(v){return v.id===button.dataset.id;}))return;ui.viewer=button.dataset.id;ui.roleModal=false;ui.divisionModal=false;ui.drawer=false;persist();navigate('overview');toast('Workspace: '+viewer().name);return;}
     if(name==='choose-division'){ui.divisionModal=true;ui.roleModal=false;ui.employeePicker=false;ui.drawer=false;render();return;}
     if(name==='choose-employee'){ui.employeePicker=true;ui.pickerDivision=ui.tab==='division'?ui.activeDivision:emp().division;ui.drawer=false;ui.roleModal=false;ui.divisionModal=false;render();return;}
