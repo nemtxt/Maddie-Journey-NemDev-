@@ -32,7 +32,7 @@
       'The fictional monitoring snapshot could not be verified. No provider connection is required.');
     return;
   }
-  let ui={tab:'welcome',division:'all',activeDivision:'rmd',scope:'all',divisionPickerMode:'view',query:'',employeeSort:'name',employee:data.employees[0].id,detail:'preview',employeeModalOpen:false,divisionModal:false,employeePicker:false,pickerDivision:'rmd',frequency:'monthly',mobile:false,milestoneCategory:'birthday',milestoneDivision:'all',milestoneShowAll:false,milestonePicking:false,divisionTab:'summary',attentionFilter:'all',attentionShowAll:false,workView:'list',journeyView:'board',journeyShowAll:false,sidebarCollapsed:false,highlightMember:'',viewerIds:[],viewerOrigin:'',filesFilter:'missing',filesExpanded:false,calendarStart:'',calendarType:'all',calendarSelected:'',calendarExpanded:'',density:'comfortable',};
+  let ui={tab:'welcome',division:'all',activeDivision:'rmd',scope:'all',divisionPickerMode:'view',query:'',employeeSort:'name',employee:data.employees[0].id,detail:'preview',employeeModalOpen:false,divisionModal:false,employeePicker:false,pickerDivision:'rmd',frequency:'monthly',mobile:false,milestoneCategory:'birthday',milestoneDivision:'all',milestoneShowAll:false,milestonePicking:false,divisionTab:'summary',attentionFilter:'all',attentionShowAll:false,workView:'list',journeyView:'board',journeyShowAll:false,sidebarCollapsed:false,highlightMember:'',viewerIds:[],viewerOrigin:'',viewerContext:'',filesFilter:'missing',filesExpanded:false,calendarStart:'',calendarType:'all',calendarSelected:'',calendarExpanded:'',density:'comfortable',};
   // UI preferences do not alter or store employee records.
   try{
     const remembered=sessionStorage.getItem('maddie-journey-workview');
@@ -40,21 +40,61 @@
     ui.sidebarCollapsed=localStorage.getItem('maddie-journey-sidebar-collapsed')==='true';
     ui.density=localStorage.getItem('maddie-journey-density')==='compact'?'compact':'comfortable';
   }catch(err){}
-  // Return focus to the action that opened a dialog after its view is dismissed.
+  // Remember the exact read-only source control and scroll position, not just the employee ID.
+  // Re-rendering the dialog replaces DOM nodes; the original focus target is reconstructed.
   let modalOrigin=null;
   function rememberModalOrigin(element){
     if(!element||!element.dataset)return;
-    modalOrigin={action:element.dataset.action,id:element.dataset.id||'',division:element.dataset.division||''};
+    const d=element.dataset;
+    const scrollers=typeof document.querySelectorAll==='function'?
+      Array.from(document.querySelectorAll('.table-wrap, .journey-kanban, .work-board, .work-list-table')):[];
+    modalOrigin={
+      action:d.action,id:d.id||'',division:d.division||'',detail:d.detail||'',
+      date:d.date||'',originKind:d.originKind||'',originLabel:d.originLabel||'',
+      route:location.hash||'#'+ui.tab,tab:ui.tab,
+      y:Number(window.scrollY)||0,
+      scrollers:scrollers.map(function(el,index){
+        return {index:index,x:el.scrollLeft||0,y:el.scrollTop||0};
+      })
+    };
   }
   function restoreModalOrigin(){
     const origin=modalOrigin;modalOrigin=null;
     if(!origin)return;
-    const candidates=Array.from(document.querySelectorAll('[data-action]'));
-    const original=candidates.find(function(node){return node.dataset.action===origin.action&&
-      (!origin.id||node.dataset.id===origin.id)&&(!origin.division||node.dataset.division===origin.division);});
-    const fallback=document.querySelector('[data-action="quick-search"]');
-    const target=original||fallback;
-    if(target&&typeof target.focus==='function')target.focus({preventScroll:true});
+    const root=$('app');
+    const sameRoute=origin.tab===ui.tab&&(location.hash||'#'+ui.tab)===origin.route;
+    if(!sameRoute){focusWorkspaceHeading();return;}
+    const regions=typeof document.querySelectorAll==='function'?
+      Array.from(document.querySelectorAll('.table-wrap, .journey-kanban, .work-board, .work-list-table')):[];
+    (origin.scrollers||[]).forEach(function(p){
+      const el=regions[p.index];
+      if(el){el.scrollLeft=p.x;el.scrollTop=p.y;}
+    });
+    if(typeof window.scrollTo==='function')window.scrollTo({top:origin.y,behavior:'instant'});
+    const candidates=typeof document.querySelectorAll==='function'?
+      Array.from(document.querySelectorAll('[data-action]')):[];
+    const match=function(el,strict){
+      if(!el||!el.dataset||el.dataset.action!==origin.action)return false;
+      return (!origin.id||el.dataset.id===origin.id)&&
+        (!origin.division||el.dataset.division===origin.division)&&
+        (!strict||(!origin.detail||el.dataset.detail===origin.detail)&&
+        (!origin.date||el.dataset.date===origin.date)&&
+        (!origin.originKind||el.dataset.originKind===origin.originKind));
+    };
+    const exact=candidates.find(function(el){return match(el,true);});
+    const loose=exact||candidates.find(function(el){return match(el,false);});
+    const fallback=(root&&typeof root.querySelector==='function'&&
+      root.querySelector('#main-content h1'))||document.querySelector('[data-action="quick-search"]');
+    const target=loose||fallback;
+    if(target&&typeof target.focus==='function'){
+      if(!loose&&target.setAttribute)target.setAttribute('tabindex','-1');
+      target.focus({preventScroll:true});
+    }
+  }
+  function closeReader(){
+    ui.employeeModalOpen=false;ui.divisionModal=false;ui.employeePicker=false;
+    ui.milestonePicking=false;ui.viewerIds=[];ui.viewerOrigin='';ui.viewerContext='';
+    render();restoreModalOrigin();
   }
   const now=function(){return new Date().toISOString().slice(0,10);};
   const safe=function(v){return String(v===undefined||v===null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
@@ -1312,14 +1352,14 @@
     ui.scope=id;ui.activeDivision=id;
     ui.divisionTab=['summary','board','list','chart'].includes(view)?view:'summary';
     ui.highlightMember=focusId&&data.employees.some(function(e){return e.id===focusId&&e.division===id;})?focusId:'';
-    modalOrigin=null;ui.viewerIds=[];ui.viewerOrigin='';ensureEmployeeScope();
+    modalOrigin=null;ui.viewerIds=[];ui.viewerOrigin='';ui.viewerContext='';ensureEmployeeScope();
     ui.tab='division';ui.employeeModalOpen=false;ui.divisionModal=false;ui.employeePicker=false;
     ui.mobile=false;ui.query='';ui.division='all';
     const route='#division/'+id+(ui.divisionTab==='summary'?'':'/'+ui.divisionTab);
     if(location.hash!==route)location.hash=route;
     window.scrollTo({top:0,behavior:'instant'});render();focusWorkspaceHeading();
   }
-  function navigate(tab){modalOrigin=null;if(tab==='division'){openDivision(ui.activeDivision,ui.divisionTab);return;}ui.highlightMember='';ui.viewerIds=[];ui.viewerOrigin='';ui.scope='all';ensureEmployeeScope();ui.tab=tab;ui.employeeModalOpen=false;ui.divisionModal=false;ui.employeePicker=false;ui.mobile=false;ui.query='';ui.division='all';if(location.hash!=='#'+tab)location.hash='#'+tab;window.scrollTo({top:0,behavior:'instant'});render();focusWorkspaceHeading();}
+  function navigate(tab){modalOrigin=null;if(tab==='division'){openDivision(ui.activeDivision,ui.divisionTab);return;}ui.highlightMember='';ui.viewerIds=[];ui.viewerOrigin='';ui.viewerContext='';ui.scope='all';ensureEmployeeScope();ui.tab=tab;ui.employeeModalOpen=false;ui.divisionModal=false;ui.employeePicker=false;ui.mobile=false;ui.query='';ui.division='all';if(location.hash!=='#'+tab)location.hash='#'+tab;window.scrollTo({top:0,behavior:'instant'});render();focusWorkspaceHeading();}
   // All data-editing functions were removed: this frontend never mutates employee records.
   function toCSV(rows){
     return rows.map(function(row){return row.map(function(value){
@@ -1463,12 +1503,12 @@
       if(!ui.employeeModalOpen||!selected||selected.division!==button.dataset.division)return;
       openDivision(selected.division,'list',selected.id);return;
     }
-    if(name==='close'){ui.employeeModalOpen=false;ui.divisionModal=false;ui.employeePicker=false;ui.milestonePicking=false;ui.viewerIds=[];ui.viewerOrigin='';render();restoreModalOrigin();return;}
+    if(name==='close'||name==='viewer-return'){closeReader();return;}
     if(name==='detail'){ui.detail=button.dataset.tab;render();const selected=$('app').querySelector('.employee-modal-tabs .employee-tab.active');if(selected&&typeof selected.focus==='function')selected.focus({preventScroll:true});return;}
     if(name==='export-csv'){const rows=[['Employee ID','Name','Division','Role','Start date','Journey %','Welcome kit %','KPI score %','Performance rating','Final approval']].concat(filtered().map(function(x){return [x.id,x.name,div(x.division).name,x.jobTitle,x.startDate,journeyPct(x),kitPct(x),score(x),rating(score(x)),x.review.coo.status];}));download('maddie-journey-directory-visible.csv','text/csv;charset=utf-8',toCSV(rows));return;}
     if(name==='attendance-csv'){const rows=[['Employee ID','Employee','Division','Date','Type','Approval','Verified','Reason','Supervisor remarks']];scopedEmployees().forEach(function(x){x.attendance.forEach(function(r){rows.push([x.id,x.name,div(x.division).name,r.date,r.type,r.approval,r.verified?'Yes':'No',r.reason,r.remarks]);});});download('maddie-journey-attendance.csv','text/csv;charset=utf-8',toCSV(rows));return;}
   }
-  document.addEventListener('click',function(ev){const dept=ev.target.closest('[data-nav-division]');if(dept){ev.preventDefault();openDivision(dept.dataset.navDivision);return;}const nav=ev.target.closest('[data-nav]');if(nav){ev.preventDefault();navigate(nav.dataset.nav);return;}const act=ev.target.closest('[data-action]');if(act){ev.preventDefault();if(['open','choose-division','choose-scope','choose-employee','milestone-division'].includes(act.dataset.action))rememberModalOrigin(act);action(act.dataset.action,act);return;}if(['employee','division','picker'].includes(ev.target.dataset.overlay)){ui.employeeModalOpen=false;ui.divisionModal=false;ui.employeePicker=false;ui.viewerIds=[];ui.viewerOrigin='';render();restoreModalOrigin();}});
+  document.addEventListener('click',function(ev){const dept=ev.target.closest('[data-nav-division]');if(dept){ev.preventDefault();openDivision(dept.dataset.navDivision);return;}const nav=ev.target.closest('[data-nav]');if(nav){ev.preventDefault();navigate(nav.dataset.nav);return;}const act=ev.target.closest('[data-action]');if(act){ev.preventDefault();if(['open','choose-division','choose-scope','choose-employee','milestone-division'].includes(act.dataset.action))rememberModalOrigin(act);action(act.dataset.action,act);return;}if(['employee','division','picker'].includes(ev.target.dataset.overlay)){closeReader();}});
   document.addEventListener('change',function(ev){
     const el=ev.target;
     if(!el.dataset.ui)return;
@@ -1535,9 +1575,7 @@
       }
     }
     if(!anyOpen)return;
-    if(ev.key==='Escape'){
-      ui.employeeModalOpen=false;ui.divisionModal=false;ui.employeePicker=false;ui.viewerIds=[];ui.viewerOrigin='';render();restoreModalOrigin();return;
-    }
+    if(ev.key==='Escape'){closeReader();return;}
     if(ev.key!=='Tab')return;
     // Keep keyboard navigation within whichever centered dialog is on top.
     const modal=$('app').querySelector('[role="dialog"]');
