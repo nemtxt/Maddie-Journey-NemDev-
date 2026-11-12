@@ -1,4 +1,4 @@
-/* Maddie Journey v1.7 — dependency-free smoke tests.
+/* Maddie Journey v1.8 — dependency-free smoke tests.
    Run from the repository root: node tests/smoke.js
    These are simulated interaction tests, not browser visual tests. */
 'use strict';
@@ -13,6 +13,7 @@ const appCode=read('app.js');
 const html=read('index.html');
 const css=read('operations.css');
 const landingCss=read('landing.css');
+const paletteCss=read('palette.css');
 const executed=[];
 
 function test(name,body){body();executed.push(name);console.log('PASS',name);}
@@ -50,9 +51,12 @@ function boot(existing){
 test('Source files parse and load order is correct',()=>{
   new Function(seedCode);new Function(appCode);
   assert(html.indexOf('theme.css')<html.indexOf('operations.css'));
-  assert(html.indexOf('operations.css')<html.indexOf('landing.css'));
+  assert(html.indexOf('operations.css')<html.indexOf('palette.css'));
+  assert(html.indexOf('palette.css')<html.indexOf('landing.css'));
   assert(css.includes('.org-tier')&&css.includes('.queue-filter'));
-  assert(landingCss.includes('assets/madhalloween-hero.webp'));
+  assert(landingCss.includes('assets/madhalloween.jpg'));
+  assert(!landingCss.includes('.webp')&&!html.includes('.webp'));
+  assert(paletteCss.includes('--mj-pink:')&&paletteCss.includes('--mj-yellow:')&&paletteCss.includes('--mj-blue:'));
 });
 
 const app=boot();
@@ -69,6 +73,14 @@ test('Welcome landing uses real Madhouse logo and accessible paths',()=>{
   assert(app.html().includes('data-action="landing-role"'));
   assert.equal((app.html().match(/class="landing-audience-card"/g)||[]).length,3);
   assert(app.html().includes('data-nav="sources"'));
+});
+
+test('Original artwork and accessible outline icons are referenced',()=>{
+  assert(app.html().includes('assets/madhouse-logo.png'));
+  assert(app.html().includes('landing-official-logo'));
+  assert(!app.html().includes('logo">m.'));
+  assert(app.html().includes('landing-audience-icon tone-pink'));
+  assert(app.html().includes('<svg viewBox="0 0 24 24"'));
 });
 
 test('Landing audience choices open the intended demo workspaces',()=>{
