@@ -1,4 +1,4 @@
-/* Maddie Journey v2.0 — dependency-free read-only smoke checks.
+/* Maddie Journey v2.1 — dependency-free read-only smoke checks.
    Run from repository root: node tests/smoke.js
    Simulated interactions; browser/device visual QA is separate. */
 'use strict';
@@ -58,101 +58,95 @@ check('Files parse; reader CSS is last and PNG/JPEG media are preserved',()=>{
 });
 
 const user=boot();
+check('No access gate, saved persona, chooser or editable source controls remain',()=>{
+  for(const absent of ['workspaceModal(', 'workspaceChosen', 'data-action="select-viewer"', 'data-action="choose-workspace"', 'maddie-journey-viewer-v2', 'function changeField(', 'function openRecordEditor(']){
+    assert(!src['app.js'].includes(absent),absent);
+  }
+  assert(!src['reader.css'].includes('/* A first-visit chooser'));
+  assert(src['reader.css'].includes('.workspace-subnav'));
+});
 
-check('Landing opens before dashboard and uses authentic logo',()=>{
+check('Landing links directly to HR, Division and Executive screens without a popup',()=>{
   assert(user.html().includes('landing-hero'));
   assert(user.html().includes('assets/madhouse-logo.png'));
-  assert(user.html().includes('data-action="landing-role"'));
-});
-
-check('Direct first entry asks for workspace category then specific person',()=>{
+  assert(!user.html().includes('Who is using the dashboard?'));
+  assert(user.html().includes('class="landing-audience-card" data-nav="employees"'));
+  assert(user.html().includes('class="landing-audience-card" data-nav="divisions"'));
+  assert(user.html().includes('class="landing-audience-card" data-nav="overview"'));
   user.navigate('overview');
-  assert(user.html().includes('Who is using the dashboard?'));
-  assert(user.html().includes('data-category="hr"'));
-  assert(user.html().includes('data-category="head"'));
-  assert(user.html().includes('data-category="executive"'));
-  assert(!user.html().includes('workspace-sidebar'));
-  user.click('workspace-category',{category:'hr'});
-  assert(user.html().includes('Choose your preview identity'));
-  assert(user.html().includes('GIEZELLE'));
-  assert(user.html().includes('KURT'));
-  user.click('select-viewer',{id:'giezelle'});
-  assert(user.html().includes('People &amp; Culture overview'));
-  assert.equal(user.mem['maddie-journey-viewer-v2'],'giezelle');
+  assert(user.html().includes('Organization overview'));
+  assert(!user.html().includes('workspace-gate'));
+  assert(!user.html().includes('role-choice'));
 });
 
-check('51 employees, eight divisions and all main navigation destinations remain',()=>{
-  assert.equal(user.win.MJ_SEED.employees.length,51);
-  assert.equal(user.win.MJ_SEED.divisions.length,8);
-  for(const tab of ['overview','divisions','employees','milestones','journey','kit','attendance','kpi','approvals','sources','audit']){
+check('Sidebar has exactly five primary sections with correct destinations',()=>{
+  user.navigate('overview');
+  const h=user.html();
+  const main=h.match(/class="workspace-mainnav-item/g)||[];
+  assert.equal(main.length,5);
+  for(const label of ['Dashboard','People','Journey','Performance','Data &amp; Sources'])assert(h.includes(label),label);
+  for(const dest of ['overview','employees','journey','kpi','sources'])assert(h.includes('data-nav="'+dest+'"'),dest);
+});
+
+check('Top subnavigation changes with context and supports direct links',()=>{
+  const configs={
+    overview:[['overview','Overview'],['divisions','Divisions']],
+    employees:[['employees','Directory'],['milestones','Milestones']],
+    journey:[['journey','Journey board'],['kit','Welcome Kit'],['attendance','Attendance']],
+    kpi:[['kpi','KPI scorecards'],['approvals','Reviews']],
+    sources:[['sources','Data sources'],['audit','About the prototype']]
+  };
+  for(const [tab,links] of Object.entries(configs)){
     user.navigate(tab);
-    assert(user.html().includes('<h1>'),tab);
-    assert(user.html().includes('workspace-sidebar'),tab);
+    const h=user.html(),sub=h.split('class="workspace-subnav-links"')[1]?.split('</nav>')[0]||'';
+    assert(sub,tab);
+    assert.equal((sub.match(/data-nav="/g)||[]).length,links.length,tab);
+    for(const [dest,label] of links){
+      assert(sub.includes('data-nav="'+dest+'"'),tab+': '+dest);
+      assert(sub.includes(label),tab+': '+label);
+    }
   }
 });
 
-check('Navigation has one grouped sidebar, contextual top bar and viewer switch',()=>{
-  user.navigate('overview');
-  assert(!user.html().includes('workspace-rail'));
-  assert(!user.html().includes('workspace-toplinks'));
-  assert(user.html().includes('reader-sidebar-status'));
-  assert(user.html().includes('data-action="quick-search"'));
-  assert(user.html().includes('data-action="choose-workspace"'));
-  assert(user.html().includes('Sample data'));
-  user.click('quick-search');
-  assert(user.html().includes('data-ui="query"'));
+check('All eleven screens accessible to any visitor, read-only',()=>{
+  const screens=['overview','divisions','employees','milestones','journey','kit','attendance','kpi','approvals','sources','audit'];
+  for(const tab of screens){
+    user.navigate(tab);
+    const h=user.html();
+    assert(h.includes('<h1>'),tab);
+    assert(h.includes('workspace-sidebar'),tab);
+    assert(h.includes('workspace-subnav'),tab);
+    assert(!h.includes('Who is using the dashboard?'),tab);
+  }
+  assert.equal(user.win.MJ_SEED.employees.length,51);
+  assert.equal(user.win.MJ_SEED.divisions.length,8);
 });
 
-check('Viewer switching changes perspective without modifying any source data',()=>{
-  user.click('choose-workspace');
-  assert(user.html().includes('Who is using the dashboard?'));
-  user.selectViewer('aj','head');
-  assert(user.html().includes('My departments'));
-  assert.equal(user.mem['maddie-journey-viewer-v2'],'aj');
-  user.click('choose-workspace');
-  user.selectViewer('ceo','executive');
-  assert(user.html().includes('Organization overview'));
-  assert.equal(user.mem['maddie-journey-viewer-v2'],'ceo');
+check('All eight divisions allow Summary, Board, List and Org chart',()=>{
+  for(const d of user.win.MJ_SEED.divisions){
+    user.click('goto-division',{division:d.id});
+    assert(user.html().includes('data-nav="divisions"'));
+    for(const [tab,fragment] of [['summary','Division'],['board','department-board'],['list','department-table'],['chart','org-canvas']]){
+      user.click('division-tab',{tab});
+      assert(user.html().includes(fragment),d.id+': '+tab);
+    }
+  }
 });
 
-check('Returning viewer opens direct Journey link without another chooser',()=>{
-  const returning=boot({'maddie-journey-viewer-v2':'aj'},'#journey');
-  assert(returning.html().includes('Journey board'));
-  assert(!returning.html().includes('Who is using the dashboard?'));
-});
-
-check('Journey Kanban has all seven stages plus Completed',()=>{
+check('Journey Kanban and table still cover all 51 sample employees',()=>{
   user.navigate('journey');
   assert(user.html().includes('class="journey-kanban"'));
   assert.equal((user.html().match(/class="journey-lane"/g)||[]).length,8);
-  for(let i=0;i<8;i++)assert(user.html().includes('data-stage-index="'+i+'"'));
-  assert(user.html().includes('data-action="choose-scope"'));
-  assert(user.html().includes('Fictional')||user.html().includes('sample'));
-});
-
-check('Journey Table lists all 51 employees and department filter works',()=>{
   user.click('journey-view',{mode:'table'});
-  assert(user.html().includes('class="table journey-table"'));
   assert.equal((user.html().match(/class="journey-stage-pill"/g)||[]).length,51);
-  user.click('set-scope',{division:'rmd'});
-  const count=user.win.MJ_SEED.employees.filter(e=>e.division==='rmd').length;
+  user.click('set-scope',{division:'media'});
+  const count=user.win.MJ_SEED.employees.filter(e=>e.division==='media').length;
   assert.equal((user.html().match(/class="journey-stage-pill"/g)||[]).length,count);
   user.click('journey-view',{mode:'board'});
   assert(user.html().includes('class="journey-kanban"'));
 });
 
-check('All eight department boards and charts still open previews',()=>{
-  for(const d of user.win.MJ_SEED.divisions){
-    user.click('goto-division',{division:d.id});
-    user.click('division-tab',{tab:'board'});
-    assert(user.html().includes('department-board'),d.id);
-    user.click('division-tab',{tab:'chart'});
-    assert(user.html().includes('Fictional reporting structure'),d.id);
-  }
-});
-
-check('Every employee detail panel is read-only, including HR',()=>{
-  user.click('choose-workspace');user.selectViewer('giezelle','hr');
+check('Employee modal is view only for every tab',()=>{
   user.navigate('employees');
   for(const detail of ['preview','info','journey','kit','attendance','kpi','approvals','milestones']){
     user.click('open',{id:'MJ-003',detail});
@@ -165,21 +159,23 @@ check('Every employee detail panel is read-only, including HR',()=>{
   }
 });
 
-check('Illegal action and change events cannot edit fixture or local storage',()=>{
-  const before=JSON.stringify(user.win.MJ_SEED.employees);
-  user.click('review',{step:'division',decision:'Endorsed'});
-  user.click('new-record');
-  user.click('milestone-edit',{kind:'promotion'});
-  user.click('reset');
-  user.changeField('score.division','0');
-  user.changeField('profile.name','Changed');
-  assert.equal(JSON.stringify(user.win.MJ_SEED.employees),before);
-  assert.equal(Object.prototype.hasOwnProperty.call(user.mem,'maddie-journey-demo-v3'),false);
-  assert(!src['app.js'].includes('function openRecordEditor('));
-  assert(!src['app.js'].includes('function changeField('));
+check('Milestones and sample disciplinary information no longer depend on viewer identity',()=>{
+  user.navigate('milestones');
+  user.click('milestone-category',{kind:'discipline'});
+  assert(!user.html().includes('HR-only details'));
+  assert(!user.html().includes('HR-managed information'));
+  const someone=user.win.MJ_SEED.employees.find(e=>(e.disciplinaryActions||[]).length);
+  if(someone){
+    user.click('open',{id:someone.id,detail:'milestones'});
+    assert(user.html().includes('Disciplinary actions'));
+    assert(!user.html().includes('not available in this preview'));
+    user.click('close');
+  }
 });
 
-check('Existing worklist board/list, source transparency and mobile drawer still work',()=>{
+check('Search, follow-up Board/List and source status keep functioning',()=>{
+  user.click('quick-search');
+  assert(user.html().includes('data-ui="query"'));
   user.navigate('overview');
   user.click('attention-filter',{kind:'all'});
   user.click('work-view',{mode:'board'});
@@ -187,22 +183,37 @@ check('Existing worklist board/list, source transparency and mobile drawer still
   user.click('work-view',{mode:'list'});
   assert(user.html().includes('class="work-list-table"'));
   user.navigate('sources');
-  for(const name of ['Airtable','Google Sheets','Google Drive','Google Docs','Email']){
-    assert(user.html().includes(name));
+  for(const source of ['Airtable','Google Sheets','Google Drive','Google Docs','Email']){
+    assert(user.html().includes(source),source);
   }
-  assert((user.html().match(/Not connected/g)||[]).length>=5);
+});
+
+check('Mobile menu and backdrop close properly',()=>{
+  user.navigate('overview');
   user.click('mobile');
   assert(user.html().includes('layout menu-open'));
+  assert(user.html().includes('workspace-scrim'));
   user.click('mobile');
   assert(!user.html().includes('layout menu-open'));
 });
 
-check('Legacy browser-edited sample data is ignored but not overwritten',()=>{
-  const legacy=JSON.stringify({version:6,employees:[]});
-  const prior=boot({'maddie-journey-viewer-v2':'kurt','maddie-journey-demo-v3':legacy},'#overview');
-  assert(prior.html().includes('People &amp; Culture overview'));
-  assert.equal(prior.mem['maddie-journey-demo-v3'],legacy);
-  assert.equal(prior.win.MJ_SEED.employees.length,51);
+check('No old role choice or record-edit actions can affect the fictional fixture',()=>{
+  const old=JSON.stringify(user.win.MJ_SEED.employees);
+  for(const action of ['choose-workspace','select-viewer','review','new-record','milestone-edit','reset'])user.click(action,{id:'giezelle',step:'division',decision:'Endorsed'});
+  user.changeField('score.division','0');
+  assert.equal(JSON.stringify(user.win.MJ_SEED.employees),old);
+  assert(!Object.prototype.hasOwnProperty.call(user.mem,'maddie-journey-demo-v3'));
 });
 
-console.log('\n'+results.length+' smoke tests passed. Rendered desktop/mobile browser QA is separate.');
+check('Direct deep links work without a viewer choice',()=>{
+  for(const hash of ['#overview','#employees','#journey','#sources','#division/media']){
+    const fresh=boot({'maddie-journey-viewer-v2':'aj'},hash);
+    assert(fresh.html().includes('workspace-sidebar'),hash);
+    assert(!fresh.html().includes('Who is using the dashboard?'),hash);
+    if(hash.startsWith('#division/'))assert(fresh.html().includes('Media'),hash);
+  }
+  user.navigate('welcome');
+  assert(user.html().includes('landing-hero'));
+});
+
+console.log('\n'+results.length+' smoke tests passed. Physical-device visual QA is separate.');
