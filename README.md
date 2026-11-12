@@ -1,4 +1,4 @@
-# Maddie Journey · Prototype v1.7
+# Maddie Journey · Prototype v1.8
 
 A lightweight, button-first People & Culture prototype built using **HTML, CSS and vanilla JavaScript only**. No build tools, paid subscriptions, login, Airtable or cloud service are needed for demonstration.
 
@@ -14,11 +14,26 @@ https://nemtxt.github.io/Maddie-Journey-NemDev-/
 
 The URL is not assumed live until Pages publication is verified.
 
-## v1.5 — Nemesis-inspired interface and progressive appearance
+## v1.8 — Original artwork and unified pastel operations interface
+
+This release follows the approved landing-page reference and uses **the exact uploaded files**, not re-generated or WebP-derived images.
+
+- **Official logo:** `assets/madhouse-logo.png`, unchanged original PNG, 720 × 117 pixels, SHA-256 `c3659c9b6e2e671074c82c313e70938556f65ef6f69850524a801684ecd2decc`.
+- **Event photograph:** `assets/madhalloween.jpg`, unchanged original JPEG, 1800 × 1072 pixels, SHA-256 `e69297164df142ade9ceecb9287dfe30814b6e9fb89619502fc0c3dc7a06fe29`. The second upload was JPEG, so preserving its original bytes avoids changing its format or introducing additional compression.
+- **No WebP assets:** The previous optimized WebP was removed, and all photo references now use the original JPEG.
+- **Approved landing layout:** translucent header positioned over the event photograph, bold left-aligned introduction, three audience cards (HR, Division Heads, executive overview), feature shortcuts and pastel-wave footer. The supplied third screenshot is the layout reference, not used as a flattened webpage.
+- **Consistent product palette:** `palette.css` applies warm blush backgrounds, pink primary buttons, pastel yellow and blue summary cards, readable plum text, and subtle lavender accents to navigation, dashboard cards, org charts, tables and centered modals.
+- **Light / Dark:** Light is the default for a new visitor. Switching appearance is persistent, and both palettes work on internal screens. Earlier saved preferences are respected.
+- **Operational model:** All 51 sample employees, eight divisions and existing tracker functionality are retained. HR and assigned Division Heads can preview/edit the demo fields permitted by the existing simulated role logic. CEO/COO/CSO demonstrations remain observer-oriented.
+- **Data policy:** No actual Airtable/Google connector or authenticated multi-user backend is claimed or deployed. Static GitHub Pages cannot enforce real HR permissions.
+
+Regression checks: run `node tests/smoke.js`. A live desktop/mobile browser visual review is a separate acceptance step.
+
+## v1.5 — Earlier typography and appearance foundations
 
 The interface now follows the design language of the **Nemesis Corporation** website supplied with this project: **Inter typography, restrained dark canvas, fine dividers, low-emphasis card surfaces, subtle department accents, compact pill buttons and a translucent sticky header**. It does not copy the corporate website's brand assets or introduce marketing-page animations into operational workflows.
 
-- **Appearance:** Use the **Light / Dark** segmented control in the **top-right header**. The current choice is stored in the browser under \`maddie-journey-theme\`, separately from HR sample records. The initial default is dark to reflect the reference site; both themes cover all pages, charts, forms, division cards and popups.
+- **Appearance:** Use the **Light / Dark** segmented control in the **top-right header**. The current choice is stored in the browser under \`maddie-journey-theme\`, separately from HR sample records. The initial dark prototype was superseded by the v1.8 light-first pastel palette; both themes continue to cover the application.
 - **Progressive transition:** Theme colors blend gently instead of flashing. Modal entrances and card hover states are subtle; the CSS respects \`prefers-reduced-motion\` and disables nonessential movement when required.
 - **Eight divisions:** Each division has a small, consistent accent used on its cards and department header only. This keeps divisions identifiable without making the dashboard overly colorful.
 - **HR workflow:** Overview → People directory or Milestones → select division/employee → open a centered modal to edit permitted fields.
@@ -33,7 +48,7 @@ Appearance changes need no build process and no backend. All new styling lives i
 The root URL (no hash, or `#welcome`) now opens a lightweight, responsive landing screen before the dashboard.
 
 - **Authentic branding only:** the provided Madhouse Design Studio logo is used in the landing header, dashboard sidebar and mobile header. The invented pink “M” symbol from the earlier illustration is intentionally not part of the project.
-- **Real supplied photo:** the Madhalloween team photograph is the landing hero background, optimized locally as `assets/madhalloween-hero.webp`. The original source was supplied for this prototype; the optimized image does not contain baked-in text or fabricated branding.
+- **Real supplied photo:** the Madhalloween team photograph is the landing hero background, preserved as the original upload `assets/madhalloween.jpg`. The original source was supplied for this prototype; the optimized image does not contain baked-in text or fabricated branding.
 - **Pastel interface:** pink, white, soft yellow and blue, with the existing persistent Light / Dark control. Light is the initial appearance for new browsers; previously saved choices remain unchanged.
 - **Direct navigation:** Open dashboard, View divisions, and links to Org charts, Employees and Data sources. The HR, Division Heads and Executive overview cards set a fictional demo workspace and open the overview; these are not login or authorization controls.
 - **Preserved routes:** `#overview`, `#divisions`, `#division/rmd`, and all other direct dashboard links still work. A new `#welcome` destination returns to the landing screen.
@@ -106,7 +121,7 @@ Disciplinary details are hidden from non-HR demo roles. **These role restriction
 
 All sample data is stored in your own browser's **localStorage**. The prototype does **not** sync edits to GitHub or between users/devices. GitHub Pages only hosts the static files. The demo role chooser is **not authentication**.
 
-The current fixtures are **v5**. Compatible v3/v4 browser data and JSON imports are upgraded without wiping existing employee scores or manually edited profiles; missing milestone fields are added. **Reset** replaces local data with new fictional fixtures, so export a JSON backup before resetting.
+The current fixtures are **v6**. Compatible v3/v4/v5 browser data and JSON imports are upgraded without wiping existing employee scores or manually edited profiles; missing milestone fields are added. **Reset** replaces local data with new fictional fixtures, so export a JSON backup before resetting.
 
 Do not store real employee details, disciplinary actions, salaries, passwords, access tokens or private Airtable links in this public GitHub Pages prototype. Secure multi-user access requires a real authenticated backend before production use.
 
@@ -114,13 +129,17 @@ Do not store real employee details, disciplinary actions, salaries, passwords, a
 
 - `index.html` — landing and dashboard entry point
 - `styles.css` — core responsive screens and centered dialogs
-- `theme.css` — Inter-based Nemesis design system and progressive Light / Dark themes
+- `theme.css` — underlying typography and Light/Dark design tokens
+- `operations.css` — responsive org charts, work queues and division tracking
+- `palette.css` — unified pastel palette for all interior screens
+- `landing.css` — approved responsive landing page and original JPG background
+- `tests/smoke.js` — dependency-free regression checks
 - `data.js` — fictional 51-person dataset and initial milestone records
 - `app.js` — workflows, charts, edit dialogs, local storage and exports
 
 ### Branding assets
 
-- `assets/madhouse-logo.png` — optimized copy of the authentic logo supplied by the user.
-- `assets/madhalloween-hero.webp` — optimized copy of the supplied Madhalloween photograph.
+- `assets/madhouse-logo.png` — unchanged original PNG logo supplied by the user.
+- `assets/madhalloween.jpg` — unchanged original JPEG photograph supplied by the user.
 - `landing.css` — responsive pastel landing appearance and official branding in the dashboard shell.
 
