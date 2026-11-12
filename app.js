@@ -724,7 +724,10 @@
     const sorted=staff.slice().sort(function(a,b){return journeyStage(a)-journeyStage(b)||a.name.localeCompare(b.name);});
     return '<section class="panel journey-table-panel"><div class="panel-head"><div><h2>Employee journey summary</h2>'+
       '<p>All '+staff.length+' sample employees sorted by current incomplete stage</p></div></div>'+
-      '<div class="table-wrap"><table class="table journey-table"><thead><tr><th scope="col">Employee</th><th scope="col">Division</th>'+
+      '<div class="table-wrap"><table class="table journey-table">'+
+      '<caption class="sr-only">Journey checklist: '+staff.length+
+      ' fictional employees, sorted by their first incomplete stage.</caption>'+
+      '<thead><tr><th scope="col">Employee</th><th scope="col">Division</th>'+
       '<th scope="col">Current stage</th><th scope="col">Overall</th><th scope="col">Completed stages</th><th scope="col"></th></tr></thead><tbody>'+
       sorted.map(function(e){
         const i=journeyStage(e),label=i===7?'Completed':'Stage '+(i+1)+' · '+data.stages[i].name;
@@ -732,7 +735,7 @@
           '<td>'+safe(div(e.division).short)+'</td><td><span class="journey-stage-pill">'+safe(label)+'</span></td>'+
           '<td><div class="progress-wrapper">'+progress(journeyPct(e))+'<span>'+e.journey.flat().filter(Boolean).length+
       ' / '+e.journey.flat().length+' tasks · '+journeyPct(e)+'%</span></div></td>'+
-          '<td>'+e.journey.filter(function(a){return a.every(Boolean);}).length+' / 7</td>'+
+          '<td class="report-num">'+e.journey.filter(function(a){return a.every(Boolean);}).length+' / 7</td>'+
           '<td>'+button('Preview','open','data-id="'+safe(e.id)+'" data-detail="journey"','small')+'</td></tr>';
       }).join('')+'</tbody></table></div></section>';
   }
@@ -749,6 +752,8 @@
       '<p>Each employee is counted once, at their first incomplete stage</p></div>'+
       '<div class="journey-distribution-total">'+tasks+' / '+possible+' checklist tasks completed</div></div>'+
       '<div class="table-wrap"><table class="table journey-distribution-table">'+
+      '<caption class="sr-only">Eight mutually exclusive Journey stage groups for '+
+      total+' selected fictional people.</caption>'+
       '<thead><tr><th scope="col">Current stage</th><th scope="col">People</th>'+
       '<th scope="col">Share of selected employees</th></tr></thead><tbody>'+
       stages.map(function(stage){
@@ -892,7 +897,10 @@
       '<p>Verified records only · latest 12 periods with entries; missing periods are not evidence of zero incidents</p></div>'+
       '<select class="field" aria-label="Attendance summary frequency" data-ui="frequency">'+
       opts([{value:'weekly',label:'Weekly'},{value:'monthly',label:'Monthly'}],ui.frequency)+'</select></div>'+
-      '<div class="table-wrap"><table class="table attendance-period-table"><thead><tr>'+
+      '<div class="table-wrap"><table class="table attendance-period-table">'+
+      '<caption class="sr-only">'+(ui.frequency==='weekly'?'Weekly':'Monthly')+
+      ' attendance summary: '+keys.length+' periods with verified records.</caption>'+
+      '<thead><tr>'+
       '<th scope="col">Period</th><th scope="col">Verified entries</th>'+
       '<th scope="col">Late</th><th scope="col">Absent</th><th scope="col">Excused lates</th>'+
       '<th scope="col">Approved leaves</th><th scope="col">Concern entries</th></tr></thead><tbody>'+
@@ -920,7 +928,9 @@
     return '<section class="panel kpi-composition-panel" aria-label="KPI weighted score composition">'+
       '<div class="panel-head"><div><h2>Score composition</h2>'+
       '<p>Raw category score × weight = weighted contribution</p></div></div>'+
-      '<div class="table-wrap"><table class="table kpi-composition-table"><thead><tr>'+
+      '<div class="table-wrap"><table class="table kpi-composition-table">'+
+      '<caption class="sr-only">Four weighted fictional KPI categories; total weight 100%.</caption>'+
+      '<thead><tr>'+
       '<th scope="col">Category</th><th scope="col">Raw score</th><th scope="col">Weight</th>'+
       '<th scope="col">Contribution</th></tr></thead><tbody>'+
       parts.map(function(part){
@@ -974,7 +984,9 @@
     return '<section class="review-record-summary" aria-label="Review stage status summary">'+
       '<strong>'+completed+' / '+steps.length+' stages show an endorsed or approved status</strong>'+
       '<p>These are current fictional statuses, not evidence of a verified chronological audit trail.</p></section>'+
-      '<div class="table-wrap review-record-table"><table class="table"><thead><tr>'+
+      '<div class="table-wrap review-record-table"><table class="table">'+
+      '<caption class="sr-only">Four review steps and their fictional recorded statuses for '+
+      safe(e.name)+'.</caption><thead><tr>'+
       '<th scope="col">Step</th><th scope="col">Reviewer</th><th scope="col">Recorded status</th>'+
       '<th scope="col">Recorded date</th><th scope="col">Sample note</th></tr></thead><tbody>'+
       steps.map(function(step){
