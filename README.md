@@ -1,4 +1,4 @@
-# Maddie Journey — Read-only Prototype v2.3
+# Maddie Journey — Read-only Prototype v2.4
 
 **Madhouse Design Studio · People & Culture**
 
@@ -14,7 +14,7 @@ The intended external data sources for the **later Claude-connected development 
 
 ## Interface
 
-The responsive frontend uses HTML, CSS and vanilla JavaScript, with the original Madhouse Design Studio PNG logo and the original Madhalloween JPEG event photograph. The user-provided white dashboard reference informs the composition, with a restrained pink, pastel-yellow, pastel-blue and lavender palette.
+The responsive frontend uses HTML, CSS and vanilla JavaScript, with the original Madhouse Design Studio PNG logo and the original Madhalloween JPEG event photograph. The user-provided white dashboard reference informs the composition, with white/black neutral surfaces, one consistent Inter font, and pink used only as an accent.
 
 ### Navigation
 
@@ -26,7 +26,7 @@ The responsive frontend uses HTML, CSS and vanilla JavaScript, with the original
 | Performance | KPI Scorecards · Reviews |
 | Data & Sources | Data Sources · About the Prototype |
 
-All 11 screens are available to anyone using the fictional sample prototype. A division also offers its own Summary, Board, List and Org Chart tabs. Employee cards open centered view-only previews.
+All 11 screens are available to anyone using the fictional sample prototype. On desktop, the primary sidebar collapses to icon navigation and remembers the display preference locally; on mobile it remains a full-width accessible drawer. A division also offers its own Summary, Board, List and Org Chart tabs. Employee cards open centered view-only previews.
 
 ### v2.2 overview improvements
 
@@ -48,6 +48,17 @@ All 11 screens are available to anyone using the fictional sample prototype. A d
 - **Automated verification:** 26 dependency-free smoke tests now cover data readiness, navigation, all division modes, active filters, safe CSV exports, keyboard shortcuts and read-only actions.
 
 [See the prototype acceptance matrix](docs/PROTOTYPE_ACCEPTANCE.md) for manual desktop/mobile validation tasks and documented limitations.
+
+### v2.4 visual consistency and motion
+
+- **Minimal landing:** Removed both rows of audience/shortcut cards and any landing progress badge. The landing contains the official Madhouse PNG logo, original event photograph, short introduction, two clear buttons and a quiet footer.
+- **Black and white workspace:** White surfaces in Light mode, near-black surfaces in Dark mode, neutral status backgrounds, one pink accent for active navigation, focus rings and essential actions. Decorative pastel panel fills and purple gradients are no longer part of the displayed system.
+- **One typeface:** Inter for the entire site; the font is loaded as a free web font, with a sans-serif fallback only when the font request fails. Navigation and appearance icons are consistent inline SVG rather than platform-dependent symbols.
+- **Sidebar control:** Collapse or expand the main desktop sidebar from the top header. The collapsed state retains all five destination icons, accessible labels and tooltips and is stored as a UI preference only. Mobile uses its separate Menu drawer.
+- **Soft Anime.js v4 motion:** The site uses the pinned version of Anime.js loaded from jsDelivr as an optional visual enhancement. Short page/preview fade transitions run only on navigation or dialog entry. Motion respects **prefers-reduced-motion**, never loops and has no effect on reading data if the CDN is unavailable.
+- **Verification:** The source-level tests now include the landing simplification, persistent sidebar, single-font and neutral theme configuration, and optional/reduced-motion behavior. Manual cross-browser and physical-device visual QA remains a separate acceptance step.
+
+The final design tokens and overrides are in **mono.css**. New features should use these shared tokens rather than introducing additional accent colors or page-specific fonts. The historical base stylesheets remain for compatibility.
 
 ### Seven-stage Journey
 
@@ -71,8 +82,8 @@ The later connected-account phase can implement source normalization against the
 
 - Open index.html in a modern browser or use VS Code Live Server.
 - Run: node tests/smoke.js
-- On main, the custom GitHub Actions validation workflow runs the regression tests. GitHub Pages uses its separate publishing workflow.
-- Confirm both test and Pages workflow statuses under GitHub Actions. The automated suite currently includes 26 cases; physical Windows/macOS/Android/iOS visual acceptance remains separate.
+- On main, the custom GitHub Actions validation workflow runs the regression tests. Anime.js and the Inter web font are optional third-party CDN resources; UI navigation and sample data do not depend on their availability. GitHub Pages uses its separate publishing workflow.
+- Confirm both test and Pages workflow statuses under GitHub Actions. The automated suite currently includes 29 cases; physical Windows/macOS/Android/iOS visual acceptance remains separate.
 
 ## Source files
 
@@ -86,7 +97,9 @@ The later connected-account phase can implement source normalization against the
 | operations.css / palette.css | Org chart, tracking and historical brand styles |
 | landing.css | Landing page and source photo |
 | workspace.css / reader.css | Global workspace, primary/secondary navigation and read-only views |
-| refined.css | v2.3 polished dashboard, searchable directory, source quality panel and responsive summaries |
+| refined.css | Dashboard metrics, searchable directory, source quality panel and responsive summaries |
+| mono.css | **v2.4 canonical design tokens:** monochrome Light/Dark modes, one font, one accent and collapsing sidebar |
+| motion.js | Reduced-motion-aware, nonessential Anime.js entrance transitions |
 | tests/smoke.js | Regression tests for navigation, adapters, fixtures and read-only operation |
 | docs/CLAUDE_CONNECTORS_HANDOFF.md | Future connector development instructions |
 | docs/PROTOTYPE_ACCEPTANCE.md | Complete screen/navigation matrix and physical-device acceptance checklist |
