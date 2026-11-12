@@ -353,6 +353,14 @@
       const a=attend(e),pending=e.attendance.filter(function(r){return !r.verified;}).length;
       if(a.concerns>0)create(e,'attendance',a.concerns+' verified attendance concern'+(a.concerns===1?'':'s'),'attendance',100+a.concerns);
       if(pending>0)create(e,'attendance',pending+' attendance entr'+(pending===1?'y':'ies')+' awaiting verification','attendance',94+pending);
+      // Actual fixture statuses only: never infer from onboarding or Drive.
+      const missingDocuments=data.documents201.filter(function(d){return e.files201[d.id]==='missing';});
+      const uncheckedDocuments=data.documents201.filter(function(d){return e.files201[d.id]==='not-checked';});
+      if(missingDocuments.length)create(e,'documents',missingDocuments.length+
+        ' 201 document'+(missingDocuments.length===1?'':'s')+' recorded missing','files201',
+        89+Math.min(3,missingDocuments.length));
+      else if(uncheckedDocuments.length)create(e,'documents',uncheckedDocuments.length+
+        ' 201 document'+(uncheckedDocuments.length===1?'':'s')+' not checked','files201',75);
       if(!e.kpiValidated)create(e,'kpi','KPI source not validated','kpi',80);
       if(reviewStatus(e,'division')!=='Endorsed')create(e,'reviews','Division evaluation pending','approvals',72);
       if(kitPct(e)<100)create(e,'onboarding','Welcome Kit '+kitPct(e)+'% complete','kit',58+(100-kitPct(e))/100);
@@ -376,7 +384,7 @@
         seen.add(item.e.id);return true;
       });
     };
-    const categories=[['all','All'],['attendance','Attendance'],['kpi','KPI'],['onboarding','Onboarding'],['reviews','Reviews']];
+    const categories=[['all','All'],['attendance','Attendance'],['documents','201 Files'],['kpi','KPI'],['onboarding','Onboarding'],['reviews','Reviews']];
     const active=categories.some(function(x){return x[0]===ui.attentionFilter;})?ui.attentionFilter:'all';
     const relevant=active==='all'?all:all.filter(function(x){return x.group===active;});
     const rows=uniquePeople(relevant);
@@ -508,16 +516,46 @@
       '</div></section>';
   }
   // Only a computed snapshot. This must never imply real-time or authenticated HR data.
+  // One compact operational strip; monitoring remains completely read-only.
   function monitorPulse(staff){
-    const verified=staff.filter(function(e){return attend(e).concerns>0;}).length;
-    const unverified=staff.reduce(function(n,e){return n+e.attendance.filter(function(r){return !r.verified;}).length;},0);
-    return '<div class="monitor-pulse" role="note" aria-label="Sample attendance monitoring context">'+
-      '<div class="monitor-pulse-copy"><span class="monitor-pulse-kicker">ATTENDANCE SNAPSHOT</span>'+
-      '<strong><span class="monitor-pulse-primary-count">'+verified+'</span> of '+staff.length+
-      ' people have verified attendance concerns</strong>'+
-      '<small>'+unverified+' attendance entries await verification · fictional records only</small></div>'+
-      '<button type="button" class="monitor-pulse-link" data-action="nav" data-tab="attendance">'+
-      'Inspect attendance <span aria-hidden="true">↗</span></button></div>';
+    const affected=staff.filter(function(e){return attend(e).concerns>0;}).length;
+    const unverified=staff.reduce(function(n,e){
+      return n+e.attendance.filter(function(r){return !r.verified;}).length;
+    },0);
+    const files=window.MJ_MONITORING.fileSummary(data);
+    const today=window.MJ_MONITORING.todayManila();
+    const calendar=window.MJ_MONITORING.events(data,today.slice(0,7))
+      .filter(function(e){return e.date>=today;});
+    const upcoming=calendar[0];
+    const items=[
+      {id:'attendance',label:'Attendance review',value:affected+' / '+staff.length,
+        note:'people with verified concerns',
+        meta:unverified+' attendance entries await verification · fictional records only',
+        aria:'Inspect '+affected+' people with verified attendance concerns'},
+      {id:'files201',label:'201 Files gaps',value:String(files.groups.missing.length),
+        note:'people with missing example documents',
+        meta:files.groups['not-checked'].length+' other people have documents not yet checked',
+        aria:'Inspect '+files.groups.missing.length+' people with missing sample documents'},
+      {id:'calendar',label:'Calendar outlook',value:String(calendar.length),
+        note:'remaining fictional dates in this three-month window',
+        meta:upcoming?'Next: '+upcoming.employee.name+' · '+dateLabel(upcoming.date):
+          'No future sample dates in this period',
+        aria:'Inspect '+calendar.length+' upcoming sample calendar dates'}
+    ];
+    return '<section class="monitor-pulse monitor-focus" aria-labelledby="monitor-focus-heading">'+
+      '<div class="monitor-focus-heading"><span class="monitor-pulse-kicker">WORKSPACE FOCUS</span>'+
+      '<h2 id="monitor-focus-heading">Follow the recorded details</h2>'+
+      '<p>Direct views of fictional evidence; nothing is updated here.</p></div>'+
+      '<div class="monitor-focus-grid">'+items.map(function(x){
+        return '<button type="button" class="monitor-focus-item" data-action="nav" data-tab="'+
+          safe(x.id)+'" aria-label="'+safe(x.aria)+'">'+
+          '<span class="monitor-focus-topline">'+safe(x.label)+' <span aria-hidden="true">↗</span></span>'+
+          '<span class="monitor-focus-value">'+
+          (x.id==='attendance'?'<span class="monitor-pulse-primary-count">'+affected+'</span> / '+staff.length:
+            safe(x.value))+'</span>'+
+          '<span class="monitor-focus-note">'+safe(x.note)+'</span>'+
+          '<small>'+safe(x.meta)+'</small></button>';
+      }).join('')+'</div></section>';
   }
   function roleHome(){
     const staff=data.employees;
@@ -1198,7 +1236,7 @@
       if(motion&&typeof motion[method]==='function')motion[method](kind);
     }catch(err){/* Decorative motion never blocks navigation. */}
   }
-  function render(){if(ui.tab==='welcome'){$('app').innerHTML=landingView();document.title='Maddie Journey · Madhouse Design Studio';optionalMotion('refresh','welcome');return;}const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,milestones:milestonesView,calendar:calendarView,journey:journey,kit:kitView,files201:files201View,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,sources:sourcesView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open ':'')+(ui.sidebarCollapsed?'sidebar-collapsed':'')+'">'+sidebar()+'<button type="button" class="workspace-scrim" aria-label="Close navigation" tabindex="-1" aria-hidden="true" data-action="mobile"></button><main id="main-content" class="main" tabindex="-1"'+(ui.mobile?' inert':'')+'>'+topnav()+(views[ui.tab]||overview)()+'<footer class="footer"><span>Maddie Journey · Prototype v3.3.1</span><span>Fictional snapshot · No connected sources</span></footer></main></div>'+(ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.employeeModalOpen?employeeModal():'');document.title=title(ui.tab)+' · Maddie Journey';enhanceScrollableTables();optionalMotion('refresh',ui.tab);if(ui.employeeModalOpen||ui.divisionModal||ui.employeePicker){const modal=$('app').querySelector('[role="dialog"]');if(modal&&typeof modal.focus==='function')modal.focus({preventScroll:true});}}
+  function render(){if(ui.tab==='welcome'){$('app').innerHTML=landingView();document.title='Maddie Journey · Madhouse Design Studio';optionalMotion('refresh','welcome');return;}const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,milestones:milestonesView,calendar:calendarView,journey:journey,kit:kitView,files201:files201View,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,sources:sourcesView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open ':'')+(ui.sidebarCollapsed?'sidebar-collapsed':'')+'">'+sidebar()+'<button type="button" class="workspace-scrim" aria-label="Close navigation" tabindex="-1" aria-hidden="true" data-action="mobile"></button><main id="main-content" class="main" tabindex="-1"'+(ui.mobile?' inert':'')+'>'+topnav()+(views[ui.tab]||overview)()+'<footer class="footer"><span>Maddie Journey · Prototype v3.4</span><span>Fictional snapshot · No connected sources</span></footer></main></div>'+(ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.employeeModalOpen?employeeModal():'');document.title=title(ui.tab)+' · Maddie Journey';enhanceScrollableTables();optionalMotion('refresh',ui.tab);if(ui.employeeModalOpen||ui.divisionModal||ui.employeePicker){const modal=$('app').querySelector('[role="dialog"]');if(modal&&typeof modal.focus==='function')modal.focus({preventScroll:true});}}
   function openDivision(id,view,focusId){
     if(!data.divisions.some(function(d){return d.id===id;}))return;
     ui.scope=id;ui.activeDivision=id;
@@ -1252,7 +1290,7 @@
       ui.journeyView=next;render();focusActionAfterRender(button);optionalMotion('feedback','journey');return;
     }
     if(name==='attention-filter'){
-      const next=['all','attendance','kpi','onboarding','reviews'].includes(button.dataset.kind)?button.dataset.kind:'all';
+      const next=['all','attendance','documents','kpi','onboarding','reviews'].includes(button.dataset.kind)?button.dataset.kind:'all';
       if(ui.attentionFilter===next&&!ui.attentionShowAll)return;
       ui.attentionFilter=next;ui.attentionShowAll=false;
       render();focusActionAfterRender(button);optionalMotion('feedback','attention');return;
