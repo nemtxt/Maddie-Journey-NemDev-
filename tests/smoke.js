@@ -1,4 +1,4 @@
-/* Maddie Journey v1.6 — dependency-free smoke tests.
+/* Maddie Journey v1.7 — dependency-free smoke tests.
    Run from the repository root: node tests/smoke.js
    These are simulated interaction tests, not browser visual tests. */
 'use strict';
@@ -12,6 +12,7 @@ const seedCode=read('data.js');
 const appCode=read('app.js');
 const html=read('index.html');
 const css=read('operations.css');
+const landingCss=read('landing.css');
 const executed=[];
 
 function test(name,body){body();executed.push(name);console.log('PASS',name);}
@@ -49,7 +50,9 @@ function boot(existing){
 test('Source files parse and load order is correct',()=>{
   new Function(seedCode);new Function(appCode);
   assert(html.indexOf('theme.css')<html.indexOf('operations.css'));
+  assert(html.indexOf('operations.css')<html.indexOf('landing.css'));
   assert(css.includes('.org-tier')&&css.includes('.queue-filter'));
+  assert(landingCss.includes('assets/madhalloween-hero.webp'));
 });
 
 const app=boot();
@@ -58,6 +61,26 @@ test('Fixture has 51 employees across eight populated departments',()=>{
   assert.equal(app.win.MJ_SEED.employees.length,51);
   assert.equal(app.win.MJ_SEED.divisions.length,8);
   assert(app.win.MJ_SEED.divisions.every(d=>app.win.MJ_SEED.employees.some(e=>e.division===d.id)));
+});
+
+test('Welcome landing uses real Madhouse logo and accessible paths',()=>{
+  assert(app.html().includes('assets/madhouse-logo.png'));
+  assert(app.html().includes('Maddie Journey'));
+  assert(app.html().includes('data-action="landing-role"'));
+  assert.equal((app.html().match(/class="landing-audience-card"/g)||[]).length,3);
+  assert(app.html().includes('data-nav="sources"'));
+});
+
+test('Landing audience choices open the intended demo workspaces',()=>{
+  app.click('landing-role',{role:'head'});
+  assert(app.html().includes('My departments'));
+  app.click('nav',{tab:'welcome'});
+  assert(app.html().includes('landing-hero'));
+  app.click('landing-role',{role:'executive'});
+  assert(app.html().includes('Organization overview'));
+  app.click('nav',{tab:'welcome'});
+  app.click('landing-role',{role:'hr'});
+  assert(app.html().includes('People & Culture overview'));
 });
 
 test('Home contains actionable worklist and transparent source status',()=>{
