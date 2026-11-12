@@ -1586,3 +1586,252 @@ body .monitor-focus-item>small{
   body .monitor-focus-item{border-color:CanvasText}
   body .monitor-focus-item:hover{outline:1px solid Highlight}
 }
+
+
+/* v3.4.1 — semantic pastel palette + pointer-aware micro-interactions.
+ * Neutral framework and Inter remain. Pastels convey category grouping,
+ * not verification, severity, or source authority. All data stays visible.
+ */
+html[data-theme="light"]{
+  --mj-pastel-blush:#fff0f5;
+  --mj-pastel-blush-hover:#ffe2ec;
+  --mj-pastel-sky:#edf6ff;
+  --mj-pastel-sky-hover:#e0efff;
+  --mj-pastel-sage:#edf9f1;
+  --mj-pastel-sage-hover:#e0f3e7;
+  --mj-pastel-lilac:#f4efff;
+  --mj-pastel-lilac-hover:#ebe2ff;
+  --mj-pastel-peach:#fff6e9;
+  --mj-pastel-peach-hover:#ffedd3;
+  --mj-pastel-stroke:#e6cedb;
+  --mj-pastel-neutral-hover:#f7f3f7;
+  --mj-pastel-dot-sky:#547cb0;
+  --mj-pastel-dot-sage:#40866e;
+  --mj-pastel-dot-lilac:#8472b1;
+  --mj-pastel-dot-peach:#ae7937;
+}
+html[data-theme="dark"]{
+  --mj-pastel-blush:#2b1c25;
+  --mj-pastel-blush-hover:#3a2632;
+  --mj-pastel-sky:#1b2937;
+  --mj-pastel-sky-hover:#23384b;
+  --mj-pastel-sage:#1c2c25;
+  --mj-pastel-sage-hover:#254033;
+  --mj-pastel-lilac:#272139;
+  --mj-pastel-lilac-hover:#342d4a;
+  --mj-pastel-peach:#30281e;
+  --mj-pastel-peach-hover:#413426;
+  --mj-pastel-stroke:#624252;
+  --mj-pastel-neutral-hover:#25212a;
+  --mj-pastel-dot-sky:#93bce7;
+  --mj-pastel-dot-sage:#8ac9ac;
+  --mj-pastel-dot-lilac:#b5a2e9;
+  --mj-pastel-dot-peach:#e3bd80;
+}
+
+/* Dashboard: individual metrics keep their original meaning and hierarchy. */
+body .overview-summary-grid button.overview-signal.tone-pink{
+  background:var(--mj-pastel-blush)!important
+}
+body .overview-summary-grid button.overview-signal.tone-blue{
+  background:var(--mj-pastel-sky)!important
+}
+body .overview-summary-grid button.overview-signal.tone-yellow{
+  background:var(--mj-pastel-peach)!important
+}
+body .overview-summary-grid button.overview-signal.tone-violet{
+  background:var(--mj-pastel-lilac)!important
+}
+body .overview-summary-grid button.overview-signal::after{
+  color:var(--mj-focus-accent)
+}
+/* The same category tint follows the direct overview drill-down. */
+body .monitor-focus-heading{background:var(--mj-pastel-blush)}
+body .monitor-focus-grid .monitor-focus-item:nth-child(1){
+  background:var(--mj-pastel-peach)
+}
+body .monitor-focus-grid .monitor-focus-item:nth-child(2){
+  background:var(--mj-pastel-lilac)
+}
+body .monitor-focus-grid .monitor-focus-item:nth-child(3){
+  background:var(--mj-pastel-sage)
+}
+
+/* Explicit document groups from the existing read-only fixture. */
+body .monitor-files-grid .monitor-file-card[data-group="Employment"]{
+  background:var(--mj-pastel-sage)
+}
+body .monitor-files-grid .monitor-file-card[data-group="Contracts"]{
+  background:var(--mj-pastel-lilac)
+}
+body .monitor-files-grid .monitor-file-card[data-group="Personal"]{
+  background:var(--mj-pastel-peach)
+}
+body .monitor-files-grid .monitor-file-card[data-group="Government"]{
+  background:var(--mj-pastel-sky)
+}
+body .monitor-file-counts span{
+  background:var(--mono-surface);border:1px solid var(--mono-border)
+}
+body .monitor-file-counts span:first-child{background:var(--mj-pastel-blush)}
+body .monitor-file-counts span:nth-child(2){background:var(--mj-pastel-peach)}
+body .monitor-file-missing{
+  background:var(--mj-pastel-blush);
+  color:var(--mj-focus-accent);border-color:var(--mj-pastel-stroke)
+}
+body .monitor-file-not-checked{background:var(--mj-pastel-peach)}
+body .monitor-file-complete{background:var(--mj-pastel-sage)}
+body .monitor-file-not-applicable{background:var(--mono-soft)}
+
+/* Calendar: existing textual categories remain authoritative; color supports them. */
+body .monitor-calendar-month-summary .type-checkin{background:var(--mj-pastel-sky)}
+body .monitor-calendar-month-summary .type-employment{background:var(--mj-pastel-peach)}
+body .monitor-calendar-month-summary .type-change{background:var(--mj-pastel-lilac)}
+body .monitor-calendar-month-summary .type-milestone{background:var(--mj-pastel-sage)}
+body .monitor-calendar-dot.type-checkin{background:var(--mj-pastel-dot-sky)}
+body .monitor-calendar-dot.type-employment{background:var(--mj-pastel-dot-peach)}
+body .monitor-calendar-dot.type-change{background:var(--mj-pastel-dot-lilac)}
+body .monitor-calendar-dot.type-milestone{background:var(--mj-pastel-dot-sage)}
+body button.monitor-calendar-date.selected{
+  background:var(--mj-pastel-blush);border-color:var(--mj-focus-accent)
+}
+body .monitor-calendar-date.today{outline-color:var(--mj-focus-accent)}
+
+/* Status and navigation active states stay explicit and distinguishable. */
+body .workspace-mainnav .workspace-mainnav-item[aria-current]{
+  background:var(--mj-pastel-blush);
+  box-shadow:inset 3px 0 var(--mj-focus-accent)
+}
+body .workspace-subnav a[aria-current]{
+  background:var(--mj-pastel-blush);color:var(--mj-focus-accent)
+}
+body .queue-filter.active,
+body .monitor-filter.active{
+  background:var(--mj-pastel-blush);
+  color:var(--mj-focus-accent);border-color:var(--mj-pastel-stroke)
+}
+body .queue-filter.active[data-kind="documents"]{
+  background:var(--mj-pastel-lilac)
+}
+body .monitor-priority-check{background:var(--mj-pastel-blush)}
+body .monitor-priority-validate{background:var(--mj-pastel-sky)}
+body .monitor-priority-review{background:var(--mj-pastel-lilac)}
+body .monitor-priority-progress{background:var(--mj-pastel-sage)}
+body .work-lane-attendance .work-lane-head{background:var(--mj-pastel-peach)}
+body .work-lane-documents .work-lane-head{background:var(--mj-pastel-lilac)}
+body .work-lane-kpi .work-lane-head{background:var(--mj-pastel-sky)}
+body .work-lane-onboarding .work-lane-head{background:var(--mj-pastel-sage)}
+body .work-lane-reviews .work-lane-head{background:var(--mj-pastel-blush)}
+
+/* Short, compositor-friendly transitions; never animate data rows on entry. */
+body :is(
+  .overview-summary-grid button.overview-signal,
+  .monitor-focus-item,
+  .monitor-division-row,
+  .work-card,
+  .monitor-calendar-event,
+  button.monitor-calendar-date,
+  .monitor-filter,
+  .queue-filter,
+  .workspace-mainnav .workspace-mainnav-item,
+  .workspace-subnav a,
+  .monitor-files-table .button,
+  .work-list-row .button,
+  .overview-milestone-row
+){
+  transition:background-color .15s ease,border-color .15s ease,
+    box-shadow .15s ease,transform .15s ease
+}
+
+/* Hover is only for actual mouse/trackpad pointers; touch stays free of sticky hover. */
+@media(hover:hover) and (pointer:fine){
+  body .overview-summary-grid button.overview-signal.tone-pink:hover{
+    background:var(--mj-pastel-blush-hover)!important
+  }
+  body .overview-summary-grid button.overview-signal.tone-blue:hover{
+    background:var(--mj-pastel-sky-hover)!important
+  }
+  body .overview-summary-grid button.overview-signal.tone-yellow:hover{
+    background:var(--mj-pastel-peach-hover)!important
+  }
+  body .overview-summary-grid button.overview-signal.tone-violet:hover{
+    background:var(--mj-pastel-lilac-hover)!important
+  }
+  body .overview-summary-grid button.overview-signal:hover{
+    transform:translateY(-2px)
+  }
+  body .monitor-focus-grid .monitor-focus-item:nth-child(1):hover{
+    background:var(--mj-pastel-peach-hover)
+  }
+  body .monitor-focus-grid .monitor-focus-item:nth-child(2):hover{
+    background:var(--mj-pastel-lilac-hover)
+  }
+  body .monitor-focus-grid .monitor-focus-item:nth-child(3):hover{
+    background:var(--mj-pastel-sage-hover)
+  }
+  body .monitor-focus-item:hover{
+    box-shadow:inset 0 -2px var(--mj-focus-accent)
+  }
+  body :is(.workspace-mainnav .workspace-mainnav-item,.workspace-subnav a,
+    .queue-filter,.monitor-filter,.work-card,.overview-milestone-row,
+    .monitor-calendar-event,.monitor-division-row):hover{
+    background:var(--mj-pastel-neutral-hover)
+  }
+  body :is(.queue-filter,.monitor-filter,.work-card):hover{
+    border-color:var(--mj-pastel-stroke)
+  }
+  body .monitor-calendar-date.has-events:hover{
+    background:var(--mj-pastel-blush-hover);border-color:var(--mj-pastel-stroke)
+  }
+  body .monitor-files-grid .monitor-file-card:hover{
+    border-color:var(--mj-pastel-stroke)
+  }
+  body .monitor-files-table tbody tr:hover,
+  body .table tbody tr:hover{
+    background:var(--mj-pastel-neutral-hover)
+  }
+  body :is(.work-list-row,.overview-milestone-row):hover{
+    background:var(--mj-pastel-neutral-hover)
+  }
+  body :is(.monitor-files-table .button,.work-list-row .button,
+    .calendar-navigation .button,.monitor-calendar-controls .button,
+    .monitor-calendar-more,.monitor-calendar-events-heading .button):hover{
+    border-color:var(--mj-pastel-stroke);
+    background:var(--mj-pastel-blush)
+  }
+  body .work-card:hover{transform:translateY(-1px)}
+}
+
+/* Keyboard users get the same colored affordance plus existing strong focus. */
+body .overview-summary-grid button.overview-signal:focus-visible{
+  box-shadow:inset 0 -3px var(--mj-focus-accent)
+}
+body .monitor-focus-item:focus-visible{
+  box-shadow:inset 0 -3px var(--mj-focus-accent)
+}
+body :is(.monitor-filter,.queue-filter,.workspace-subnav a,
+  .workspace-mainnav .workspace-mainnav-item,
+  .monitor-calendar-date.has-events,.monitor-calendar-event):focus-visible{
+  background:var(--mj-pastel-blush)
+}
+@media(prefers-reduced-motion:reduce){
+  body :is(.overview-summary-grid button.overview-signal,.monitor-focus-item,
+    .monitor-division-row,.work-card,.monitor-calendar-event,
+    button.monitor-calendar-date,.monitor-filter,.queue-filter,
+    .workspace-mainnav .workspace-mainnav-item,.workspace-subnav a,
+    .monitor-files-table .button,.work-list-row .button,.overview-milestone-row){
+    transition:none!important;transform:none!important
+  }
+}
+@media(forced-colors:active){
+  body :is(.overview-summary-grid button.overview-signal,.monitor-focus-item,
+    .monitor-file-card,.monitor-file-status,.monitor-calendar-count,
+    .monitor-calendar-date,.monitor-filter,.queue-filter,.work-lane-head){
+    background:Canvas!important;color:CanvasText!important;
+    border-color:CanvasText!important
+  }
+  body :is(.monitor-focus-item,.work-card,.monitor-calendar-event,
+    .workspace-mainnav .workspace-mainnav-item):focus-visible{
+    outline:3px solid Highlight!important
+  }
+}
