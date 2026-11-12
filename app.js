@@ -160,19 +160,64 @@
   }
   function divisionEvaluatorNames(d){return d.evaluators.map(function(id){const v=data.viewers.find(function(p){return p.id===id;});return v?v.name:id;}).join(' / ');}
   function assignedDivisionIds(){const v=viewer();return data.divisions.filter(function(d){return d.evaluators.includes(v.id);}).map(function(d){return d.id;});}
+  // Department hierarchy is fictional: the reporting lines demonstrate chart behavior.
+  function orgChart(d){
+    const team=data.employees.filter(function(e){return e.division===d.id;});
+    const levelOrder=[6,5,4,3,2,1];
+    return '<section class="org-panel" aria-label="'+safe(d.name)+' organization chart" data-department="'+safe(d.id)+'">'+
+      '<div class="org-chart-head"><div><h2>Organization chart</h2><p>Levels 6–1 · Click any employee to open a profile preview</p></div>'+
+      '<span class="org-demo-hint">Fictional reporting structure</span></div>'+
+      '<div class="org-canvas" role="group" aria-label="Department reporting hierarchy">'+
+      levelOrder.map(function(level){
+        const members=team.filter(function(e){return e.orgLevel===level;});
+        return '<div class="org-tier'+(members.length?'':' org-tier-empty')+'"><div class="org-level"><span>Level '+level+'</span></div>'+
+          '<div class="org-members">'+(members.length?members.map(function(e){
+             const boss=team.find(function(p){return p.id===e.reportsTo;});
+             return '<button type="button" class="org-person" data-action="open" data-id="'+safe(e.id)+'" data-detail="preview" aria-label="Open '+safe(e.name)+', '+safe(e.jobTitle)+', level '+level+'">'+
+               '<span class="org-person-avatar">'+safe(initials(e.name))+'</span>'+
+               '<span class="org-person-content"><strong>'+safe(e.name)+'</strong><small>'+safe(e.jobTitle)+'</small>'+
+               '<span class="org-reporting">'+(boss?'Reports to '+safe(boss.name):'Department lead')+'</span></span></button>';
+           }).join(''):'<span class="org-level-vacant">No sample members at this level</span>')+'</div></div>';
+      }).join('')+'</div>'+
+      '<p class="org-chart-note">This hierarchy is an illustrative sample, not an official organizational assignment. Use the employee list to inspect all records.</p></section>';
+  }
+  function divisionTabButton(id,name){
+    return '<button type="button" data-action="division-tab" data-tab="'+id+'" aria-pressed="'+(ui.divisionTab===id)+'" class="division-tab'+(ui.divisionTab===id?' active':'')+'">'+safe(name)+'</button>';
+  }
+  function divisionPulse(d,team){
+    const attention=team.map(function(e){
+      const issues=attend(e).concerns,notValidated=!e.kpiValidated,unfinished=kitPct(e)<100;
+      return {e:e,priority:issues*8+(notValidated?2:0)+(unfinished?2:0),reason:issues?issues+' verified attendance concern'+(issues===1?'':'s'):notValidated?'KPI source not verified':unfinished?'Welcome Kit incomplete':'Review pending'};
+    }).sort(function(a,b){return b.priority-a.priority;}).slice(0,4);
+    const kitPending=team.filter(function(e){return kitPct(e)<100;}).length;
+    const reviews=team.filter(function(e){return reviewStatus(e,'division')!=='Endorsed';}).length;
+    return '<div class="division-overview-grid"><section class="panel division-next"><div class="panel-head"><div><h2>Follow-up snapshot</h2><p>Review the sample items most likely to need attention</p></div></div>'+
+      '<div class="quick-list">'+attention.map(function(x){return '<div class="quick-item">'+avatar(x.e.name)+'<div class="grow"><b>'+safe(x.e.name)+'</b><p>'+safe(x.reason)+'</p></div>'+
+        button('Preview','open','data-id="'+safe(x.e.id)+'" data-detail="preview"','small')+'</div>';}).join('')+'</div></section>'+
+      '<section class="panel division-quick"><h2>Department at a glance</h2>'+
+      '<div class="division-stat-line"><span>Employees</span><b>'+team.length+'</b></div>'+
+      '<div class="division-stat-line"><span>Open Welcome Kits</span><b>'+kitPending+'</b></div>'+
+      '<div class="division-stat-line"><span>Awaiting evaluation</span><b>'+reviews+'</b></div>'+
+      '<div class="division-stat-line"><span>Average onboarding</span><b>'+meanOf(team,journeyPct)+'%</b></div>'+
+      '<div class="division-next-actions">'+button('Organization chart','division-tab','data-tab="chart"','small')+button('Employee list','division-tab','data-tab="team"','small primary')+'</div>'+
+      '</section></div>';
+  }
   function divisionCard(d){
     const team=data.employees.filter(function(e){return e.division===d.id;});
-    const editable=team.some(roleCanHead);
-    const hr=isHR();
-    const access=editable?'Department KPI editor':hr?'HR scoring available':'Observer / read-only';
-    return '<article class="division-card" data-department="'+safe(d.id)+'"><div class="division-card-top"><span class="tag info">'+safe(d.short)+'</span>'+pill(editable?'Editable':hr?'HR inputs':'View only')+'</div><h2>'+safe(d.name)+'</h2><p class="division-owner">'+safe(divisionEvaluatorNames(d))+'</p><div class="division-card-stats"><span><strong>'+team.length+'</strong><small>Members</small></span><span><strong>'+meanOf(team,score)+'%</strong><small>Avg. KPI</small></span><span><strong>'+meanOf(team,journeyPct)+'%</strong><small>Journey</small></span></div><div class="division-card-footer"><span class="muted micro">'+safe(access)+'</span>'+button('Open division','goto-division','data-division="'+safe(d.id)+'"','small primary')+'</div></article>';
+    const pending=team.filter(function(e){return reviewStatus(e,'division')!=='Endorsed';}).length;
+    return '<article class="division-card division-summary-card" data-department="'+safe(d.id)+'">'+
+      '<div class="division-card-top"><span class="division-short">'+safe(d.short)+'</span><span class="division-count">'+team.length+' members</span></div>'+
+      '<h2>'+safe(d.name)+'</h2><p class="division-owner">'+safe(divisionEvaluatorNames(d))+'</p>'+
+      '<div class="division-card-stats"><span><strong>'+meanOf(team,journeyPct)+'%</strong><small>Onboarding</small></span>'+
+      '<span><strong>'+meanOf(team,kitPct)+'%</strong><small>Welcome Kit</small></span>'+
+      '<span><strong>'+pending+'</strong><small>Reviews pending</small></span></div>'+
+      '<div class="division-card-footer">'+button('View dashboard','goto-division','data-division="'+safe(d.id)+'"','small primary')+
+      '<button type="button" class="division-secondary" data-action="open-org" data-division="'+safe(d.id)+'">Org chart</button></div></article>';
   }
   function divisionsView(){
-    const my=assignedDivisionIds();
-    const sorted=data.divisions.slice().sort(function(a,b){return Number(my.includes(b.id))-Number(my.includes(a.id));});
-    return header('EIGHT DEPARTMENTS','Division workspaces','Each division has its own member list, KPI evaluation desk, assigned evaluators and live demonstration summary.',button('Employee directory','nav','data-tab="employees"','small'))+
-      (my.length?'<div class="callout" style="margin-bottom:17px"><strong>Your evaluation desks:</strong> '+my.map(function(id){const d=div(id);return '<button class="link-btn" data-action="goto-division" data-division="'+safe(id)+'">'+safe(d.name)+'</button>';}).join(' &nbsp; / &nbsp; ')+'</div>':
-      '<div class="callout" style="margin-bottom:17px"><strong>'+((viewer().role==='ceo'||viewer().role==='cso'||viewer().role==='coo')?'Executive observer view':'People & Culture workspace')+':</strong> Open any division to see its employee roster and report cards. Editing follows the active demonstration evaluator role.</div>')+
+    const mine=assignedDivisionIds();
+    const sorted=data.divisions.slice().sort(function(a,b){return Number(mine.includes(b.id))-Number(mine.includes(a.id));});
+    return header('DEPARTMENTS','Divisions','Eight department dashboards with clear ownership, employee summaries and sample reporting charts.',button('Find an employee','nav','data-tab="employees"','small'))+
       '<section class="division-grid">'+sorted.map(divisionCard).join('')+'</section>';
   }
   function employeeCard(e){
@@ -185,12 +230,15 @@
   }
   function divisionView(){
     const d=div(ui.activeDivision),team=data.employees.filter(function(e){return e.division===d.id;});
-    if(!team.length)return header('DIVISION','No team members','Choose another department.',button('All divisions','nav','data-tab="divisions"','small'));
-    const editable=team.some(roleCanHead),permission=editable?'You can edit the assigned members’ division and individual KPI scores.':isHR()?'HR can update Values Alignment, Job Behavior and employee onboarding.':'Observer access — all employee details are read-only.';
-    return header('DEPARTMENT EVALUATION',d.name,'Choose a team member below to preview their charts or open the evaluation form.',button('All divisions','nav','data-tab="divisions"','small'))+
-      '<section class="panel department-toolbar" data-department="'+safe(d.id)+'"><div><span class="eyebrow">DEPARTMENT EVALUATOR'+(d.evaluators.length>1?'S':'')+'</span><h2>'+safe(divisionEvaluatorNames(d))+'</h2><p class="muted micro">'+safe(permission)+'</p></div>'+button('Change division','choose-division','','small')+'</section>'+
-      '<div class="department-team-heading"><div><h2>Team members</h2><p class="muted micro">'+team.length+' fictional employees · Select someone to review</p></div><span class="tag info">'+team.filter(function(e){return reviewStatus(e,'division')==='Endorsed';}).length+' reviews submitted</span></div>'+
-      '<section class="member-grid">'+team.map(employeeCard).join('')+'</section>';
+    if(!team.length)return header('DIVISION','No team members','Choose another division.',button('All divisions','nav','data-tab="divisions"','small'));
+    const sub={
+      summary:divisionPulse(d,team),
+      chart:orgChart(d),
+      team:'<section class="member-grid">'+team.slice().sort(function(a,b){return a.orgLevel===b.orgLevel?a.name.localeCompare(b.name):b.orgLevel-a.orgLevel;}).map(employeeCard).join('')+'</section>'
+    };
+    return header('DIVISION OVERVIEW',d.name,team.length+' sample employees · '+divisionEvaluatorNames(d),button('All divisions','nav','data-tab="divisions"','small'))+
+      '<nav class="division-tabs" aria-label="Division views">'+divisionTabButton('summary','Summary')+divisionTabButton('chart','Org chart')+divisionTabButton('team','Employees')+'</nav>'+
+      (sub[ui.divisionTab]||sub.summary);
   }
   function quickDivisionAccess(){
     const ids=assignedDivisionIds();
@@ -460,8 +508,8 @@
     const v=score(e),overall=Number(v.toFixed(1)),a=attend(e);
     const dimensions=[['Division objectives',e.scores.division,15,'coral'],['Individual objectives',e.scores.individual,45,'lilac'],['Values alignment',e.scores.values,15,'mint'],['Job behavior',e.scores.behavior,25,'gold']];
     const stageSummary=data.stages.map(function(stage,i){return {label:'Stage '+(i+1),percent:Math.round(e.journey[i].filter(Boolean).length/e.journey[i].length*100),title:stage.name};});
-    const editable=roleCanHead(e),hr=isHR(),observer=['ceo','cso','coo'].includes(viewer().role);
-    return '<div class="profile-intro"><span class="tag '+(observer?'info':'ok')+'">'+(observer?'View only':hr?'HR assessment tools':editable?'Department evaluator':'View only')+'</span><p>Employee performance, journey and attendance at a glance. Select an action to open the corresponding form.</p></div>'+
+    const editable=roleCanHead(e),hr=isHR();
+    return '<div class="profile-intro"><p>Performance, onboarding and attendance at a glance. Figures are fictional and not synced to external sources.</p></div>'+
     '<div class="employee-charts-grid">'+
       '<section class="chart-card performance-chart"><div class="chart-card-heading"><h3>2026 KPI performance</h3><span class="tag warn">Demo scores</span></div><div class="performance-chart-inner"><div class="score-donut" style="--score:'+overall+'%" role="img" aria-label="Overall KPI score '+overall+' percent"><div><strong>'+overall+'%</strong><small>'+safe(rating(v))+'</small></div></div><div class="score-breakdown">'+dimensions.map(function(x){return '<div class="score-breakdown-row"><div class="score-label"><span>'+safe(x[0])+' <small>· '+x[2]+'%</small></span><b>'+Number(x[1]).toFixed(1)+'%</b></div><div class="chart-track"><span class="'+x[3]+'" style="width:'+Math.min(100,Math.max(0,x[1]))+'%"></span></div></div>';}).join('')+'</div></div></section>'+
       '<section class="chart-card"><div class="chart-card-heading"><h3>7-stage journey</h3><strong>'+journeyPct(e)+'%</strong></div><div class="stage-preview-bars">'+stageSummary.map(function(x){return '<div class="stage-preview-row" title="'+safe(x.title)+'"><span>'+x.label+'</span><div class="chart-track"><span style="width:'+x.percent+'%"></span></div><b>'+x.percent+'%</b></div>';}).join('')+'</div></section>'+
