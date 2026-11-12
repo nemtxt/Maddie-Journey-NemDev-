@@ -8,7 +8,7 @@
 
 The prototype consists of:
 - data.js: entirely fictional local fixture
-- data-adapter.js: source-neutral read-only adapter (sample mode)
+- data-adapter.js: source-neutral read-only adapter (sample mode) with structural fixture reporting
 - app.js: frontend UI, navigation, charts, summaries and previews
 - stylesheets: responsive light/dark visual system
 - tests/smoke.js: dependency-free regression checks
@@ -20,6 +20,8 @@ The present application reads the fixture through:
     window.MJ_SOURCE_ADAPTER.getProvenance()
 
 The adapter also exposes validateSnapshot(snapshot) for basic shape and ID checks. Those checks do not validate all HR semantics.
+
+The adapter also exposes getQualityReport() for fictional fixture checks: distinct IDs, division links, supervisor references, Journey array sizes and Welcome Kit array sizes. These checks **do not** confirm that any Airtable, Sheets or HR system contains verified records.
 
 Claude connectors are **account-scoped tools, not automatically browser-callable APIs**. Any later integration must run in an authorized environment, retrieve and normalize records, and provide the frontend a permission-filtered snapshot through a secure mechanism. No connector tokens, private records or backend secrets belong in this public GitHub repository.
 
@@ -70,6 +72,8 @@ Employee IDs must be cross-referenced across sources using a verified stable ide
 GitHub Pages is public. **Never publish real employee files, disciplinary actions, compensation, private emails, API tokens, OAuth secrets or authorized connector output as assets in this prototype.**
 
 The open-access/no-account experience is suitable for fictional sample data only. A production system with confidential HR records will need authentication and server-enforced access controls, even though the dashboard itself is a reader.
+
+For current v2.3 navigation, safe filtered exports, and physical-device QA steps, see [Prototype Acceptance](PROTOTYPE_ACCEPTANCE.md).
 
 ## UI acceptance requirements
 
