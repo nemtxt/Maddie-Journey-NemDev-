@@ -50,6 +50,12 @@ function boot(initial={},hash='',mutateFixture){
     setFilter(name,value){
       events.change({target:{dataset:{ui:name},value,checked:true}});
     },
+    key(key,opts={}){
+      const ev={key,ctrlKey:false,metaKey:false,shiftKey:false,target:{tagName:'BODY'},
+        preventDefault(){this.prevented=true;},...opts};
+      events.keydown(ev);
+      return ev;
+    },
     navigate(tab){this.click('nav',{tab});}
   };
 }
@@ -322,6 +328,33 @@ check('Division employee list shortcut selects a visible List tab',()=>{
   user.click('division-tab',{tab:'list'});
   assert(user.html().includes('class="table department-table"'));
   assert(user.html().includes('data-tab="list"'));
+});
+
+check('Keyboard search works across desktop platforms without hijacking typing',()=>{
+  user.navigate('overview');
+  const ctrl=user.key('k',{ctrlKey:true});
+  assert(ctrl.prevented);
+  assert(user.html().includes('data-ui="query"'));
+  user.navigate('overview');
+  const command=user.key('k',{metaKey:true});
+  assert(command.prevented);
+  assert(user.html().includes('data-ui="query"'));
+  user.navigate('overview');
+  const slash=user.key('/');
+  assert(slash.prevented);
+  assert(user.html().includes('data-ui="query"'));
+  user.navigate('overview');
+  const typing=user.key('/',{target:{tagName:'INPUT'}});
+  assert(!typing.prevented);
+  assert(user.html().includes('Organization overview'));
+});
+
+check('Escape closes the mobile navigation drawer',()=>{
+  user.navigate('overview');
+  user.click('mobile');
+  assert(user.html().includes('layout menu-open'));
+  user.key('Escape');
+  assert(!user.html().includes('layout menu-open'));
 });
 
 check('Every rendered screen uses handled action names',()=>{
