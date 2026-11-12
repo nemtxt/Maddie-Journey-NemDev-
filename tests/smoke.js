@@ -96,7 +96,8 @@ check('No access gate, saved persona, chooser or editable source controls remain
   assert(src['reader.css'].includes('.workspace-subnav'));
 });
 
-check('Landing links directly to HR, Division and Executive screens without a popup',()=>{
+check('Landing links directly to dashboard features without a popup',()=>{
+  user.navigate('welcome');
   assert(user.html().includes('landing-hero'));
   assert(user.html().includes('assets/madhouse-logo.png'));
   assert(!user.html().includes('Who is using the dashboard?'));
