@@ -1357,4 +1357,115 @@ check('Hover transitions are pointer-aware and support keyboard, touch and reduc
   assert(!entire.includes('data-action="save-file"'));
   assert(!entire.includes('type="file"'));
 });
+check('Shared icon module provides a consistent self-contained 24px SVG vocabulary',()=>{
+  const api={};new Function('window',src['icons.js'])(api);
+  const icons=api.MJ_ICONS;
+  assert(icons&&Object.isFrozen(icons));
+  assert(icons.names.length>=35);
+  const names=['grid','users','calendar','list','database','chart','file','briefcase',
+    'id-card','shield','check','minus','x','arrow-left','arrow-right','arrow-up-right',
+    'chevron-down','chevron-right','search','panel','sun','moon'];
+  for(const name of names){
+    assert(icons.names.includes(name),name);
+    const svg=icons.svg(name);
+    assert(svg.includes('class="ui-icon ui-icon-'+name+'"'));
+    assert(svg.includes('viewBox="0 0 24 24"'));
+    assert(svg.includes('stroke-width="1.8"'));
+    assert(svg.includes('aria-hidden="true" focusable="false"'));
+    assert(svg.includes('<svg')&&svg.includes('</svg>'));
+    assert(!svg.includes('<img')&&!svg.includes('http'));
+  }
+  assert(icons.svg('<script>').includes('ui-icon-circle-help'));
+  assert(!icons.svg('<script>').includes('<script>'));
+  assert(!src['icons.js'].includes('fetch('));
+  assert(!src['icons.js'].includes('innerHTML='));
+});
+check('Decorative emoji and miscellaneous pictograms are absent from rendered interfaces',()=>{
+  const unexpected=/[\u2300-\u23ff\u25a0-\u27bf\u{1f000}-\u{1faff}]/u;
+  for(const file of ['app.js','monitoring.js','icons.js','mono.css']){
+    assert(!unexpected.test(src[file]),file+' contains a decorative symbol');
+  }
+  assert(!src['mono.css'].includes('content:"↗"'));
+  user.navigate('overview');
+  let page=user.html();
+  assert(page.includes('ui-icon-users'));
+  assert(page.includes('ui-icon-checklist'));
+  assert(page.includes('ui-icon-briefcase'));
+  assert(page.includes('ui-icon-chart'));
+  assert(page.includes('ui-icon-arrow-up-right'));
+  assert(page.includes('ui-icon-chevron-right'));
+  assert(!page.includes('aria-hidden="true">↗</span>'));
+  user.navigate('welcome');
+  page=user.html();
+  assert(page.includes('ui-icon-arrow-right'));
+  assert(!page.includes('aria-hidden="true">→</span>'));
+});
+check('Employee previews and checklists use uniform icon controls with accessible labels',()=>{
+  user.navigate('employees');
+  const person=user.win.MJ_SEED.employees[0];
+  user.click('open',{id:person.id,detail:'journey'});
+  let html=user.html();
+  assert(html.includes('class="modal-close"'));
+  assert(html.includes('aria-label="Close employee preview"'));
+  assert(html.includes('ui-icon-x'));
+  assert(html.includes('ui-icon-arrow-left'));
+  assert(html.includes('ui-icon-arrow-right'));
+  assert(html.includes('ui-icon-check')||html.includes('ui-icon-minus'));
+  assert(!html.includes('aria-hidden="true">✓</span>'));
+  user.click('detail',{tab:'kit'});
+  html=user.html();
+  assert(html.includes('reader-check-icon'));
+  assert(html.includes('ui-icon-check')||html.includes('ui-icon-minus'));
+  user.click('close');
+});
+check('Document and calendar icons preserve status text and independent read-only controls',()=>{
+  user.navigate('files201');
+  let html=user.html();
+  for(const icon of ['briefcase','file','id-card','shield']){
+    assert(html.includes('ui-icon-'+icon),icon);
+  }
+  assert(html.includes('monitor-file-symbol'));
+  assert(html.includes('monitor-filter-symbol'));
+  assert(html.includes('ui-icon-alert-circle'));
+  assert(html.includes('Who is missing what'));
+  user.navigate('calendar');
+  html=user.html();
+  assert(html.includes('ui-icon-calendar'));
+  assert(html.includes('ui-icon-clock'));
+  assert(html.includes('ui-icon-arrow-left'));
+  assert(html.includes('ui-icon-arrow-right'));
+  assert(html.includes('ui-icon-arrow-up-right'));
+  assert(html.includes('Three-month outlook'));
+  assert(!html.includes('data-action="calendar-add"'));
+});
+check('Icon dependency failure cannot block navigation or file and calendar monitoring',()=>{
+  const instance=boot({},'#overview',null,win=>{delete win.MJ_ICONS;});
+  assert(instance.html().includes('Organization overview'));
+  assert(instance.html().includes('workspace-mainnav'));
+  assert(!instance.html().includes('ui-icon-'));
+  for(const route of ['files201','calendar','employees']){
+    assert.doesNotThrow(()=>instance.navigate(route));
+    assert(instance.html().includes('<h1>'),route);
+  }
+  instance.click('open',{id:'MJ-001',detail:'files201'});
+  assert(instance.html().includes('201 Files Checklist'));
+  instance.click('close');
+});
+check('Icons retain accessible sizes and keyboard, forced-color and motion styles',()=>{
+  const css=src['mono.css'],html=src['index.html'];
+  assert(html.indexOf('icons.js')>html.indexOf('data-adapter.js'));
+  assert(html.indexOf('icons.js')<html.indexOf('monitoring.js'));
+  assert(html.indexOf('monitoring.js')<html.indexOf('app.js'));
+  for(const phrase of [
+    'body .ui-icon','width:1.15rem;height:1.15rem',
+    'body .overview-summary-grid button.overview-signal .overview-signal-icon',
+    'body .reader-check-icon .ui-icon',
+    'body .monitor-file-symbol .ui-icon',
+    'body .monitor-calendar-controls .button',
+    '@media(forced-colors:active)',
+    '@media(prefers-reduced-motion:reduce)'
+  ])assert(css.includes(phrase),phrase);
+  assert(src['app.js'].includes("const routeTargets=['overview'"));
+  assert(src['app.js'].includes('routeTargets.includes(hash)'));
+});
 console.log('\n'+results.length+' smoke tests passed. Physical-device visual QA is separate.');
