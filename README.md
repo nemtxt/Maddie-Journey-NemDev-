@@ -1,4 +1,4 @@
-# Maddie Journey — Read-only Prototype v3.4.2
+# Maddie Journey — Read-only Prototype v3.5
 
 **Madhouse Design Studio · People & Culture**
 
@@ -27,6 +27,17 @@ The responsive frontend uses HTML, CSS and vanilla JavaScript, with a text-only 
 | Data & Sources | Data Sources · About the Prototype |
 
 All 13 screens are available to anyone using the fictional sample prototype. On desktop, the primary sidebar collapses to icon navigation and remembers the display preference locally; on mobile it remains a full-width accessible drawer. A division also offers its own Summary, Board, List and Org Chart tabs. Employee cards open centered view-only previews.
+
+### Phase 8 — v3.5 information density and reporting rhythm
+
+- **Compact / Comfortable:** Every monitoring screen now has one accessible **Compact rows** toggle in its page header. It stores only the display preference in local browser storage, preserves the current route, employee detail, filters and 51 fictional employee records, and never adds a form or editor. The toggle retains a stable label with `aria-pressed` indicating its state.
+- **Predictable tables:** Directory, Journey stage and detail tables, attendance period/employee reports, KPI category composition, review steps/queue and 201 Files lists use a consistent neutral header, tabular numerals, lighter supporting text and semantically marked column/row headers.
+- **Clear denominators:** Directory Journey, Welcome Kit and KPI columns retain their original percentages while exposing completed/possible task or item counts. The 201 Files summary distinguishes **matching employees** from **rows currently shown**, and Not applicable requirements remain excluded from its applicable denominator.
+- **Accessible context:** Screen-reader table captions explain the number of fictional people, the current stage or time scope, or the weighted category composition. An empty directory search explains the filter mismatch; a person without attendance entries is explicitly **not** described as perfectly present.
+- **Visual hierarchy:** Compact mode reduces excess padding in monitoring tables and operational rows, while comfortable mode retains familiar spacing. On touch-width viewports, important controls preserve 44px minimum targets and data tables retain keyboard-accessible horizontal scrolling. The one-viewport photographic landing is untouched.
+- **No new statuses or sources:** Phase 8 does not alter sample employee data, journey calculations, attendance verification, KPI weights, review decisions, dates, or disconnected provider states. Pastel accents, hover and shared 39-icon SVG system are preserved.
+- **Verification:** **104 source-level regression tests** passed covering compact preference persistence, tabular denominators, missing-data presentations, scoped captions, accessibility safeguards, deep links and non-mutation. **Rendered browser and device QA are still pending.**
+- [Phase 8 acceptance and manual QA](docs/PHASE8_REPORTING_QA.md)
 
 ### v3.4.2 — Consistent SVG icons (no decorative emoji)
 
@@ -193,7 +204,7 @@ The later connected-account phase can implement source normalization against the
 - Open index.html in a modern browser or use VS Code Live Server.
 - Run: node tests/smoke.js
 - On main, the custom GitHub Actions validation workflow runs the regression tests. Anime.js and the Inter web font are optional third-party CDN resources; UI navigation and sample data do not depend on their availability. GitHub Pages uses its separate publishing workflow.
-- Confirm both test and Pages workflow statuses under GitHub Actions. The automated suite currently includes 94 cases; physical Windows/macOS/Android/iOS visual acceptance remains separate.
+- Confirm both test and Pages workflow statuses under GitHub Actions. The automated suite currently includes 104 cases; physical Windows/macOS/Android/iOS visual acceptance remains separate.
 
 ## Source files
 

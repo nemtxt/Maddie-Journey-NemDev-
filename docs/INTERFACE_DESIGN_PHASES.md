@@ -1,7 +1,7 @@
 # Maddie Journey — Interface Improvement Roadmap
 
 **Goal:** Keep the monitoring workspace professional, calm, fast and immediately legible, rather than adding generic administrative pages or data-entry capabilities.  
-**Baseline:** v3.4.2 · 51 fictional employees · eight divisions · 13 read-only screens · five main navigation groups.  
+**Baseline:** v3.5 · 51 fictional employees · eight divisions · 13 read-only screens · five main navigation groups.  
 **Source boundary:** All data comes from local sample fixtures; any future Claude/Drive/Airtable connectors require a secure private integration layer.
 
 ## Phase 7 — Cross-workflow monitoring clarity (v3.4)
@@ -20,11 +20,13 @@ Subtle pastel categorization added for the monitoring summary tiles, operational
 
 All UI symbols in navigation, buttons, checklists, Calendar and document monitoring were replaced with one locally defined 39-icon SVG set. Consistent 24px coordinate grid, outline stroke, responsive sizing, accessible control labels, local-script failure fallback and no decorative emojis. Automated suite: **94 checks passed**. Browser/device visual confirmation remains open.
 
-## Phase 8 — Information density and reporting rhythm (proposed v3.5)
+## Phase 8 — Information density and reporting rhythm (v3.5)
 
-Enhancement: standardize table headers, compact numerical typography, group labels, dense/comfortable spacing, hierarchy between primary and supplementary details, filter counts and clear empty/no-evidence states. Prioritize information that helps an operator understand what is missing and why rather than decorative charts.
+**Status: Implemented; 104 automated checks passed. Rendered visual/device acceptance pending.**
 
-Completion: employees, Journey, attendance, KPI, reviews and document tables share predictable information order. All denominators and status labels remain unchanged and correct, keyboard scrolling still works, no new input fields are introduced.
+Introduced a locally persisted, read-only Compact rows preference, shared typography and number alignment, meaningful screen-reader table captions, employee task/kit denominators, selected-versus-visible document counts and explicit no-evidence states. Desktop row padding is optional and can be restored to Comfortable. Mobile touch targets and horizontal table accessibility are retained. No fixture data, status or source provenance changed.
+
+Completion verified at the source/interaction-test level: directory, Journey, attendance, KPI, review and 201 document tables display the same underlying calculations with a coherent information order. Manual viewport and screen-reader checks remain open; see [Phase 8 QA](PHASE8_REPORTING_QA.md).
 
 ## Phase 9 — Contextual employee-reader continuity (proposed v3.6)
 

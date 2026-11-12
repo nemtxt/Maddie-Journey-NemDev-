@@ -1,6 +1,6 @@
 # Maddie Journey — Prototype Acceptance Checklist
 
-Release: **v3.4.2**. Scope: **HTML/CSS/vanilla JavaScript + fictional fixture only**.
+Release: **v3.5**. Scope: **HTML/CSS/vanilla JavaScript + fictional fixture only**.
 
 This document distinguishes code-level verification from human visual acceptance. The automated smoke checks confirm the named routing and data contracts but cannot prove pixel-level accuracy on physical Windows, macOS, Android or iOS devices.
 
@@ -146,3 +146,13 @@ For the intended integration boundary, see [Claude Connector Handoff](CLAUDE_CON
 - **Accessibility:** Decorative SVGs have `aria-hidden="true"` and `focusable="false"`; controls retain meaningful visible text or `aria-label`. Existing keyboard focus, forced-colors support, ≥44px mobile hit targets and reduced-motion settings remain applicable.
 - **Fallback:** When `icons.js` cannot load, no functional navigation or read-only monitoring view should fail. Test direct links, modal previews and calendar filters with the icon module deliberately absent.
 - **Validation:** 94 automated smoke tests passed. Physical Chrome/Edge/Safari mobile rendering, actual accessible-name auditing and 200% zoom remain to be checked manually.
+
+## Phase 8 — Information density and reporting rhythm (v3.5)
+
+- **Compact toggle:** `Compact rows` must be available from every monitoring page header. The same label and `aria-pressed` state communicate whether Compact is active. The preference is stored locally as `maddie-journey-density`, with only `compact` or `comfortable` accepted. Refreshes and route changes must preserve the choice.
+- **Data unchanged:** Changing presentation density cannot mutate the immutable 51-employee source or change any Journey, Welcome Kit, KPI, attendance, review or 201 File count. It must not cause an editor, role gate or connector call.
+- **Semantic reporting:** Directory, Journey, attendance, KPI composition, review stages/queue and 201 Files tables have scoped header cells and screen-reader captions with meaningful denominators, while retaining plain-language status labels.
+- **Numeric alignment:** Applicable number columns use tabular numerals and consistent right alignment; percentages remain correct and retain their sample-only provenance. Dark/light backgrounds, pastel category colors and status text must remain legible.
+- **No-evidence states:** Zero directory results are a *filter mismatch*, not a data-source outage. An employee with zero attendance entries must not be represented as perfectly present. 201 File status categories and shown/filtered totals must reconcile exactly to the fixture.
+- **Responsive layout:** Compact mode may reduce table and list spacing but must not reduce mobile action targets below 44px, introduce page-wide horizontal scrolling or affect the non-scrolling landing. The existing keyboard-scrollable table regions remain functional.
+- **QA:** 104 dependency-free regression checks pass. Actual 320px–1920px rendered layout, 200% zoom, keyboard focus and screen-reader name testing remain mandatory manual acceptance steps. See [Phase 8 QA](PHASE8_REPORTING_QA.md).
