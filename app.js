@@ -203,8 +203,7 @@
       '<button type="button" class="division-secondary" data-action="open-org" data-division="'+safe(d.id)+'">Org chart</button></div></article>';
   }
   function divisionsView(){
-    const mine=assignedDivisionIds();
-    const sorted=data.divisions.slice().sort(function(a,b){return Number(mine.includes(b.id))-Number(mine.includes(a.id));});
+    const sorted=data.divisions.slice();
     return header('DEPARTMENTS','Divisions','Eight department dashboards with clear ownership, employee summaries and sample reporting charts.',button('Find an employee','nav','data-tab="employees"','small'))+
       '<section class="division-grid">'+sorted.map(divisionCard).join('')+'</section>';
   }
