@@ -1957,3 +1957,129 @@ body .overview-summary-grid button.overview-signal>span:first-child{
     padding-right:29px;line-height:1.35
   }
 }
+
+
+/* Phase 8 · v3.5 — consistent reporting rhythm and read-only density.
+   Keeps status text and source notes visible. No data or chart changes. */
+body .page-header .density-toggle{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  min-height:40px;padding:9px 13px;border:1px solid var(--mono-border);
+  border-radius:9px;background:var(--mono-surface);color:var(--mono-secondary);
+  font-size:11px;font-weight:680;white-space:nowrap;cursor:pointer;
+  font-variant-numeric:tabular-nums
+}
+body .page-header .density-toggle .ui-icon{width:16px;height:16px}
+body .page-header .density-toggle:hover{
+  border-color:var(--mj-pastel-stroke);background:var(--mj-pastel-neutral-hover)
+}
+body .page-header .density-toggle.active{
+  background:var(--mj-pastel-lilac);color:var(--mono-text);
+  border-color:var(--mj-pastel-stroke)
+}
+body .page-header .density-toggle:focus-visible{
+  outline:3px solid var(--mj-focus-accent);outline-offset:2px
+}
+body .table{
+  font-variant-numeric:tabular-nums;
+  border-collapse:separate;border-spacing:0;
+}
+body .table :is(th,td){
+  font-size:12px;line-height:1.46;
+  padding:12px 14px;
+  vertical-align:middle;
+}
+body .table thead th{
+  font-size:10.5px!important;
+  line-height:1.4;font-weight:740!important;
+  letter-spacing:.018em;
+  background:var(--mono-soft)!important;
+  color:var(--mono-secondary)!important;
+  border-bottom:1px solid var(--mono-border);
+  white-space:nowrap
+}
+body .table tbody th[scope="row"]{
+  color:var(--mono-text);font-weight:660;
+  background:transparent;text-align:left
+}
+body .table tbody tr:last-child > :is(th,td){border-bottom-color:transparent}
+body .table :is(td,th).report-num{
+  text-align:right;font-variant-numeric:tabular-nums;
+  font-feature-settings:"tnum" 1
+}
+body :is(.attendance-period-table,.kpi-composition-table) thead th:not(:first-child){
+  text-align:right
+}
+body .table:not(.monitor-files-table):not(.monitor-file-detail-table) thead th:last-child{
+  min-width:66px
+}
+body .report-cell-sub,
+body .table .report-cell-sub{
+  display:block;margin-top:4px;line-height:1.42;
+  font-size:10px;color:var(--mono-secondary);font-weight:500
+}
+body .table :is(strong,.report-date){
+  font-variant-numeric:tabular-nums
+}
+body .table .name-cell{min-width:0}
+body .table .name-cell>div{min-width:0}
+body .table .name-cell small{overflow-wrap:anywhere}
+body .report-empty{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:8px;min-height:140px;padding:24px 18px;text-align:center;
+  color:var(--mono-secondary);line-height:1.5
+}
+body .report-empty strong{
+  color:var(--mono-text);font-size:13px;font-weight:740
+}
+body .report-empty p{
+  margin:0;max-width:48ch;font-size:11px;line-height:1.6;
+  color:var(--mono-secondary)
+}
+body .table td.report-empty-cell{
+  padding:24px;text-align:center;color:var(--mono-secondary);
+  font-size:11px;line-height:1.6;white-space:normal
+}
+body .monitor-files-table .report-empty-cell{min-height:90px}
+body .monitor-file-requirements{line-height:1.5}
+body .monitor-files-table th:first-child strong{line-height:1.4}
+body .monitor-file-status{font-variant-numeric:tabular-nums}
+/* Density only changes visual breathing room, not input size or row visibility. */
+body .layout.density-compact .table :is(th,td){
+  padding:8px 12px;line-height:1.4
+}
+body .layout.density-compact .table thead th{
+  padding-block:10px
+}
+body .layout.density-compact .table .report-cell-sub{
+  margin-top:2px
+}
+body .layout.density-compact :is(.scope-member-row,.scope-division-row,
+  .work-list-row,.monitor-division-row){
+  padding-block:9px
+}
+body .layout.density-compact .monitor-files-table td.report-empty-cell{
+  padding:18px
+}
+body .layout.density-compact .table .button,
+body .layout.density-comfortable .table .button{
+  min-height:40px
+}
+body .layout.density-compact .monitor-calendar-date.has-events,
+body .layout.density-compact .calendar-date{
+  min-height:44px
+}
+@media(max-width:760px){
+  body .page-header .density-toggle{min-height:44px;max-width:100%}
+  body .layout.density-compact .table :is(th,td){padding:10px 11px}
+  body .layout.density-compact .table .button,
+  body .layout.density-comfortable .table .button{min-height:44px}
+}
+@media(prefers-reduced-motion:reduce){
+  body .page-header .density-toggle{transition:none!important}
+}
+@media(forced-colors:active){
+  body .page-header .density-toggle{
+    background:Canvas!important;color:CanvasText!important;border-color:CanvasText!important
+  }
+  body .page-header .density-toggle.active{outline:2px solid Highlight;outline-offset:-2px}
+}
