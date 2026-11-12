@@ -1,0 +1,231 @@
+/* Maddie Journey v1.7 | Genuine Madhouse Design Studio landing
+   Only the supplied Madhouse logo is used. No invented Maddie mark.
+   Assets: supplied Madhalloween team photograph and original official logo. */
+:root {
+  --land-ink:#3b2039;
+  --land-sub:#674965;
+  --land-pink:#ed4e91;
+  --land-pink-dark:#d82e77;
+  --land-yellow:#ffedaf;
+  --land-blue:#cde8ff;
+  --land-violet:#e7d8ff;
+  --land-surface:rgba(255,251,254,.89);
+  --land-border:rgba(255,255,255,.75);
+}
+html[data-theme="dark"] {
+  --land-ink:#fff4fa;
+  --land-sub:#e7cfdc;
+  --land-pink:#ff7aac;
+  --land-pink-dark:#ed558e;
+  --land-yellow:#ffebb5;
+  --land-blue:#cce6ff;
+  --land-violet:#e5d3ff;
+  --land-surface:rgba(35,24,38,.85);
+  --land-border:rgba(255,255,255,.18);
+}
+body:has(.landing-shell){margin:0;overflow-x:hidden}
+.landing-shell {
+  position:relative;
+  isolation:isolate;
+  min-height:100vh;
+  min-height:100dvh;
+  padding:16px clamp(14px,2.6vw,44px) max(25px,env(safe-area-inset-bottom));
+  overflow:hidden;
+  color:var(--land-ink);
+  background:
+    radial-gradient(ellipse at 5% 102%,rgba(255,151,202,.72),transparent 45%),
+    radial-gradient(ellipse at 95% 110%,rgba(165,208,252,.60),transparent 43%),
+    linear-gradient(155deg,#fceaf3 0%,#fff5f8 64%,#fff4df 100%);
+  font-family:Inter,"Segoe UI",Arial,sans-serif;
+  transition:color .28s,background-color .35s;
+}
+html[data-theme="dark"] .landing-shell{
+  background:
+    radial-gradient(ellipse at 8% 105%,rgba(125,41,94,.46),transparent 48%),
+    radial-gradient(ellipse at 95% 110%,rgba(45,70,135,.28),transparent 50%),
+    linear-gradient(155deg,#1c111b,#20131d 68%,#222035);
+}
+.landing-shell::before,
+.landing-shell::after{
+  content:"";position:absolute;z-index:-1;pointer-events:none;bottom:-75px;width:68%;height:170px;
+  border-radius:50% 50% 0 0 / 80% 80% 0 0;opacity:.75;
+}
+.landing-shell::before{left:-19%;background:linear-gradient(90deg,#ffaed0,#fff1bd);transform:rotate(3deg)}
+.landing-shell::after{right:-25%;background:linear-gradient(90deg,#cde5ff,#ffebb5);transform:rotate(-3deg)}
+html[data-theme="dark"] .landing-shell::before,
+html[data-theme="dark"] .landing-shell::after{opacity:.17}
+.landing-main{max-width:1720px;margin:auto;position:relative}
+.landing-header{
+  position:relative;z-index:5;display:flex;align-items:center;justify-content:space-between;
+  min-height:77px;gap:24px;
+  padding:13px clamp(17px,2.7vw,42px);
+  border:1px solid var(--land-border);border-radius:26px;
+  background:var(--land-surface);
+  backdrop-filter:blur(24px) saturate(130%);
+  -webkit-backdrop-filter:blur(24px) saturate(130%);
+  box-shadow:0 9px 40px rgba(83,25,63,.11);
+}
+.landing-brand{display:flex;align-items:center;gap:clamp(12px,2vw,28px);min-width:0;text-decoration:none;color:inherit}
+.landing-official-logo{width:clamp(165px,21vw,300px);max-height:57px;height:auto;object-fit:contain;flex-shrink:1}
+.landing-brand-separator{height:31px;width:1px;background:rgba(104,65,92,.28);flex:0 0 1px}
+.landing-brand-title{font-size:clamp(15px,1.75vw,26px);font-weight:700;letter-spacing:-.035em;white-space:nowrap;line-height:1.15}
+.landing-header-actions{display:flex;align-items:center;gap:clamp(9px,1.5vw,23px);flex-shrink:0}
+.landing-header .theme-control{border-color:rgba(104,65,92,.18);background:rgba(255,255,255,.55)}
+.landing-header .theme-choice{color:#59435c}
+.landing-header .theme-choice.active{background:#fff;color:#352039;border-color:#f4d6e5}
+html[data-theme="dark"] .landing-header .theme-control{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18)}
+html[data-theme="dark"] .landing-header .theme-choice{color:#e6dce6}
+html[data-theme="dark"] .landing-header .theme-choice.active{background:rgba(255,255,255,.16);color:#fff;border-color:rgba(255,255,255,.17)}
+.landing-demo-label{font-size:12px;font-weight:600;white-space:nowrap;color:var(--land-sub);border-left:1px solid rgba(105,66,93,.18);padding-left:18px}
+.landing-header-cta,
+.landing-primary-cta{
+  display:inline-flex;justify-content:center;align-items:center;gap:16px;
+  min-height:46px;padding:10px 24px;border-radius:999px;
+  background:linear-gradient(125deg,#fa75a7,var(--land-pink-dark));
+  color:#fff;box-shadow:0 8px 20px rgba(219,40,117,.18);font-weight:700;
+  font-size:13px;text-decoration:none;white-space:nowrap;
+  transition:transform .2s,box-shadow .2s,filter .2s;
+}
+.landing-header-cta:hover,.landing-primary-cta:hover{filter:brightness(1.04);transform:translateY(-2px);box-shadow:0 10px 26px rgba(219,40,117,.25);color:#fff}
+.landing-header-cta span,.landing-primary-cta span{font-size:20px;line-height:1}
+.landing-hero{
+  position:relative;min-height:clamp(450px,44vw,620px);
+  overflow:hidden;border-radius:24px;margin-top:13px;display:flex;align-items:center;
+  background-image:
+    linear-gradient(90deg,rgba(53,22,41,.92) 0%,rgba(73,29,50,.77) 33%,rgba(81,29,48,.20) 76%,rgba(65,25,46,.12) 100%),
+    linear-gradient(0deg,rgba(88,31,58,.48) 0%,rgba(88,31,58,0) 36%),
+    url("./assets/madhalloween-hero.webp");
+  background-size:cover;
+  background-position:center center;
+  background-color:#5c2c45;
+  isolation:isolate;
+}
+.landing-hero::after{content:"";position:absolute;inset:auto 0 0;height:80px;pointer-events:none;background:linear-gradient(0deg,rgba(111,42,78,.35),transparent)}
+.landing-hero-inner{width:min(760px,68%);position:relative;z-index:1;margin:40px clamp(20px,4vw,65px) 62px;color:#fff}
+.landing-kicker{display:flex;align-items:center;gap:13px;font-size:12px;font-weight:650;letter-spacing:.03em;color:#ffe6f4}
+.landing-kicker-line{height:5px;width:50px;border-radius:99px;background:#ffdf7a}
+.landing-hero h1{font-size:clamp(45px,5.6vw,84px);color:#fff;letter-spacing:-.06em;line-height:1.08;margin:21px 0 16px;font-weight:750}
+.landing-hero-lead{font-size:clamp(21px,2.15vw,34px);font-weight:600;line-height:1.23;letter-spacing:-.035em;max-width:720px;color:#fff;margin:0 0 17px}
+.landing-hero-copy{font-size:clamp(14px,1.14vw,18px);color:#ffe9f4;max-width:570px;line-height:1.5;font-weight:450;margin:0}
+.landing-hero-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:27px}
+.landing-hero-actions a{min-height:52px;padding-inline:26px;font-size:14px}
+.landing-secondary-cta{
+  display:inline-flex;justify-content:center;align-items:center;gap:14px;
+  min-height:46px;padding:10px 23px;background:rgba(255,255,255,.96);
+  border:1px solid rgba(255,255,255,.5);border-radius:999px;color:#4f294a;
+  font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap;
+  transition:transform .2s,background-color .2s;
+}
+.landing-secondary-cta:hover{background:#fff;transform:translateY(-2px);color:#4f294a}
+.landing-section-heading{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin:22px 5px 12px}
+.landing-section-heading h2{font-size:16px;font-weight:700;color:var(--land-ink)}
+.landing-section-heading p{font-size:12px;color:var(--land-sub);margin:0}
+.landing-audience-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.landing-audience-card{
+  display:flex;align-items:center;text-align:left;gap:15px;min-height:105px;padding:18px;
+  background:var(--land-surface);border:1px solid var(--land-border);border-radius:21px;
+  box-shadow:0 7px 23px rgba(88,27,68,.08);color:var(--land-ink);
+  transition:transform .2s,background-color .25s,border-color .25s;
+  cursor:pointer;
+}
+.landing-audience-card:hover,.landing-shortcut:hover{transform:translateY(-2px);border-color:rgba(243,125,178,.68)}
+.landing-audience-icon,
+.landing-shortcut-icon{display:grid;place-items:center;flex-shrink:0;width:55px;height:55px;border-radius:14px;font-size:27px;font-weight:500}
+.tone-pink{background:#ffcae0;color:#d52773}
+.tone-yellow{background:#fff0ba;color:#aa741a}
+.tone-blue{background:#cbe7ff;color:#1268bd}
+.tone-violet{background:#e6d6ff;color:#734bce}
+.landing-audience-copy{min-width:0;display:flex;flex-direction:column;gap:5px;flex:1}
+.landing-audience-copy strong{font-size:clamp(14px,1.16vw,19px);font-weight:700;line-height:1.27;letter-spacing:-.025em}
+.landing-audience-copy small{font-size:12px;line-height:1.45;color:var(--land-sub)}
+.landing-card-chevron{color:var(--land-sub);font-size:28px;line-height:1}
+.landing-shortcuts{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;
+  margin:20px 0 0;border:1px solid var(--land-border);
+  border-radius:23px;background:var(--land-surface);padding:19px 13px;
+  box-shadow:0 9px 25px rgba(88,27,68,.08);
+}
+.landing-shortcut{display:flex;align-items:center;min-width:0;gap:13px;padding:5px 20px;text-decoration:none;color:var(--land-ink);transition:transform .2s}
+.landing-shortcut:not(:last-child){border-right:1px solid rgba(121,66,96,.18)}
+.landing-shortcut-icon{width:47px;height:47px;font-size:22px;border-radius:13px}
+.landing-shortcut strong{display:block;font-size:15px;font-weight:700;line-height:1.28;white-space:nowrap}
+.landing-shortcut small{display:block;font-size:12px;color:var(--land-sub);line-height:1.35;margin-top:4px}
+.landing-footer{display:flex;justify-content:space-between;gap:12px;align-items:center;margin:22px 4px 0;font-size:11px;color:var(--land-sub);padding-bottom:10px}
+.landing-shell a:focus-visible,.landing-shell button:focus-visible{outline:3px solid #3e8bcc;outline-offset:4px}
+.sidebar-official-logo{display:block;max-width:183px;width:100%;height:auto;object-fit:contain}
+.brand-official-link{display:flex;flex-direction:column;align-items:flex-start;gap:7px;min-width:0;text-decoration:none;color:var(--nem-sidebar-ink)}
+.brand-official-link:hover{color:var(--nem-sidebar-ink)}
+.brand-product-name{display:block;font-weight:650;font-size:13px;letter-spacing:-.03em;line-height:1.2}
+.mobile-brand{gap:11px;min-width:0;color:var(--nem-sidebar-ink);text-decoration:none}
+.mobile-brand .mobile-official-logo{width:115px;height:auto;max-height:23px;object-fit:contain}
+.mobile-brand b{font-size:13px;white-space:nowrap;letter-spacing:-.03em}
+@media(max-width:1180px){
+  .landing-header{gap:13px;padding-inline:21px}
+  .landing-brand{gap:15px}
+  .landing-official-logo{width:clamp(165px,19vw,225px)}
+  .landing-brand-title{font-size:clamp(15px,1.6vw,20px)}
+  .landing-header-actions{gap:12px}
+  .landing-header-cta{padding:10px 15px}
+  .landing-hero-inner{width:min(680px,72%)}
+  .landing-shortcut{padding-inline:13px}
+  .landing-audience-card{padding:14px;gap:10px}
+}
+@media(max-width:920px){
+  .landing-demo-label{display:none}
+  .landing-header-cta{min-height:41px}
+  .landing-hero{min-height:520px;background-position:59% center}
+  .landing-hero-inner{width:min(590px,80%)}
+  .landing-audience-grid{grid-template-columns:1fr}
+  .landing-audience-card{min-height:77px}
+  .landing-audience-icon{width:48px;height:48px}
+  .landing-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:15px}
+  .landing-shortcut:nth-child(2){border-right:0}
+}
+@media(max-width:640px){
+  .landing-shell{padding:10px 10px max(16px,env(safe-area-inset-bottom))}
+  .landing-header{padding:13px 14px;gap:10px;flex-wrap:wrap;border-radius:17px}
+  .landing-brand{flex:1;gap:10px;min-width:0}
+  .landing-official-logo{width:145px;max-height:30px}
+  .landing-brand-separator{height:21px}
+  .landing-brand-title{font-size:16px;white-space:normal;line-height:1.02;max-width:76px}
+  .landing-header-actions{width:100%;justify-content:space-between}
+  .landing-header .theme-choice{min-width:58px}
+  .landing-header-cta{min-height:36px;font-size:11px;padding:7px 13px}
+  .landing-hero{min-height:520px;margin-top:10px;border-radius:15px;align-items:flex-end;background-position:55% center;
+    background-image:
+      linear-gradient(0deg,rgba(48,20,37,.94) 0%,rgba(65,24,48,.79) 52%,rgba(77,28,56,.14) 100%),
+      url("./assets/madhalloween-hero.webp");
+  }
+  .landing-hero-inner{width:100%;margin:30px 20px 35px}
+  .landing-kicker{font-size:11px;line-height:1.4}
+  .landing-kicker-line{width:28px}
+  .landing-hero h1{font-size:clamp(38px,9vw,53px);margin:13px 0 11px}
+  .landing-hero-lead{font-size:clamp(20px,5vw,26px)}
+  .landing-hero-copy{font-size:13px;max-width:360px}
+  .landing-hero-actions{margin-top:20px;gap:9px}
+  .landing-hero-actions a{min-height:46px;font-size:12px;padding-inline:16px}
+  .landing-section-heading{align-items:flex-start;flex-direction:column;gap:4px;margin:20px 4px 11px}
+  .landing-section-heading h2{font-size:15px}
+  .landing-section-heading p{font-size:11px}
+  .landing-audience-grid{gap:9px}
+  .landing-audience-card{min-height:75px;border-radius:15px}
+  .landing-audience-copy strong{font-size:14px}
+  .landing-audience-copy small{font-size:11px}
+  .landing-shortcuts{border-radius:16px;padding:11px 8px;gap:5px}
+  .landing-shortcut{gap:8px;padding:9px 6px;border:0!important}
+  .landing-shortcut-icon{width:37px;height:37px;font-size:19px}
+  .landing-shortcut strong{font-size:12px}
+  .landing-shortcut small{font-size:10px}
+  .landing-footer{flex-direction:column;align-items:flex-start;gap:4px;margin-top:18px;font-size:10px}
+  .mobile-brand .mobile-official-logo{width:92px}
+  .mobile-brand b{font-size:11px}
+}
+@media(max-width:360px){
+  .landing-brand-title{max-width:64px;font-size:14px}
+  .landing-official-logo{width:132px}
+  .landing-hero-actions{flex-direction:column;align-items:stretch}
+  .landing-hero-actions a{width:100%}
+}
+@media(prefers-reduced-motion:reduce){
+  .landing-shell *, .landing-shell *::before,.landing-shell *::after{transition:none!important;animation:none!important}
+}
