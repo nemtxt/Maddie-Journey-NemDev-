@@ -655,6 +655,7 @@
   function sourcesView(){
     const catalog=window.MJ_SOURCE_ADAPTER.getSources();
     const provenance=window.MJ_SOURCE_ADAPTER.getProvenance();
+    const quality=window.MJ_SOURCE_ADAPTER.getQualityReport();
     return header('DATA CONNECTIONS','Data sources',
       'A transparent handoff plan for integrating the future Claude-connected source systems.')+
       '<div class="source-banner"><span class="source-banner-icon">i</span><div><strong>Sample mode · No connected accounts required</strong>'+
@@ -665,6 +666,17 @@
         '<p>'+safe(source.kind)+'</p><div class="source-card-bottom"><span>'+safe(source.scope)+'</span>'+
         '<span>No last sync</span></div></article>';
       }).join('')+'</section>'+
+      '<section class="panel source-quality"><div class="panel-head"><div><h2>Sample data integrity</h2>'+
+      '<p>Structural checks on the fictional fixture only — not verification against any real source</p></div>'+
+      '<span class="source-quality-state '+(quality.structureValid?'good':'warning')+'">'+
+      (quality.structureValid?'Structure checks passed':'Fixture needs review')+'</span></div>'+
+      '<div class="source-quality-stats"><div><strong>'+quality.uniqueEmployeeIds+'</strong><small>Unique employee IDs</small></div>'+
+      '<div><strong>'+quality.divisionCount+'</strong><small>Division references</small></div>'+
+      '<div><strong>'+quality.stageCount+'</strong><small>Journey stages</small></div>'+
+      '<div><strong>'+quality.kitItemCount+'</strong><small>Welcome Kit items</small></div></div>'+
+      (quality.issueCount?'<p class="source-quality-warning">'+quality.issueCount+' structural issue(s) found. Review the sample fixture before connecting data.</p>':
+      '<p class="muted micro">No missing sample IDs, division links, supervisor links, Journey arrays or Kit arrays detected.</p>')+
+      '</section>'+
       '<section class="panel source-policy"><h2>Planned integration architecture</h2>'+
       '<p><strong>Phase 1 — GitHub:</strong> Finish HTML, CSS, JavaScript, responsive pages and navigation with a read-only fictional dataset. The source adapter provides a stable data shape.</p>'+
       '<p><strong>Phase 2 — Claude workspace:</strong> Use authorized account-scoped connectors or a controlled service to retrieve provider records, normalize them by employee ID and return permission-filtered summaries. The original systems retain ownership.</p>'+
