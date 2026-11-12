@@ -174,9 +174,8 @@
     const compact=ui.density==='compact';
     return '<button type="button" class="button small density-toggle'+(compact?' active':'')+
       '" data-action="toggle-density" aria-pressed="'+compact+
-      '" aria-label="'+(compact?'Use comfortable monitoring row spacing':'Use compact monitoring row spacing')+
-      '" title="Table and list spacing only">'+landingIcon(compact?'grid':'list')+
-      '<span>'+(compact?'Comfortable rows':'Compact rows')+'</span></button>';
+      '" aria-label="Compact monitoring rows" title="Adjusts table and list spacing only">'+
+      landingIcon('list')+'<span>Compact rows</span></button>';
   }
   function header(eyebrow,heading,description,actions){
     return '<div class="page-header"><div><div class="eyebrow">'+safe(eyebrow)+
