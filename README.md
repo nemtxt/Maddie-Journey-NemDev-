@@ -8,11 +8,11 @@ A lightweight, button-first People & Culture prototype built using **HTML, CSS a
 
 Open `index.html` in a modern browser for a local test. The first screen is the official-logo landing page.
 
-To deploy, open **GitHub repository → Settings → Pages → Deploy from a branch → main / (root) → Save**. After GitHub reports a successful publication, the expected URL is:
+To deploy with the included test-and-deploy workflow: open **GitHub repository → Settings → Pages → Build and deployment → Source: GitHub Actions**. Save this one-time setting. Every subsequent push to `main` runs `node tests/smoke.js`, then deploys the static site if the tests pass. View results in the repository's **Actions** tab. A public repository can use this workflow without adding a paid backend. After GitHub reports a successful Pages publication, the expected URL is:
 
 https://nemtxt.github.io/Maddie-Journey-NemDev-/
 
-The URL is not assumed live until Pages publication is verified.
+The URL is not assumed live until Pages publication is verified. GitHub Pages must be enabled for this repository; committing the workflow alone does not prove that deployment succeeded.
 
 ## v1.8 — Original artwork and unified pastel operations interface
 
@@ -136,6 +136,10 @@ Do not store real employee details, disciplinary actions, salaries, passwords, a
 - `tests/smoke.js` — dependency-free regression checks
 - `data.js` — fictional 51-person dataset and initial milestone records
 - `app.js` — workflows, charts, edit dialogs, local storage and exports
+
+### GitHub Pages automation
+
+The repository includes `.github/workflows/pages.yml`. It tests before attempting deployment; a failed test blocks publication. Choose **GitHub Actions** as the Pages source under Settings. Do not publish confidential HR data or credentials in this static project.
 
 ### Branding assets
 
