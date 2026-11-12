@@ -42,7 +42,7 @@
       }).length;};
       const complete=count('complete'),missing=count('missing'),unchecked=count('not-checked'),na=count('not-applicable');
       return '<article class="monitor-file-card"><span class="monitor-file-type">'+esc(doc.group)+'</span>'+
-        '<h3>'+esc(doc.label)+'</h3><strong>'+complete+' <small>/ '+total+' complete</small></strong>'+
+        '<h3>'+esc(doc.label)+'</h3><strong>'+complete+' <small>/ '+(total-na)+' applicable complete</small></strong>'+
         '<div class="monitor-file-counts"><span>'+missing+' missing</span><span>'+unchecked+' not checked</span>'+
         (na?'<span>'+na+' N/A</span>':'')+'</div></article>';
     }).join('');
