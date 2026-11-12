@@ -7,9 +7,21 @@
   const $=function(id){return document.getElementById(id);};
   const clone=function(x){return JSON.parse(JSON.stringify(x));};
   let data;
-  try {const raw=JSON.parse(localStorage.getItem(KEY));data=(raw&&raw.version===seed.version&&Array.isArray(raw.employees)&&raw.employees.length===51)?raw:clone(seed);}catch(err){data=clone(seed);}
+  try {
+    const raw=JSON.parse(localStorage.getItem(KEY));
+    const valid=raw&&[3,4].includes(raw.version)&&Array.isArray(raw.employees)&&raw.employees.length===51;
+    data=valid?raw:clone(seed);
+    if(valid&&raw.version===3){
+      // Preserve all saved scores and comments. Reallocate only untouched fictional
+      // Design samples to the new Design Operations division (no real employees).
+      const untouched=data.employees.filter(function(e){return e.division==='design'&&!e.modifiedAt&&!(e.audit||[]).length;});
+      untouched.forEach(function(e,i){if(i%2===1)e.division='designops';});
+      data.version=seed.version;
+      try{localStorage.setItem(KEY,JSON.stringify(data));}catch(err){}
+    }
+  }catch(err){data=clone(seed);}
   data.viewers=clone(seed.viewers); data.divisions=clone(seed.divisions); data.stages=clone(seed.stages); data.kit=clone(seed.kit);
-  let ui={tab:'overview',viewer:'giezelle',division:'all',activeDivision:'rmd',query:'',employee:data.employees[0].id,detail:'preview',drawer:false,roleModal:false,divisionModal:false,employeePicker:false,pickerDivision:'rmd',frequency:'monthly',mobile:false};
+  let ui={tab:'overview',viewer:'giezelle',division:'all',activeDivision:'rmd',scope:'all',divisionPickerMode:'view',query:'',employee:data.employees[0].id,detail:'preview',drawer:false,roleModal:false,divisionModal:false,employeePicker:false,pickerDivision:'rmd',frequency:'monthly',mobile:false};
   try {const saved=JSON.parse(sessionStorage.getItem('maddie-journey-ui')||'null');if(saved&&saved.viewer)ui.viewer=saved.viewer;}catch(err){}
   const now=function(){return new Date().toISOString().slice(0,10);};
   const safe=function(v){return String(v===undefined||v===null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
@@ -17,6 +29,13 @@
   const viewer=function(){return data.viewers.find(function(v){return v.id===ui.viewer;})||data.viewers[0];};
   const emp=function(id){return data.employees.find(function(e){return e.id===(id||ui.employee);});};
   const div=function(id){return data.divisions.find(function(d){return d.id===id;})||{name:id,short:id,evaluators:[]};};
+  const scopedEmployees=function(){return ui.scope==='all'?data.employees:data.employees.filter(function(e){return e.division===ui.scope;});};
+  const scopeLabel=function(){return ui.scope==='all'?'All 8 divisions':div(ui.scope).name;};
+  function ensureEmployeeScope(){
+    const es=scopedEmployees();
+    if(es.length&&!es.some(function(e){return e.id===ui.employee;}))ui.employee=es[0].id;
+    return es;
+  }
   const roleCanHead=function(e){const v=viewer();return !!(e&&(v.role==='head'||v.role==='corp')&&(v.divisions||[]).includes(e.division));};
   const isHR=function(){return viewer().role==='hr';};
   const canTrack=function(e){return isHR()||roleCanHead(e);};
