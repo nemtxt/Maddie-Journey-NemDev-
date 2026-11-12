@@ -9,7 +9,7 @@
   const clone=function(x){return JSON.parse(JSON.stringify(x));};
   const data=clone(seed);
   const VIEWER_KEY='maddie-journey-viewer-v2';
-  let ui={tab:'welcome',viewer:'ceo',division:'all',activeDivision:'rmd',scope:'all',divisionPickerMode:'view',query:'',employee:data.employees[0].id,detail:'preview',employeeModalOpen:false,roleModal:false,divisionModal:false,employeePicker:false,pickerDivision:'rmd',frequency:'monthly',mobile:false,milestoneCategory:'birthday',milestoneDivision:'all',milestoneShowAll:false,milestonePicking:false,divisionTab:'summary',attentionFilter:'all',attentionShowAll:false,workView:'list',journeyView:'board',workspaceChosen:false,chooserCategory:'all'};
+  let ui={tab:'welcome',viewer:'ceo',division:'all',activeDivision:'rmd',scope:'all',divisionPickerMode:'view',query:'',employee:data.employees[0].id,detail:'preview',employeeModalOpen:false,roleModal:false,divisionModal:false,employeePicker:false,pickerDivision:'rmd',frequency:'monthly',mobile:false,milestoneCategory:'birthday',milestoneDivision:'all',milestoneShowAll:false,milestonePicking:false,divisionTab:'summary',attentionFilter:'all',attentionShowAll:false,workView:'list',journeyView:'board',journeyShowAll:false,workspaceChosen:false,chooserCategory:'all'};
   try{
     const savedId=localStorage.getItem(VIEWER_KEY);
     if(data.viewers.some(function(v){return v.id===savedId;})){ui.viewer=savedId;ui.workspaceChosen=true;}
@@ -421,10 +421,61 @@
   }
 
   function employeeSelector(){ensureEmployeeScope();const e=emp();return '<label class="field-label">Selected employee</label><button type="button" class="employee-picker-trigger" data-action="choose-employee" aria-haspopup="dialog" aria-label="Choose an employee">'+avatar(e.name)+'<span><b>'+safe(e.name)+'</b><small>'+safe(div(e.division).short)+' · '+safe(e.id)+'</small></span><strong>Change member ↗</strong></button>';}
-  function journey(){
-    return header('ONBOARDING','Journey tracker','Explore the seven-stage onboarding board and open an employee to inspect their progress.',button('Browse divisions','nav','data-tab="divisions"','small'))+
-      trackerRoster('journey');
+  function journeyStage(e){
+    const stage=e.journey.findIndex(function(items){return !items.every(Boolean);});
+    return stage<0?7:stage;
   }
+  function journeyKanban(staff){
+    const stages=data.stages.map(function(stage,i){return {index:i,label:stage.name,timing:stage.timing};}).concat([{index:7,label:'Journey completed',timing:'All seven stages'}]);
+    const limit=ui.journeyShowAll?1000:8;
+    return '<section class="journey-kanban" aria-label="Seven-stage Journey Kanban board">'+stages.map(function(stage){
+      const members=staff.filter(function(e){return journeyStage(e)===stage.index;}).sort(function(a,b){return a.name.localeCompare(b.name);});
+      return '<div class="journey-lane" data-stage-index="'+stage.index+'">'+
+        '<div class="journey-lane-head"><div class="journey-lane-title"><span class="journey-stage-dot"></span><strong>'+
+        (stage.index<7?'Stage '+(stage.index+1):'Completed')+'</strong><span class="journey-stage-count">'+members.length+'</span></div>'+
+        '<h3>'+safe(stage.label)+'</h3><p>'+safe(stage.timing)+'</p></div>'+
+        '<div class="journey-lane-scroll">'+(members.length?members.slice(0,limit).map(function(e){
+          const stageItems=e.journey[stage.index]||[],count=stageItems.filter(Boolean).length;
+          const progressOfStage=stage.index===7?100:Math.round(count/Math.max(1,stageItems.length)*100);
+          return '<button type="button" class="journey-person" data-action="open" data-id="'+safe(e.id)+'" data-detail="journey"'+
+            ' aria-label="Preview '+safe(e.name)+' Journey progress"><span class="journey-person-head">'+avatar(e.name)+
+            '<span><strong>'+safe(e.name)+'</strong><small>'+safe(div(e.division).short)+' · '+safe(e.jobTitle)+'</small></span></span>'+
+            '<span class="journey-person-progress"><span>'+ (stage.index===7?'Journey complete':'Current stage · '+count+'/'+stageItems.length)+'</span><b>'+journeyPct(e)+'% total</b></span>'+
+            '<span class="work-card-progress"><span style="width:'+progressOfStage+'%"></span></span></button>';
+        }).join(''):'<p class="journey-lane-empty">No sample employees</p>')+'</div>'+
+        (!ui.journeyShowAll&&members.length>limit?'<p class="journey-lane-more">+'+(members.length-limit)+' more · Switch to Table for all</p>':'')+
+        '</div>';
+    }).join('')+'</section>';
+  }
+  function journeyTable(staff){
+    const sorted=staff.slice().sort(function(a,b){return journeyStage(a)-journeyStage(b)||a.name.localeCompare(b.name);});
+    return '<section class="panel journey-table-panel"><div class="panel-head"><div><h2>Employee journey summary</h2>'+
+      '<p>All '+staff.length+' sample employees sorted by current incomplete stage</p></div></div>'+
+      '<div class="table-wrap"><table class="table journey-table"><thead><tr><th scope="col">Employee</th><th scope="col">Division</th>'+
+      '<th scope="col">Current stage</th><th scope="col">Overall</th><th scope="col">Completed stages</th><th scope="col"></th></tr></thead><tbody>'+
+      sorted.map(function(e){
+        const i=journeyStage(e),label=i===7?'Completed':'Stage '+(i+1)+' · '+data.stages[i].name;
+        return '<tr><td><div class="name-cell">'+avatar(e.name)+'<div><strong>'+safe(e.name)+'</strong><small>'+safe(e.jobTitle)+'</small></div></div></td>'+
+          '<td>'+safe(div(e.division).short)+'</td><td><span class="journey-stage-pill">'+safe(label)+'</span></td>'+
+          '<td><div class="progress-wrapper">'+progress(journeyPct(e))+'<span>'+journeyPct(e)+'%</span></div></td>'+
+          '<td>'+e.journey.filter(function(a){return a.every(Boolean);}).length+' / 7</td>'+
+          '<td>'+button('Preview','open','data-id="'+safe(e.id)+'" data-detail="journey"','small')+'</td></tr>';
+      }).join('')+'</tbody></table></div></section>';
+  }
+  function journey(){
+    const team=scopedEmployees(),stageCounts=Array.from({length:8},function(_,i){return team.filter(function(e){return journeyStage(e)===i;}).length;});
+    const avg=meanOf(team,journeyPct);
+    return header('ONBOARDING MONITORING','Journey board',
+      'See all seven stages in one view. People are grouped by their first incomplete stage; nothing can be edited here.',
+      button(scopeLabel()+' ▾','choose-scope','','small'))+
+      '<div class="journey-board-toolbar"><div><h2>'+safe(scopeLabel())+'</h2><p>'+team.length+' employees · '+avg+'% average journey completion · '+stageCounts[7]+' completed</p></div>'+
+      '<div class="workspace-view-switch" role="group" aria-label="Journey presentation">'+
+      ['board','table'].map(function(mode){return '<button type="button" data-action="journey-view" data-mode="'+mode+'" class="'+(ui.journeyView===mode?'active':'')+'" aria-pressed="'+(ui.journeyView===mode)+'">'+
+      landingIcon(mode==='board'?'grid':'list')+(mode==='board'?'Board':'Table')+'</button>';}).join('')+'</div></div>'+
+      (ui.journeyView==='table'?journeyTable(team):journeyKanban(team))+
+      '<p class="journey-explainer">This is a read-only sample snapshot. If a later stage contains completed tasks, the board still groups the employee under the earliest incomplete stage. View any employee for the full seven-stage checklist.</p>';
+  }
+
   function kitSection(e){
     return '<div class="kit-grid">'+data.kit.map(function(k,i){
       const note=e.kitNotes[k.id]||'',ready=!!e.kit[i];
@@ -944,6 +995,7 @@
     if(name==='set-theme'){setTheme(button.dataset.themeValue);return;}if(!ui.workspaceChosen)return;
     if(name==='quick-search'){navigate('employees');const search=$('app')&&$('app').querySelector('[data-ui="query"]');if(search&&typeof search.focus==='function')search.focus();return;}
     if(name==='work-view'){ui.workView=button.dataset.mode==='board'?'board':'list';try{sessionStorage.setItem('maddie-journey-workview',ui.workView);}catch(err){}render();return;}
+    if(name==='journey-view'){ui.journeyView=button.dataset.mode==='table'?'table':'board';render();return;}
     if(name==='attention-filter'){ui.attentionFilter=['all','attendance','kpi','onboarding','reviews'].includes(button.dataset.kind)?button.dataset.kind:'all';ui.attentionShowAll=false;render();return;}
     if(name==='attention-more'){ui.attentionShowAll=!ui.attentionShowAll;render();return;}
     if(name==='division-tab'){ui.divisionTab=['summary','board','list','chart','team'].includes(button.dataset.tab)?button.dataset.tab:'summary';render();return;}
