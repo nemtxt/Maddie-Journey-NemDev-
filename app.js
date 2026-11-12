@@ -42,6 +42,7 @@
   data.viewers=clone(seed.viewers); data.divisions=clone(seed.divisions); data.stages=clone(seed.stages); data.kit=clone(seed.kit);
   let ui={tab:'welcome',viewer:'giezelle',division:'all',activeDivision:'rmd',scope:'all',divisionPickerMode:'view',query:'',employee:data.employees[0].id,detail:'preview',employeeModalOpen:false,roleModal:false,divisionModal:false,employeePicker:false,pickerDivision:'rmd',frequency:'monthly',mobile:false,milestoneCategory:'birthday',milestoneDivision:'all',milestoneShowAll:false,milestonePicking:false,divisionTab:'summary',attentionFilter:'all',attentionShowAll:false,workView:'list'};
   try {const saved=JSON.parse(sessionStorage.getItem('maddie-journey-ui')||'null');if(saved&&data.viewers.some(function(v){return v.id===saved.viewer;}))ui.viewer=saved.viewer;ui.scope='all';}catch(err){}
+  try{const remembered=sessionStorage.getItem('maddie-journey-workview');if(remembered==='board'||remembered==='list')ui.workView=remembered;}catch(err){}
   const now=function(){return new Date().toISOString().slice(0,10);};
   const safe=function(v){return String(v===undefined||v===null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
   const money=function(n){return '₱'+(Number(n)||0).toLocaleString('en-PH',{maximumFractionDigits:2,minimumFractionDigits:2});};
@@ -96,7 +97,7 @@
     document.documentElement.dataset.theme=next;
     try{localStorage.setItem('maddie-journey-theme',next);}catch(err){}
     const meta=document.querySelector('meta[name="theme-color"]');
-    if(meta)meta.setAttribute('content',next==='dark'?'#211722':'#fff8fc');
+    if(meta)meta.setAttribute('content',next==='dark'?'#1c1c26':'#f8f9fb');
     document.querySelectorAll('[data-action="set-theme"]').forEach(function(el){
       const pressed=el.dataset.themeValue===next;
       el.setAttribute('aria-pressed',String(pressed));
@@ -687,7 +688,8 @@
       database:'<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/>',
       home:'<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>',
       grid:'<rect x="3" y="3" width="7" height="7" rx="1.3"/><rect x="14" y="3" width="7" height="7" rx="1.3"/><rect x="3" y="14" width="7" height="7" rx="1.3"/><rect x="14" y="14" width="7" height="7" rx="1.3"/>',
-      search:'<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/>'
+      search:'<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/>',
+      list:'<path d="M9 6h12M9 12h12M9 18h12"/><path d="M4 6h.01M4 12h.01M4 18h.01" stroke-width="3"/>'
     };
     return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+(drawings[name]||drawings.chart)+'</svg>';
   }
@@ -733,7 +735,7 @@
       '<footer class="landing-footer"><span>Madhouse Design Studio · Maddie Journey</span><span>Prototype · 51 fictional employees · 8 divisions · Not live-connected</span></footer>'+
       '</main></div>';
   }
-  function render(){if(ui.tab==='welcome'){$('app').innerHTML=landingView();document.title='Maddie Journey · Madhouse Design Studio';return;}const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,milestones:milestonesView,journey:journey,kit:kitView,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,sources:sourcesView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open':'')+'">'+sidebar()+'<main id="main-content" class="main" tabindex="-1">'+topnav()+(views[ui.tab]||overview)()+'<footer class="footer"><span>Maddie Journey · Prototype v1.9</span><span>51 fictional employees · Local browser storage · No live integrations</span></footer></main></div>'+(ui.roleModal?workspaceModal():ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.employeeModalOpen?employeeModal():'');document.title=title(ui.tab)+' · Maddie Journey';if(ui.employeeModalOpen||ui.roleModal||ui.divisionModal||ui.employeePicker){const modal=$('app').querySelector('[role="dialog"]');if(modal&&typeof modal.focus==='function')modal.focus({preventScroll:true});}}
+  function render(){if(ui.tab==='welcome'){$('app').innerHTML=landingView();document.title='Maddie Journey · Madhouse Design Studio';return;}const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,milestones:milestonesView,journey:journey,kit:kitView,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,sources:sourcesView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open':'')+'">'+sidebar()+'<button type="button" class="workspace-scrim" aria-label="Close navigation" data-action="mobile"></button><main id="main-content" class="main" tabindex="-1">'+topnav()+(views[ui.tab]||overview)()+'<footer class="footer"><span>Maddie Journey · Prototype v1.9</span><span>51 fictional employees · Local browser storage · No live integrations</span></footer></main></div>'+(ui.roleModal?workspaceModal():ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.employeeModalOpen?employeeModal():'');document.title=title(ui.tab)+' · Maddie Journey';if(ui.employeeModalOpen||ui.roleModal||ui.divisionModal||ui.employeePicker){const modal=$('app').querySelector('[role="dialog"]');if(modal&&typeof modal.focus==='function')modal.focus({preventScroll:true});}}
   function openDivision(id){if(!data.divisions.some(function(d){return d.id===id;}))return;ui.scope=id;ui.activeDivision=id;ui.divisionTab='summary';ensureEmployeeScope();persist();ui.tab='division';ui.employeeModalOpen=false;ui.roleModal=false;ui.divisionModal=false;ui.employeePicker=false;ui.mobile=false;ui.query='';ui.division='all';if(location.hash!=='#division/'+id)location.hash='#division/'+id;window.scrollTo({top:0,behavior:'instant'});render();}
   function navigate(tab){if(tab==='division'){openDivision(ui.activeDivision);return;}ui.scope='all';ensureEmployeeScope();ui.tab=tab;ui.employeeModalOpen=false;ui.roleModal=false;ui.divisionModal=false;ui.employeePicker=false;ui.mobile=false;ui.query='';ui.division='all';if(location.hash!=='#'+tab)location.hash='#'+tab;window.scrollTo({top:0,behavior:'instant'});render();}
   function invalidateEvaluation(e){
@@ -885,7 +887,7 @@
   function action(name,button){const e=emp();if(name==='landing-role'){const roles={hr:'giezelle',head:'aj',executive:'ceo'};const id=roles[button.dataset.role];if(!id)return;ui.viewer=id;ui.scope='all';ui.milestoneDivision='all';persist();navigate('overview');return;}if(name==='mobile'){ui.mobile=!ui.mobile;render();return;}
     if(name==='set-theme'){setTheme(button.dataset.themeValue);return;}
     if(name==='quick-search'){navigate('employees');const search=$('app')&&$('app').querySelector('[data-ui="query"]');if(search&&typeof search.focus==='function')search.focus();return;}
-    if(name==='work-view'){ui.workView=button.dataset.mode==='board'?'board':'list';render();return;}
+    if(name==='work-view'){ui.workView=button.dataset.mode==='board'?'board':'list';try{sessionStorage.setItem('maddie-journey-workview',ui.workView);}catch(err){}render();return;}
     if(name==='attention-filter'){ui.attentionFilter=['all','attendance','kpi','onboarding','reviews'].includes(button.dataset.kind)?button.dataset.kind:'all';ui.attentionShowAll=false;render();return;}
     if(name==='attention-more'){ui.attentionShowAll=!ui.attentionShowAll;render();return;}
     if(name==='division-tab'){ui.divisionTab=['summary','board','list','chart','team'].includes(button.dataset.tab)?button.dataset.tab:'summary';render();return;}
