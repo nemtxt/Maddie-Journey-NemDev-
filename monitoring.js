@@ -7,6 +7,10 @@
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
   });};
   const docLabels={'complete':'Complete','missing':'Missing','not-checked':'Not checked','not-applicable':'Not applicable'};
+  const icon=function(name){return root.MJ_ICONS.svg(name);};
+  const documentIcons={Employment:'briefcase',Contracts:'file',Personal:'id-card',Government:'shield'};
+  const statusIcons={'complete':'check','missing':'alert-circle','not-checked':'clock','not-applicable':'minus'};
+  const eventIcons={checkin:'clock',employment:'briefcase',milestone:'award',change:'activity'};
   function fileStatus(employee,docs){
     const missing=[],unchecked=[],applicable=[],complete=[];
     docs.forEach(function(doc){
@@ -41,7 +45,7 @@
         return row.employee.files201[doc.id]===state;
       }).length;};
       const complete=count('complete'),missing=count('missing'),unchecked=count('not-checked'),na=count('not-applicable');
-      return '<article class="monitor-file-card" data-group="'+esc(doc.group)+'"><span class="monitor-file-type">'+esc(doc.group)+'</span>'+
+      return '<article class="monitor-file-card" data-group="'+esc(doc.group)+'"><span class="monitor-file-heading"><span class="monitor-file-symbol" aria-hidden="true">'+icon(documentIcons[doc.group]||'file')+'</span><span class="monitor-file-type">'+esc(doc.group)+'</span></span>'+
         '<h3>'+esc(doc.label)+'</h3><strong>'+complete+' <small>/ '+(total-na)+' applicable complete</small></strong>'+
         '<div class="monitor-file-counts"><span>'+missing+' missing</span><span>'+unchecked+' not checked</span>'+
         (na?'<span>'+na+' N/A</span>':'')+'</div></article>';
@@ -51,7 +55,7 @@
     const tabs=choices.map(function(c){
       return '<button type="button" class="monitor-filter'+(active===c[0]?' active':'')+
         '" data-action="files-filter" data-kind="'+c[0]+'" aria-pressed="'+(active===c[0])+'">'+
-        esc(c[1])+' <b>'+summary.groups[c[0]].length+'</b></button>';
+        '<span class="monitor-filter-symbol" aria-hidden="true">'+icon(statusIcons[c[0]]||'list')+'</span>'+esc(c[1])+' <b>'+summary.groups[c[0]].length+'</b></button>';
     }).join('');
     const people=visible.map(function(row){
       const e=row.employee,relevant=row.status==='missing'?row.missing:
@@ -60,7 +64,7 @@
         relevant.map(function(doc){return doc.label;}).join(' · ');
       return '<tr><th scope="row"><strong>'+esc(e.name)+'</strong><small>'+esc(e.id)+
         ' · '+esc((snapshot.divisions.find(function(d){return d.id===e.division;})||{}).short||e.division)+'</small></th>'+
-        '<td><span class="monitor-file-status monitor-file-'+row.status+'">'+esc(docLabels[row.status])+'</span></td>'+
+        '<td><span class="monitor-file-status monitor-file-'+row.status+'">'+icon(statusIcons[row.status]||'info')+esc(docLabels[row.status])+'</span></td>'+
         '<td class="monitor-file-requirements">'+esc(description)+'</td>'+
         '<td><button class="button small" type="button" data-action="open" data-id="'+esc(e.id)+
         '" data-detail="files201">Inspect</button></td></tr>';
@@ -89,13 +93,13 @@
     const docs=snapshot.documents201||[],status=fileStatus(e,docs);
     return '<section class="panel monitor-person-documents"><div class="panel-head"><div>'+
       '<h2>201 Files Checklist</h2><p>Fictional per-document statuses · not verified against an official file folder</p></div>'+
-      '<span class="monitor-file-status monitor-file-'+status.status+'">'+esc(docLabels[status.status])+'</span></div>'+
+      '<span class="monitor-file-status monitor-file-'+status.status+'">'+icon(statusIcons[status.status]||'info')+esc(docLabels[status.status])+'</span></div>'+
       '<div class="table-wrap"><table class="table monitor-file-detail-table"><thead><tr>'+
       '<th scope="col">Requirement</th><th scope="col">Recorded status</th></tr></thead><tbody>'+
       docs.map(function(d){
         const state=e.files201[d.id];
         return '<tr><th scope="row">'+esc(d.label)+'</th><td><span class="monitor-file-status monitor-file-'+
-          esc(state)+'">'+esc(docLabels[state])+'</span></td></tr>';
+          esc(state)+'">'+icon(statusIcons[state]||'info')+esc(docLabels[state])+'</span></td></tr>';
       }).join('')+'</tbody></table></div>'+
       '<p class="report-source-note">This document checklist is synthetic demonstration data. No source file or real verification is implied.</p></section>';
   }
@@ -195,7 +199,7 @@
           '<time datetime="'+e.date+'">'+esc(e.date.slice(8))+' '+
           esc(new Date(e.date+'T00:00:00Z').toLocaleDateString('en-PH',{month:'short',timeZone:'UTC'}))+'</time>'+
           '<span><b>'+esc(e.employee.name)+'</b><small>'+esc(e.title)+' · '+esc(e.provenance)+'</small></span>'+
-          '<span aria-hidden="true">↗</span></button>';
+          '<span class="monitor-calendar-event-arrow" aria-hidden="true">'+icon('arrow-up-right')+'</span></button>';
       }).join(''):'<p class="monitor-calendar-empty-message">No example events for this view.</p>')+
       (!selected&&detail.length>4?'<button class="button small monitor-calendar-more" type="button" '+
         'data-action="calendar-more" data-month="'+month+'">'+
@@ -215,14 +219,14 @@
       esc(monthText(month))+' – '+esc(monthText(months[2]))+' · '+
       filtered.length+' of '+all.length+' fictional dates displayed</p></div>'+
       '<div class="monitor-calendar-controls" role="group" aria-label="Calendar range">'+
-      '<button class="button small" type="button" data-action="calendar-shift" data-shift="-3">← Previous</button>'+
+      '<button class="button small" type="button" data-action="calendar-shift" data-shift="-3">'+icon('arrow-left')+' Previous</button>'+
       '<button class="button small" type="button" data-action="calendar-today">Today</button>'+
-      '<button class="button small" type="button" data-action="calendar-shift" data-shift="3">Next →</button>'+
+      '<button class="button small" type="button" data-action="calendar-shift" data-shift="3">Next '+icon('arrow-right')+'</button>'+
       '</div></div>'+
       '<div class="monitor-calendar-typebar" role="group" aria-label="Calendar event filters">'+
       types.map(function(type){return '<button type="button" class="monitor-filter'+
         (ui.calendarType===type[0]?' active':'')+'" data-action="calendar-type" data-kind="'+type[0]+
-        '" aria-pressed="'+(ui.calendarType===type[0])+'">'+esc(type[1])+'</button>';}).join('')+'</div>'+
+        '" aria-pressed="'+(ui.calendarType===type[0])+'">'+'<span class="monitor-filter-symbol" aria-hidden="true">'+icon(eventIcons[type[0]]||'calendar')+'</span>'+esc(type[1])+'</button>';}).join('')+'</div>'+
       '<div class="monitor-calendar-three">'+months.map(function(m){return monthPanel(m,filtered,ui);}).join('')+'</div>'+
       '<p class="report-source-note">This calendar contains only fictional profile dates, recorded sample promotions and computed check-in/probation milestones. Calculated dates are not confirmed appointments, statutory deadlines or booked meetings. No PIP/LIP tracker or live calendar provider is connected.</p></div>';
   }
