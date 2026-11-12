@@ -1485,3 +1485,104 @@ body .monitor-file-missing,
 body button.monitor-calendar-date.selected{
   border-color:var(--mj-focus-accent)
 }
+
+
+/* Phase 7 / v3.4 — quiet cross-workflow monitoring hierarchy.
+   Compact operational scan, one Inter font, neutral-first design, one pink accent. */
+body .monitor-pulse.monitor-focus{
+  display:block;overflow:hidden;
+  padding:0;margin:0 0 var(--mj-space-4);
+  background:var(--mono-surface);
+  border:1px solid var(--mono-border);border-radius:var(--mj-radius-panel)
+}
+body .monitor-focus-heading{
+  display:flex;align-items:baseline;gap:10px;
+  flex-wrap:wrap;padding:12px 18px 11px;
+  border-bottom:1px solid var(--mono-border);
+  background:var(--mono-soft)
+}
+body .monitor-focus-heading .monitor-pulse-kicker{
+  font-size:10px;letter-spacing:.09em;
+  color:var(--mono-secondary);font-weight:750
+}
+body .monitor-focus-heading h2{
+  color:var(--mono-text);font-size:13px;line-height:1.35;
+  letter-spacing:-.018em;font-weight:720
+}
+body .monitor-focus-heading p{
+  margin:0 0 0 auto;
+  color:var(--mono-secondary);font-size:11px;line-height:1.4
+}
+body .monitor-focus-grid{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:0;width:100%;min-width:0
+}
+body .monitor-focus-item{
+  position:relative;appearance:none;-webkit-appearance:none;
+  display:flex;align-items:flex-start;flex-direction:column;
+  width:100%;min-width:0;min-height:135px;
+  padding:16px 18px 15px;
+  text-align:left;cursor:pointer;
+  color:var(--mono-text);background:transparent;
+  border:0;border-right:1px solid var(--mono-border);
+  transition:background-color .14s ease
+}
+body .monitor-focus-item:last-child{border-right:0}
+body .monitor-focus-item:hover{background:var(--mono-hover)}
+body .monitor-focus-item:focus-visible{
+  outline-offset:-3px!important
+}
+body .monitor-focus-topline{
+  display:flex;align-items:center;justify-content:space-between;
+  width:100%;gap:10px;color:var(--mono-secondary);
+  font-weight:690;font-size:11px;line-height:1.4
+}
+body .monitor-focus-topline>span{
+  color:var(--mj-focus-accent);font-size:15px;line-height:1
+}
+body .monitor-focus-value{
+  display:block;margin-top:7px;
+  font-size:clamp(21px,2vw,29px);font-weight:780;
+  line-height:1.15;letter-spacing:-.045em;
+  color:var(--mono-text);font-variant-numeric:tabular-nums
+}
+body .monitor-focus-value .monitor-pulse-primary-count{
+  color:var(--mono-text)
+}
+body .monitor-focus-note{
+  display:block;margin-top:2px;
+  font-size:11px;line-height:1.45;font-weight:640;
+  color:var(--mono-text)
+}
+body .monitor-focus-item>small{
+  display:block;margin-top:7px;font-size:10px;
+  line-height:1.45;color:var(--mono-secondary);
+  overflow-wrap:anywhere
+}
+@media(min-width:761px) and (max-width:1050px){
+  body .monitor-focus-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  body .monitor-focus-item:nth-child(2){border-right:0}
+  body .monitor-focus-item:last-child{
+    grid-column:1 / -1;min-height:110px;
+    border-top:1px solid var(--mono-border)
+  }
+  body .monitor-focus-heading p{margin-left:0}
+}
+@media(max-width:760px){
+  body .monitor-focus-grid{grid-template-columns:minmax(0,1fr)}
+  body .monitor-focus-heading{padding:12px 14px}
+  body .monitor-focus-heading p{flex:1 0 100%;margin-left:0}
+  body .monitor-focus-item{
+    min-height:100px;padding:13px 15px;
+    border-right:0;border-bottom:1px solid var(--mono-border)
+  }
+  body .monitor-focus-item:last-child{border-bottom:0}
+  body .monitor-focus-value{font-size:25px}
+}
+@media(prefers-reduced-motion:reduce){
+  body .monitor-focus-item{transition:none!important}
+}
+@media(forced-colors:active){
+  body .monitor-focus-item{border-color:CanvasText}
+  body .monitor-focus-item:hover{outline:1px solid Highlight}
+}
