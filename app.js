@@ -155,12 +155,17 @@
     if(!ids.length)return '';
     return '<section class="panel assigned-panel"><div class="heading-line"><div><h2>My division evaluation desk'+(ids.length>1?'s':'')+'</h2><p class="muted micro">Open your assigned members and their KPI scorecards</p></div>'+button('All divisions','nav','data-tab="divisions"','small')+'</div><div class="assigned-links">'+ids.map(function(id){const d=div(id);const team=data.employees.filter(function(e){return e.division===id;});return button(safe(d.name)+' · '+team.length+' members','goto-division','data-division="'+safe(id)+'"','primary');}).join('')+'</div></section>';
   }
-  function metrics(){return '<div class="grid metrics"><div class="metric"><div class="metric-label">Team members <span class="metric-icon">◎</span></div><strong>'+data.employees.length+'</strong><div class="metric-sub">Across '+data.divisions.length+' divisions · demo</div></div><div class="metric"><div class="metric-label">Journey completion <span class="metric-icon">◷</span></div><strong>'+totalAvg(journeyPct)+'%</strong><div class="metric-sub">All 7 stages · sample progress</div></div><div class="metric"><div class="metric-label">Welcome kit ready <span class="metric-icon">▣</span></div><strong>'+totalAvg(kitPct)+'%</strong><div class="metric-sub">Equipment, tools & access</div></div><div class="metric"><div class="metric-label">Approval completed <span class="metric-icon">✓</span></div><strong>'+approvedCount()+' / 51</strong><div class="metric-sub">'+pendingCount()+' not fully approved</div></div></div>';}
-
+  function metrics(){
+    const staff=scopedEmployees(),n=staff.length,done=staff.filter(function(e){return reviewStatus(e,'coo')==='Approved';}).length;
+    return '<div class="grid metrics">'+metricCard('Team members',n,scopeLabel()+' · demo')+
+      metricCard('Journey completion',meanOf(staff,journeyPct)+'%','All 7 onboarding stages')+
+      metricCard('Welcome Kit ready',meanOf(staff,kitPct)+'%','Equipment, tools and access')+
+      metricCard('Final approvals',done+' / '+n,(n-done)+' pending or in progress')+'</div>';
+  }
   function roleHome(){
     const v=viewer();
     if(isHR()){
-      const attention=data.employees.filter(function(e){return kitPct(e)<100;}).sort(function(a,b){return kitPct(a)-kitPct(b);}).slice(0,4);
+      const attention=scopedEmployees().filter(function(e){return kitPct(e)<100;}).sort(function(a,b){return kitPct(a)-kitPct(b);}).slice(0,4);
       return header('PEOPLE & CULTURE','HR workspace','Employee support, onboarding and HR evaluation tools — choose what you want to work on.',button('Browse employees','nav','data-tab="employees"','primary'))+
       metrics()+
       '<div class="home-action-grid">'+
@@ -171,7 +176,7 @@
       '</div><section class="panel"><div class="panel-head"><div><h2>Welcome kits needing attention</h2><p>Preview an employee to continue their onboarding.</p></div>'+button('All departments','nav','data-tab="divisions"','small')+'</div><div class="quick-list">'+attention.map(function(e){return '<div class="quick-item">'+avatar(e.name)+'<div class="grow"><b>'+safe(e.name)+'</b><p>'+safe(div(e.division).short)+' · Kit '+kitPct(e)+'% complete</p></div>'+button('Preview','open','data-id="'+safe(e.id)+'" data-detail="preview"','small')+'</div>';}).join('')+'</div></section>';
     }
     if(['head','corp'].includes(v.role)){
-      const own=assignedDivisionIds(),members=data.employees.filter(function(e){return own.includes(e.division);});
+      const own=assignedDivisionIds().filter(function(id){return ui.scope==='all'||id===ui.scope;}),members=data.employees.filter(function(e){return own.includes(e.division);});
       const pending=members.filter(function(e){return reviewStatus(e,'division')!=='Endorsed';}).slice(0,6);
       return header('DEPARTMENT EVALUATION','My evaluation workspace','Quick access to your assigned divisions and employees. Charts open in a popup.',button('Open divisions','nav','data-tab="divisions"','primary'))+
       '<div class="grid metrics">'+
@@ -190,7 +195,7 @@
     const leaders=data.divisions.map(function(d){const es=data.employees.filter(function(e){return e.division===d.id;});return '<div class="bar-line"><span>'+safe(d.short)+'</span>'+progress(Math.round(es.reduce(function(a,e){return a+journeyPct(e);},0)/es.length))+'<strong>'+Math.round(es.reduce(function(a,e){return a+journeyPct(e);},0)/es.length)+'%</strong></div>';}).join('');
     const concern=data.employees.slice().sort(function(a,b){return attend(b).concerns-attend(a).concerns;}).filter(function(e){return attend(e).concerns>0;}).slice(0,4);
     const soon=data.employees.filter(function(e){return journeyPct(e)<45;}).slice(0,4);
-    return header('A CLEARER WAY TO WORK','Good to see you.','One workspace for 51 sample Maddies — onboarding, attendance, KPI reviews and approvals.',button('View directory','nav','data-tab="employees"','primary'))
+    return header('A CLEARER WAY TO WORK','Good to see you.','Onboarding, attendance, KPI reviews and approvals across eight divisions, with fictional employees.',button('View directory','nav','data-tab="employees"','primary'))
     +metrics()+quickDivisionAccess()+'<div class="grid dashboard-grid"><section class="panel"><div class="panel-head"><div><h2>Onboarding across divisions</h2><p>Average completion of all journey-stage requirements</p></div>'+pill('Demo')+'</div>'+leaders+'</section><section class="panel"><div class="panel-head"><div><h2>Management snapshot</h2><p>Verified attendance records only</p></div></div><div class="grid" style="grid-template-columns:1fr 1fr;gap:12px"><div class="soft"><span class="muted micro">Employees with late records</span><h2>'+data.employees.filter(function(e){return attend(e).lates>0;}).length+'</h2></div><div class="soft"><span class="muted micro">Employees with absences</span><h2>'+data.employees.filter(function(e){return attend(e).absences>0;}).length+'</h2></div><div class="soft"><span class="muted micro">No lates or absences</span><h2>'+data.employees.filter(function(e){return attend(e).clean;}).length+'</h2></div><div class="soft"><span class="muted micro">Pending final approval</span><h2>'+pendingCount()+'</h2></div></div><div class="hr"></div><div class="callout"><strong>Role preview:</strong> Switch evaluators in the upper-right corner to test each part of the approval process. Role restrictions here are UI simulations, not real authorization.</div></section></div>'
     +'<div class="grid subgrid"><section class="panel"><div class="panel-head"><div><h2>Onboarding needs attention</h2><p>Employees with lower sample journey completion</p></div>'+button('Open journey','nav','data-tab="journey"','small')+'</div><div class="quick-list">'+soon.map(function(e){return '<div class="quick-item">'+avatar(e.name)+'<div class="grow"><b>'+safe(e.name)+'</b><p>'+safe(div(e.division).short)+' · '+journeyPct(e)+'% completed</p></div>'+button('Open','open','data-id="'+e.id+'"','small')+'</div>';}).join('')+'</div></section><section class="panel"><div class="panel-head"><div><h2>Attendance signals</h2><p>Unexcused or unapproved verified incidents</p></div>'+button('See analytics','nav','data-tab="attendance"','small')+'</div><div class="quick-list">'+concern.map(function(e){return '<div class="quick-item">'+avatar(e.name)+'<div class="grow"><b>'+safe(e.name)+'</b><p>'+safe(div(e.division).short)+' · '+attend(e).concerns+' concern(s)</p></div>'+button('Review','open','data-id="'+e.id+'" data-detail="attendance"','small')+'</div>';}).join('')+'</div></section></div>';
   }
