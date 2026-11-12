@@ -1,4 +1,4 @@
-# Maddie Journey · Prototype v1.5
+# Maddie Journey · Prototype v1.6
 
 A lightweight, button-first People & Culture prototype built using **HTML, CSS and vanilla JavaScript only**. No build tools, paid subscriptions, login, Airtable or cloud service are needed for demonstration.
 
@@ -27,6 +27,15 @@ The interface now follows the design language of the **Nemesis Corporation** web
 - **Keyboard access:** Visible focus indicators and a Skip to main content link. Theme switching does not re-render forms or discard open modal state.
 
 Appearance changes need no build process and no backend. All new styling lives in \`theme.css\`, layered after the original \`styles.css\` to keep future refinements separate.
+
+## v1.6 changes
+
+- A focused home dashboard: four KPIs, a category-filtered action queue, quick links and an eight-division table.
+- Each division now has Summary, Org chart and Employees tabs, with clickable six-level fictional hierarchies.
+- An honest Data Sources screen shows Airtable, Google Sheets, Google Drive, Google Docs and email as not connected.
+- All 51 sample employees and older saved scores are preserved; the new hierarchy fields use data version 6.
+- Additional visual and accessibility refinements are in operations.css.
+- Run `node tests/smoke.js` for regression testing; see `docs/UX_DASHBOARD_DECISIONS.md` for research rationale.
 
 ## Simple user flow
 
