@@ -50,6 +50,72 @@
   function sidebar(){return '<aside class="sidebar"><div class="brand"><span class="logo">m.</span><span><b>Maddie Journey</b><small>People & Culture Workspace</small></span></div><div class="sidebar-label">Workspace</div><nav class="nav" aria-label="Main navigation">'+items.map(function(i){return '<a href="#'+i[0]+'" data-nav="'+i[0]+'" class="'+(ui.tab===i[0]?'active':'')+'"><span class="nav-icon">'+i[1]+'</span>'+i[2]+'</a>';}).join('')+'</nav><div class="sidebar-bottom"><div class="demo">PROTOTYPE · Demo mode only<br>Local changes stay on this device.</div><div class="sidebar-user">'+avatar(viewer().name)+'<span><b>'+safe(viewer().name)+'</b><small>'+safe(viewer().title)+'</small></span></div></div></aside>';}
   function title(t){if(t==='division')return div(ui.activeDivision).name+' · Evaluation';return {divisions:'Divisions',overview:'Overview',employees:'People directory',journey:'Employee journey',kit:'Welcome Maddie Kit',attendance:'Attendance analytics',kpi:'2026 KPI evaluations',approvals:'Executive approvals',audit:'Activity & data'}[t]||'Overview';}
   function header(eyebrow,heading,description,actions){return '<div class="page-header"><div><div class="eyebrow">'+safe(eyebrow)+'</div><h1>'+safe(heading)+'</h1><p>'+safe(description)+'</p></div><div class="actions">'+(actions||'')+'</div></div>'+(ui.tab==='overview'?'':screenSummary());}
+
+  /* Summaries use the same calculated sample records displayed in each screen. */
+  function meanOf(list,calculate){return list.length?Math.round(list.reduce(function(n,e){return n+calculate(e);},0)/list.length):0;}
+  function metricCard(label,value,note){return '<div class="metric"><div class="metric-label">'+safe(label)+'<span class="metric-icon">◇</span></div><strong>'+safe(value)+'</strong><div class="metric-sub">'+safe(note)+'</div></div>';}
+  function screenSummary(){
+    const all=data.employees;
+    const team=ui.tab==='division'?all.filter(function(e){return e.division===ui.activeDivision;}):all;
+    let cards=[];
+    if(ui.tab==='division'){
+      cards=[['Division members',team.length,'Fictional employee records'],['Average KPI score',meanOf(team,score).toString()+'%','Demonstration figures only'],['Journey completion',meanOf(team,journeyPct)+'%','All 7 onboarding stages'],['Submitted evaluations',team.filter(function(e){return reviewStatus(e,'division')==='Endorsed';}).length,'Division Head endorsements']];
+    }else if(ui.tab==='divisions'){
+      cards=[['Active divisions',data.divisions.length,'Dedicated evaluator workspaces'],['Sample employees',all.length,'Company-wide directory'],['Average KPI score',meanOf(all,score)+'%','Demonstration scores'],['Average onboarding',meanOf(all,journeyPct)+'%','Completion across 7 stages']];
+    }else if(ui.tab==='employees'){
+      cards=[['Employee directory',all.length,'Fictional team members'],['Divisions',data.divisions.length,'Assigned evaluator groups'],['Average journey',meanOf(all,journeyPct)+'%','All stages'],['KPI sources to validate',all.filter(function(e){return !e.kpiValidated;}).length,'Official KPI data not connected']];
+    }else if(ui.tab==='journey'){
+      cards=[['Average completion',meanOf(all,journeyPct)+'%','All stages'],['Stage 1 completed',all.filter(function(e){return e.journey[0].every(Boolean);}).length,'Onboarding & setup'],['Stage 2 completed',all.filter(function(e){return e.journey[1].every(Boolean);}).length,'Onboarding & immersion'],['All 7 stages done',all.filter(function(e){return journeyPct(e)===100;}).length,'Journey complete']];
+    }else if(ui.tab==='kit'){
+      cards=[['Overall kit completion',meanOf(all,kitPct)+'%','All 11 checklist items'],['Fully provisioned',all.filter(function(e){return kitPct(e)===100;}).length,'Every kit item marked done'],['Pending kits',all.filter(function(e){return kitPct(e)<100;}).length,'Employee kits with open items'],['Requirements completed',all.reduce(function(n,e){return n+e.kit.filter(Boolean).length;},0),'Out of '+all.length*data.kit.length+' total']];
+    }else if(ui.tab==='attendance'){
+      const a=all.map(attend);
+      cards=[['Verified late arrivals',a.reduce(function(n,x){return n+x.lates;},0),'Includes excused entries'],['Verified absences',a.reduce(function(n,x){return n+x.absences;},0),'Review approval reasons'],['No late / absent records',a.filter(function(x){return x.clean;}).length,'Based on verified entries'],['Employees with concerns',a.filter(function(x){return x.concerns>0;}).length,'Unexcused/unapproved verified records']];
+    }else if(ui.tab==='kpi'){
+      cards=[['Average weighted score',meanOf(all,score)+'%','15 / 45 / 15 / 25 grading'],['Excellent (demo)',all.filter(function(e){return score(e)>=95;}).length,'Sample score 95–100'],['Pending KPI validation',all.filter(function(e){return !e.kpiValidated;}).length,'No official KPI sync'],['Division endorsements',all.filter(function(e){return reviewStatus(e,'division')==='Endorsed';}).length,'Completed demo head reviews']];
+    }else if(ui.tab==='approvals'){
+      cards=[['Division Head endorsed',all.filter(function(e){return reviewStatus(e,'division')==='Endorsed';}).length,'Initial evaluation'],['Corporate Ops endorsed',all.filter(function(e){return reviewStatus(e,'corp')==='Endorsed';}).length,'Review & endorsement'],['CSO reviewed',all.filter(function(e){return reviewStatus(e,'cso')==='Endorsed';}).length,'Strategic review'],['COO approved',approvedCount(),'Final approval tracked']];
+    }else if(ui.tab==='audit'){
+      const changed=all.filter(function(e){return e.audit.length>0;});
+      cards=[['Employee records',all.length,'All fictional'],['Edited employees',changed.length,'On this browser'],['Logged changes',all.reduce(function(n,e){return n+e.audit.length;},0),'Local activity history'],['Shared sync','Off','JSON backup available']];
+    }
+    return cards.length?'<section class="screen-summary" aria-label="'+safe(title(ui.tab))+' summary"><div class="summary-heading"><span class="eyebrow">SCREEN SUMMARY</span><span class="muted micro">Calculated from sample data</span></div><div class="grid metrics">'+cards.map(function(c){return metricCard(c[0],c[1],c[2]);}).join('')+'</div></section>':'';
+  }
+  function divisionEvaluatorNames(d){return d.evaluators.map(function(id){const v=data.viewers.find(function(p){return p.id===id;});return v?v.name:id;}).join(' / ');}
+  function assignedDivisionIds(){const v=viewer();return data.divisions.filter(function(d){return d.evaluators.includes(v.id);}).map(function(d){return d.id;});}
+  function divisionCard(d){
+    const team=data.employees.filter(function(e){return e.division===d.id;});
+    const editable=team.some(roleCanHead);
+    const hr=isHR();
+    const access=editable?'Department KPI editor':hr?'HR scoring available':'Observer / read-only';
+    return '<article class="division-card"><div class="division-card-top"><span class="tag info">'+safe(d.short)+'</span>'+pill(editable?'Editable':hr?'HR inputs':'View only')+'</div><h2>'+safe(d.name)+'</h2><p class="division-owner">'+safe(divisionEvaluatorNames(d))+'</p><div class="division-card-stats"><span><strong>'+team.length+'</strong><small>Members</small></span><span><strong>'+meanOf(team,score)+'%</strong><small>Avg. KPI</small></span><span><strong>'+meanOf(team,journeyPct)+'%</strong><small>Journey</small></span></div><div class="division-card-footer"><span class="muted micro">'+safe(access)+'</span>'+button('Open division','goto-division','data-division="'+safe(d.id)+'"','small primary')+'</div></article>';
+  }
+  function divisionsView(){
+    const my=assignedDivisionIds();
+    const sorted=data.divisions.slice().sort(function(a,b){return Number(my.includes(b.id))-Number(my.includes(a.id));});
+    return header('SEVEN DEPARTMENTS','Division workspaces','Each division has its own member list, KPI evaluation desk, assigned evaluators and live demonstration summary.',button('Employee directory','nav','data-tab="employees"','small'))+
+      (my.length?'<div class="callout" style="margin-bottom:17px"><strong>Your evaluation desks:</strong> '+my.map(function(id){const d=div(id);return '<button class="link-btn" data-action="goto-division" data-division="'+safe(id)+'">'+safe(d.name)+'</button>';}).join(' &nbsp; / &nbsp; ')+'</div>':
+      '<div class="callout" style="margin-bottom:17px"><strong>'+((viewer().role==='ceo'||viewer().role==='cso'||viewer().role==='coo')?'Executive observer view':'People & Culture workspace')+':</strong> Open any division to see its employee roster and report cards. Editing follows the active demonstration evaluator role.</div>')+
+      '<section class="division-grid">'+sorted.map(divisionCard).join('')+'</section>';
+  }
+  function divisionView(){
+    const d=div(ui.activeDivision);
+    const team=data.employees.filter(function(e){return e.division===d.id;});
+    if(!team.length)return header('DIVISION','No members found','Select another division.',button('All divisions','nav','data-tab="divisions"','small'));
+    const isEditor=team.some(roleCanHead);
+    const permission=isEditor?'You can edit Division and Individual Objective scores for this department.':isHR()?'You can edit HR Values Alignment and Job Behavior for employees here.':'Observer mode: you can inspect member evaluations but cannot change records.';
+    const status=team.filter(function(e){return reviewStatus(e,'division')==='Endorsed';}).length;
+    return header('DEPARTMENT EVALUATION',d.name,'Individual employee KPI scorecards, onboarding progress and division-specific evaluation access.',button('← All divisions','nav','data-tab="divisions"','small'))+
+    '<section class="panel division-toolbar"><div class="division-toolbar-row"><div class="division-heading"><span class="eyebrow">ASSIGNED EVALUATOR'+(d.evaluators.length>1?'S':'')+'</span><h2>'+safe(divisionEvaluatorNames(d))+'</h2><p class="muted micro">'+safe(permission)+'</p></div><div class="division-switch"><label class="field-label" for="division-switch">Switch division</label><select class="field" id="division-switch" data-ui="activeDivision">'+opts(data.divisions.map(function(v){return {value:v.id,label:v.name};}),d.id)+'</select></div></div></section>'+
+    '<section class="panel no-pad"><div class="table-wrap"><table class="table division-members"><thead><tr><th>Team member</th><th>Division KPI · 15%</th><th>Individual KPI · 45%</th><th>HR grading · 40%</th><th>Overall</th><th>Review status</th><th>Evaluation</th></tr></thead><tbody>'+
+    team.map(function(e){return '<tr><td><div class="name-cell">'+avatar(e.name)+'<div><strong>'+safe(e.name)+'</strong><small>'+safe(e.id)+' · '+safe(e.jobTitle)+'</small></div></div></td><td><strong>'+e.scores.division.toFixed(1)+'%</strong></td><td><strong>'+e.scores.individual.toFixed(1)+'%</strong></td><td><strong>'+((e.scores.values*.15+e.scores.behavior*.25)/.4).toFixed(1)+'%</strong></td><td><strong class="score">'+score(e).toFixed(1)+'%</strong><small>'+safe(rating(score(e)))+'</small></td><td>'+pill(reviewStatus(e,'division'))+'</td><td><div class="actions">'+button(isEditor||isHR()?'Evaluate':'View report','open','data-id="'+safe(e.id)+'" data-detail="kpi"','small primary')+button('Journey','open','data-id="'+safe(e.id)+'" data-detail="journey"','small')+'</div></td></tr>';}).join('')+
+    '</tbody></table></div></section><div class="division-hint">This division has '+team.length+' fictional employee profiles; '+status+' have a completed Division Head endorsement. Ratings are generated from sample scores, not official KPI records.</div>';
+  }
+  function quickDivisionAccess(){
+    const ids=assignedDivisionIds();
+    if(!ids.length)return '';
+    return '<section class="panel assigned-panel"><div class="heading-line"><div><h2>My division evaluation desk'+(ids.length>1?'s':'')+'</h2><p class="muted micro">Open your assigned members and their KPI scorecards</p></div>'+button('All divisions','nav','data-tab="divisions"','small')+'</div><div class="assigned-links">'+ids.map(function(id){const d=div(id);const team=data.employees.filter(function(e){return e.division===id;});return button(safe(d.name)+' · '+team.length+' members','goto-division','data-division="'+safe(id)+'"','primary');}).join('')+'</div></section>';
+  }
   function metrics(){return '<div class="grid metrics"><div class="metric"><div class="metric-label">Team members <span class="metric-icon">◎</span></div><strong>'+data.employees.length+'</strong><div class="metric-sub">Across '+data.divisions.length+' divisions · demo</div></div><div class="metric"><div class="metric-label">Journey completion <span class="metric-icon">◷</span></div><strong>'+totalAvg(journeyPct)+'%</strong><div class="metric-sub">All 7 stages · sample progress</div></div><div class="metric"><div class="metric-label">Welcome kit ready <span class="metric-icon">▣</span></div><strong>'+totalAvg(kitPct)+'%</strong><div class="metric-sub">Equipment, tools & access</div></div><div class="metric"><div class="metric-label">Approval completed <span class="metric-icon">✓</span></div><strong>'+approvedCount()+' / 51</strong><div class="metric-sub">'+pendingCount()+' not fully approved</div></div></div>';}
   function overview(){
     const leaders=data.divisions.map(function(d){const es=data.employees.filter(function(e){return e.division===d.id;});return '<div class="bar-line"><span>'+safe(d.short)+'</span>'+progress(Math.round(es.reduce(function(a,e){return a+journeyPct(e);},0)/es.length))+'<strong>'+Math.round(es.reduce(function(a,e){return a+journeyPct(e);},0)/es.length)+'%</strong></div>';}).join('');
