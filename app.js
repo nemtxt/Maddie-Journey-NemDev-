@@ -615,17 +615,28 @@
     (t==='info'?'<div class="panel" style="margin-bottom:15px"><div class="form-grid"><div><span class="field-label">Start date</span><strong>'+dateLabel(e.startDate)+'</strong></div><div><span class="field-label">Employee ID</span><strong>'+safe(e.id)+'</strong></div><div><span class="field-label">Org level (sample)</span><strong>Level '+safe(e.orgLevel||'—')+'</strong></div><div><span class="field-label">Reports to (sample)</span><strong>'+safe((data.employees.find(function(p){return p.id===e.reportsTo;})||{}).name||'Department lead')+'</strong></div></div></div>':'')+
     detailContent(e,t)+'</div></section></div>';
   }
+  function landingIcon(name){
+    const drawings={
+      people:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+      hierarchy:'<rect x="9" y="2" width="6" height="5" rx="1"/><rect x="2" y="17" width="6" height="5" rx="1"/><rect x="16" y="17" width="6" height="5" rx="1"/><path d="M12 7v5M5 17v-5h14v5"/>',
+      crown:'<path d="M2 8 7 12 12 3 17 12 22 8 20 20H4L2 8Z"/><path d="M4 16h16"/>',
+      chart:'<path d="M4 20v-6M10 20V9M16 20V4M22 20v-10"/>',
+      users:'<circle cx="9" cy="7" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M16 6a3 3 0 1 1 0 6M22 20v-2a6 6 0 0 0-4-5.66"/>',
+      database:'<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/>'
+    };
+    return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+(drawings[name]||drawings.chart)+'</svg>';
+  }
   function landingView(){
     const audience=[
-      {label:'HR',detail:'People, records and workforce tracking',role:'hr',theme:'pink',icon:'♙'},
-      {label:'Division Heads',detail:'Department performance and team overview',role:'head',theme:'yellow',icon:'◇'},
-      {label:'Executive overview',detail:'CEO, COO and CSO · organizational insights',role:'executive',theme:'blue',icon:'✧'}
+      {label:'HR',detail:'People, records and workforce tracking',role:'hr',theme:'pink',icon:'people'},
+      {label:'Division Heads',detail:'Department performance and team overview',role:'head',theme:'yellow',icon:'hierarchy'},
+      {label:'Executive overview',detail:'CEO, COO and CSO · organizational insights',role:'executive',theme:'blue',icon:'crown'}
     ];
     const feature=[
-      {name:'Summaries',detail:'Key insights at a glance',target:'overview',theme:'pink',icon:'▥'},
-      {name:'Org charts',detail:'Explore all eight divisions',target:'divisions',theme:'yellow',icon:'♧'},
-      {name:'Employees',detail:'Profiles and milestones',target:'employees',theme:'blue',icon:'♙'},
-      {name:'Data sources',detail:'Connection status and provenance',target:'sources',theme:'violet',icon:'▤'}
+      {name:'Summaries',detail:'Key insights at a glance',target:'overview',theme:'pink',icon:'chart'},
+      {name:'Org charts',detail:'Explore all eight divisions',target:'divisions',theme:'yellow',icon:'hierarchy'},
+      {name:'Employees',detail:'Profiles and milestones',target:'employees',theme:'blue',icon:'users'},
+      {name:'Data sources',detail:'Connection status and provenance',target:'sources',theme:'violet',icon:'database'}
     ];
     return '<div class="landing-shell" id="main-content" tabindex="-1">'+
       '<main class="landing-main">'+
@@ -645,13 +656,13 @@
       '<p>Three ways to explore the same organized sample information.</p></div>'+
       '<div class="landing-audience-grid">'+audience.map(function(a){
         return '<button type="button" class="landing-audience-card" data-action="landing-role" data-role="'+a.role+'">'+
-        '<span class="landing-audience-icon tone-'+a.theme+'" aria-hidden="true">'+a.icon+'</span>'+
+        '<span class="landing-audience-icon tone-'+a.theme+'" aria-hidden="true">'+landingIcon(a.icon)+'</span>'+
         '<span class="landing-audience-copy"><strong>'+safe(a.label)+'</strong><small>'+safe(a.detail)+'</small></span>'+
         '<span class="landing-card-chevron" aria-hidden="true">›</span></button>';
       }).join('')+'</div></section>'+
       '<section class="landing-shortcuts" aria-label="Explore features">'+feature.map(function(f){
         return '<a href="#'+f.target+'" data-nav="'+f.target+'" class="landing-shortcut">'+
-          '<span class="landing-shortcut-icon tone-'+f.theme+'" aria-hidden="true">'+f.icon+'</span>'+
+          '<span class="landing-shortcut-icon tone-'+f.theme+'" aria-hidden="true">'+landingIcon(f.icon)+'</span>'+
           '<span><strong>'+safe(f.name)+'</strong><small>'+safe(f.detail)+'</small></span></a>';
       }).join('')+'</section>'+
       '<footer class="landing-footer"><span>Madhouse Design Studio · Maddie Journey</span><span>Prototype · 51 fictional employees · 8 divisions · Not live-connected</span></footer>'+
