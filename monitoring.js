@@ -7,7 +7,7 @@
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
   });};
   const docLabels={'complete':'Complete','missing':'Missing','not-checked':'Not checked','not-applicable':'Not applicable'};
-  const icon=function(name){return root.MJ_ICONS.svg(name);};
+  const icon=function(name){return root.MJ_ICONS&&typeof root.MJ_ICONS.svg==='function'?root.MJ_ICONS.svg(name):'';};
   const documentIcons={Employment:'briefcase',Contracts:'file',Personal:'id-card',Government:'shield'};
   const statusIcons={'complete':'check','missing':'alert-circle','not-checked':'clock','not-applicable':'minus'};
   const eventIcons={checkin:'clock',employment:'briefcase',milestone:'award',change:'activity'};
