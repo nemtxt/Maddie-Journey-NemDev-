@@ -1,4 +1,4 @@
-/* Maddie Journey v3.2 — dependency-free read-only smoke checks.
+/* Maddie Journey v3.3 — dependency-free read-only smoke checks.
    Run from repository root: node tests/smoke.js
    Simulated interactions; browser/device visual QA is separate. */
 'use strict';
@@ -13,7 +13,7 @@ const src=Object.fromEntries(files.map(name=>[name,read(name)]));
 const results=[];
 function check(name,fn){fn();results.push(name);console.log('PASS '+name);}
 
-function boot(initial={},hash='',mutateFixture){
+function boot(initial={},hash='',mutateFixture,configureRuntime){
   const mem={...initial},events={},nodes={},downloads=[];
   let currentDownloadBlob=null;
   const mount={innerHTML:'',querySelector(selector){return selector==='[role="dialog"]'?{focus(){},querySelectorAll(){return [];}}:null;}};
@@ -35,6 +35,7 @@ function boot(initial={},hash='',mutateFixture){
   new Function('window',src['data.js'])(win);
   if(mutateFixture)mutateFixture(win.MJ_SEED);
   new Function('window',src['data-adapter.js'])(win);
+  if(configureRuntime)configureRuntime(win,doc);
   function TestBlob(chunks,options){this.text=chunks.join('');this.type=options.type;}
   const testURL={createObjectURL(blob){currentDownloadBlob=blob;return 'blob:test-download';},revokeObjectURL(){}};
   new Function('window','document','localStorage','sessionStorage','location','setTimeout','Blob','URL',src['app.js'])(
@@ -56,7 +57,12 @@ function boot(initial={},hash='',mutateFixture){
       events.keydown(ev);
       return ev;
     },
-    navigate(tab){this.click('nav',{tab});}
+    navigate(tab){this.click('nav',{tab});},
+    typeSearch(value){
+      const el={dataset:{ui:'query'},value,selectionStart:value.length,
+        focus(){},setSelectionRange(){}};
+      doc.activeElement=el;events.input({target:el});return el;
+    }
   };
 }
 
@@ -852,5 +858,133 @@ check('Phase 5 mobile styles include 320px safeguards, touch size and focus cont
   assert(css.includes('min-width:max(750px,100%)'));
   assert(css.includes('height:100dvh'));
   assert(css.includes('body .main{overflow:visible'));
+});
+check('Phase 6 page entrances have no list staggering and cap at two surfaces',()=>{
+  const elements=Array.from({length:700},(_,i)=>({id:i})),seen=[];
+  const doc={readyState:'complete',visibilityState:'visible',querySelector(){return null;},
+    querySelectorAll(){return elements;}};
+  const win={anime:{animate(el,p){seen.push({el,p});}},matchMedia(){return{matches:false}}};
+  new Function('window','document',src['motion.js'])(win,doc);
+  assert.equal(seen.length,2);
+  assert(seen.every(({el,p})=>(el===elements[0]||el===elements[1])&&p.delay===0&&p.duration<=165));
+  win.MJ_MOTION.refresh('overview');assert.equal(seen.length,2);
+  win.MJ_MOTION.refresh('journey');assert.equal(seen.length,4);
+});
+check('Phase 6 mobile drawer is never animated twice as another modal',()=>{
+  const el={id:'drawer'},seen=[];let opened=false;
+  const doc={readyState:'complete',visibilityState:'visible',querySelector(q){
+    if(q==='.layout.menu-open .workspace-sidebar')return opened?el:null;
+    if(q==='[role="dialog"]')return opened?el:null;
+    return null;
+  },querySelectorAll(){return[];}};
+  const win={anime:{animate(x,p){seen.push({x,p});}},matchMedia(){return{matches:false}}};
+  new Function('window','document',src['motion.js'])(win,doc);
+  opened=true;win.MJ_MOTION.refresh('overview');
+  assert.equal(seen.length,1);assert.equal(seen[0].x,el);assert.equal(seen[0].p.duration,150);
+  win.MJ_MOTION.refresh('overview');assert.equal(seen.length,1);
+  opened=false;win.MJ_MOTION.refresh('overview');
+  opened=true;win.MJ_MOTION.refresh('overview');assert.equal(seen.length,2);
+});
+check('Phase 6 employee modal transitions once per opening, not per detail',()=>{
+  const el={id:'dialog'},seen=[];let opened=false;
+  const doc={readyState:'complete',visibilityState:'visible',querySelector(q){
+    return q.startsWith('.employee-modal[role="dialog"]')&&opened?el:null;
+  },querySelectorAll(){return[];}};
+  const win={anime:{animate(x,p){seen.push({x,p});}},matchMedia(){return{matches:false}}};
+  new Function('window','document',src['motion.js'])(win,doc);
+  opened=true;win.MJ_MOTION.refresh('employees');
+  assert.equal(seen.length,1);assert.equal(seen[0].p.duration,155);
+  win.MJ_MOTION.refresh('employees');assert.equal(seen.length,1);
+  opened=false;win.MJ_MOTION.refresh('employees');
+  opened=true;win.MJ_MOTION.refresh('employees');assert.equal(seen.length,2);
+});
+check('Phase 6 respects reduced-motion, hidden tabs and Save-Data',()=>{
+  for(const kind of ['reduced','hidden','save-data']){
+    const calls=[],doc={readyState:'complete',visibilityState:kind==='hidden'?'hidden':'visible',
+      querySelector(){return null;},querySelectorAll(){return[{}];}};
+    const win={anime:{animate(){calls.push(1);}},
+      navigator:{connection:{saveData:kind==='save-data'}},
+      matchMedia(){return{matches:kind==='reduced'}}};
+    new Function('window','document',src['motion.js'])(win,doc);
+    win.MJ_MOTION.refresh('journey');win.MJ_MOTION.feedback('attention');
+    assert.equal(calls.length,0,kind);
+  }
+  const doc={readyState:'complete',visibilityState:'visible',querySelector(){return null;},
+    querySelectorAll(){return[{}];}};
+  const offline={matchMedia(){return{matches:false}}};
+  new Function('window','document',src['motion.js'])(offline,doc);
+  assert.doesNotThrow(()=>{offline.MJ_MOTION.refresh('journey');offline.MJ_MOTION.feedback('attention');});
+  const throwing={anime:{animate(){throw Error('Animation failure');}},
+    matchMedia(){return{matches:false}}};
+  assert.doesNotThrow(()=>new Function('window','document',src['motion.js'])(throwing,doc));
+  assert.doesNotThrow(()=>throwing.MJ_MOTION.refresh('journey'));
+});
+check('Phase 6 filter motion targets only a status label',()=>{
+  const label={},seen=[];const doc={readyState:'complete',visibilityState:'visible',
+    querySelector(q){return q==='.work-queue .queue-count'?label:null;},
+    querySelectorAll(){return[];}};
+  const win={anime:{animate(x,p){seen.push({x,p});}},matchMedia(){return{matches:false}}};
+  new Function('window','document',src['motion.js'])(win,doc);
+  win.MJ_MOTION.feedback('attention');win.MJ_MOTION.feedback('unknown');
+  assert.equal(seen.length,1);assert.equal(seen[0].x,label);
+  assert.equal(seen[0].p.duration,110);assert.equal(seen[0].p.delay,0);
+  assert(!src['motion.js'].includes('.work-list-row'));
+});
+check('Phase 6 selecting active filters does not reconstruct the workspace',()=>{
+  const ctx=boot({},'#overview'),root=ctx.doc.getElementById('app');
+  let value=root.innerHTML,n=0;
+  Object.defineProperty(root,'innerHTML',{configurable:true,get(){return value;},
+    set(v){value=v;n++;}});
+  ctx.click('work-view',{mode:'list'});ctx.click('attention-filter',{kind:'all'});
+  assert.equal(n,0);
+  ctx.click('work-view',{mode:'board'});assert.equal(n,1);
+  ctx.click('work-view',{mode:'board'});assert.equal(n,1);
+  ctx.click('attention-filter',{kind:'kpi'});assert.equal(n,2);
+  ctx.click('attention-filter',{kind:'kpi'});assert.equal(n,2);
+  ctx.click('attention-more');assert.equal(n,3);
+  ctx.click('attention-filter',{kind:'kpi'});assert.equal(n,4);
+  ctx.navigate('journey');const current=n;
+  ctx.click('journey-view',{mode:'board'});assert.equal(n,current);
+  ctx.click('journey-view',{mode:'table'});assert.equal(n,current+1);
+  ctx.click('journey-view',{mode:'table'});assert.equal(n,current+1);
+});
+check('Phase 6 directory search updates its table in place',()=>{
+  const ctx=boot({},'#employees'),root=ctx.doc.getElementById('app');
+  const area={outerHTML:''},counter={textContent:''},clear={innerHTML:'',
+    querySelector(){return null;}};
+  const panel={querySelector(q){return q==='.table-wrap, .empty'?area:
+    q==='.directory-results-count'?counter:q==='.directory-clear-slot'?clear:null;}};
+  root.querySelector=q=>q==='.panel.no-pad'?panel:null;
+  let scanned=0;root.querySelectorAll=()=>{scanned++;return[];};
+  let html=root.innerHTML,rebuilds=0;
+  Object.defineProperty(root,'innerHTML',{configurable:true,get(){return html;},
+    set(v){html=v;rebuilds++;}});
+  ctx.typeSearch('MJ-003');
+  assert.equal(rebuilds,0);assert.equal(counter.textContent,'1 of 51 employees');
+  assert(area.outerHTML.includes('MJ-003'));assert(clear.innerHTML.includes('Clear search'));
+  assert(scanned>0);
+});
+check('Phase 6 loading and error states give accessible recovery',()=>{
+  assert(src['index.html'].includes('class="boot" role="status" aria-live="polite"'));
+  assert(src['index.html'].includes('Preparing the fictional monitoring snapshot'));
+  const app={innerHTML:''},doc={getElementById:()=>app,title:''};
+  new Function('window','document',src['app.js'])({},doc);
+  assert(app.innerHTML.includes('Sample data unavailable'));
+  assert(app.innerHTML.includes('role="alert"'));
+  assert(app.innerHTML.includes('Reload dashboard'));
+  const invalid=boot({},'#overview',fixture=>{fixture.employees[0].division='invalid';});
+  assert(invalid.html().includes('class="data-error-card" role="alert"'));
+  assert(!invalid.html().includes('workspace-sidebar'));
+});
+check('Phase 6 a broken optional animation layer does not stop the app',()=>{
+  const ctx=boot({},'#overview',null,win=>{
+    win.MJ_MOTION={refresh(){throw Error('CDN failure');},
+      feedback(){throw Error('CDN failure');}};
+  });
+  assert(ctx.html().includes('Organization overview'));
+  assert.doesNotThrow(()=>ctx.click('attention-filter',{kind:'kpi'}));
+  assert(ctx.html().includes('aria-pressed="true">KPI'));
+  assert.doesNotThrow(()=>ctx.navigate('employees'));
+  assert(ctx.html().includes('All Maddies'));
 });
 console.log('\n'+results.length+' smoke tests passed. Physical-device visual QA is separate.');

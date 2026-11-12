@@ -1,4 +1,4 @@
-# Maddie Journey — Read-only Prototype v3.2
+# Maddie Journey — Read-only Prototype v3.3
 
 **Madhouse Design Studio · People & Culture**
 
@@ -121,6 +121,15 @@ The final design tokens and overrides are in **mono.css**. New features should u
 - **Navigation continuity:** A route change focuses the new screen heading, and frequency/sort choices retain keyboard context. No new input/edit workflow, data changes or integrations.
 - **Verification:** 57 dependency-free smoke tests, covering drawer state/trapping, overflow region behavior, deep keyboard navigation and layout/style safeguards. **Manual visual testing at specific viewport sizes is still required; automated source checks do not prove no clipped pixels.** See [the Phase 5 manual QA checklist](docs/PHASE5_RESPONSIVE_QA.md).
 
+### Phase 6 — v3.3 motion and performance
+
+- Anime.js v4 is **optional**: route entrances animate at most two structural elements for ≤165 ms with zero delay; dialogs ≤155 ms and drawer ≤150 ms, with no duplicate drawer/modal animation or staggered list motion.
+- Filter feedback, where available, is restricted to a single status label for ≤110 ms. The underlying lists, charts and monitoring controls update immediately.
+- Reduced-motion preferences, hidden tabs, Save-Data and missing/throwing Anime.js disable motion without blocking screens.
+- Selecting an already-active monitoring view or category does not replace the entire DOM. Directory typing updates only its result table, visible count and clear control, then recalculates keyboard scroll accessibility.
+- The startup placeholder is a static accessible status and invalid/missing fictional fixtures show an accessible, recoverable error screen without fake synchronization.
+- **66 automated smoke tests** check animation budgets, optional dependency failure, modal/drawer behavior, render avoidance and loading/error recovery. Manual performance traces and physical-device visual checks are still pending; see [Phase 6 QA](docs/PHASE6_MOTION_QA.md).
+
 ### Seven-stage Journey
 
 The Journey monitoring screen contains **seven stages plus Completed**, with one card per employee grouped by the first incomplete stage. The Board scrolls horizontally; Table view shows all matching members and aggregate progress. All status rows are non-editable.
@@ -144,7 +153,7 @@ The later connected-account phase can implement source normalization against the
 - Open index.html in a modern browser or use VS Code Live Server.
 - Run: node tests/smoke.js
 - On main, the custom GitHub Actions validation workflow runs the regression tests. Anime.js and the Inter web font are optional third-party CDN resources; UI navigation and sample data do not depend on their availability. GitHub Pages uses its separate publishing workflow.
-- Confirm both test and Pages workflow statuses under GitHub Actions. The automated suite currently includes 57 cases; physical Windows/macOS/Android/iOS visual acceptance remains separate.
+- Confirm both test and Pages workflow statuses under GitHub Actions. The automated suite currently includes 66 cases; physical Windows/macOS/Android/iOS visual acceptance remains separate.
 
 ## Source files
 
@@ -159,7 +168,7 @@ The later connected-account phase can implement source normalization against the
 | landing.css | Landing page and source photo |
 | workspace.css / reader.css | Global workspace, primary/secondary navigation and read-only views |
 | refined.css | Dashboard metrics, searchable directory, source quality panel and responsive summaries |
-| mono.css | **v3.2 canonical styles:** shared tokens, monochrome design, 320px responsive safeguards, accessible drawers and keyboard-scrollable tables |
+| mono.css | **v3.3 canonical styles:** monochrome system, responsive monitoring, static boot/recovery and short sidebar layout transitions |
 | motion.js | Reduced-motion-aware, nonessential Anime.js entrance transitions |
 | tests/smoke.js | Regression tests for navigation, adapters, fixtures and read-only operation |
 | docs/CLAUDE_CONNECTORS_HANDOFF.md | Future connector development instructions |

@@ -1,6 +1,6 @@
 # Maddie Journey — Prototype Acceptance Checklist
 
-Release: **v3.2**. Scope: **HTML/CSS/vanilla JavaScript + fictional fixture only**.
+Release: **v3.3**. Scope: **HTML/CSS/vanilla JavaScript + fictional fixture only**.
 
 This document distinguishes code-level verification from human visual acceptance. The automated smoke checks confirm the named routing and data contracts but cannot prove pixel-level accuracy on physical Windows, macOS, Android or iOS devices.
 
@@ -101,3 +101,12 @@ For the intended integration boundary, see [Claude Connector Handoff](CLAUDE_CON
 - **Accessibility:** Confirm visible focus, ≥44px mobile targets where practical, zoom/text resizing, both themes, reduced-motion preference and high-contrast OS mode. Check with an actual screen reader.
 - **Landing:** The photographic landing must remain one full viewport with no independent scrollbar and a working Skip to main content target.
 - **Integrity:** Source remains 51 fictional employees, eight divisions, read-only controls and no connected provider. Manual viewport/browser checks are not replaced by unit tests; track actual observations separately.
+
+## Phase 6 — Motion and performance acceptance
+
+- No list rows or employee records stagger into visibility. Route motion targets at most two structural surfaces, with zero delay and ≤165 ms duration.
+- Dialog and mobile drawer each animate only once on entry, ≤155 ms and ≤150 ms respectively. Filter feedback affects only a short status indicator, ≤110 ms.
+- Motion is disabled for reduced motion, hidden tabs and Save-Data and cannot block the app if the animation CDN is unavailable or errors.
+- Directory search updates only its table/result count; selecting the current filter or view must not rebuild the workspace. Horizontal table accessibility is recalculated after localized search updates.
+- The loading state is static and accessible; missing/corrupted fictional records show an alert and reload action, with no claims of live synchronization.
+- A real browser/performance trace remains mandatory before declaring physical-device or runtime performance acceptance. See [Phase 6 manual QA](PHASE6_MOTION_QA.md).
