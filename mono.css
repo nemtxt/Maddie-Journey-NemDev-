@@ -1465,3 +1465,9 @@ body .monitor-calendar-workspace>.report-source-note{margin:18px 0}
 @media(prefers-reduced-motion:reduce){
   body .monitor-filter{transition:none}
 }
+
+/* 320px touch-height protection for densely packed calendar day controls. */
+@media(max-width:350px){
+  body .monitor-calendar-date,body .monitor-calendar-empty{height:44px}
+  body button.monitor-calendar-date{min-height:44px}
+}
