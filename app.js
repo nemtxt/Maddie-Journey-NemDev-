@@ -40,7 +40,7 @@
     if(raw&&data===raw)try{localStorage.setItem(KEY,JSON.stringify(data));}catch(err){}
   }catch(err){data=clone(seed);}
   data.viewers=clone(seed.viewers); data.divisions=clone(seed.divisions); data.stages=clone(seed.stages); data.kit=clone(seed.kit);
-  let ui={tab:'overview',viewer:'giezelle',division:'all',activeDivision:'rmd',scope:'all',divisionPickerMode:'view',query:'',employee:data.employees[0].id,detail:'preview',employeeModalOpen:false,roleModal:false,divisionModal:false,employeePicker:false,pickerDivision:'rmd',frequency:'monthly',mobile:false,milestoneCategory:'birthday',milestoneDivision:'all',milestoneShowAll:false,milestonePicking:false,divisionTab:'summary',attentionFilter:'all',attentionShowAll:false};
+  let ui={tab:'welcome',viewer:'giezelle',division:'all',activeDivision:'rmd',scope:'all',divisionPickerMode:'view',query:'',employee:data.employees[0].id,detail:'preview',employeeModalOpen:false,roleModal:false,divisionModal:false,employeePicker:false,pickerDivision:'rmd',frequency:'monthly',mobile:false,milestoneCategory:'birthday',milestoneDivision:'all',milestoneShowAll:false,milestonePicking:false,divisionTab:'summary',attentionFilter:'all',attentionShowAll:false};
   try {const saved=JSON.parse(sessionStorage.getItem('maddie-journey-ui')||'null');if(saved&&data.viewers.some(function(v){return v.id===saved.viewer;}))ui.viewer=saved.viewer;ui.scope='all';}catch(err){}
   const now=function(){return new Date().toISOString().slice(0,10);};
   const safe=function(v){return String(v===undefined||v===null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
@@ -104,7 +104,7 @@
     });
   }
   function topnav(){
-    return '<div class="mobile-top"><div class="brand"><span class="logo">m.</span><b>Maddie Journey</b></div>'+button('☰','mobile','','small')+'</div>'+
+    return '<div class="mobile-top"><a href="#welcome" data-nav="welcome" class="brand mobile-brand" aria-label="Maddie Journey welcome"><img src="./assets/madhouse-logo.png" alt="Madhouse Design Studio" class="mobile-official-logo"><b>Maddie Journey</b></a>'+button('☰','mobile','','small')+'</div>'+
       '<div class="topbar"><div class="breadcrumb">PEOPLE & CULTURE <span class="breadcrumb-divider" aria-hidden="true">/</span><strong>'+safe(title(ui.tab))+'</strong></div>'+
       '<div class="top-actions">'+themeControl()+'</div></div>';
   }
@@ -113,7 +113,7 @@
     const v=viewer();
     const groups=[['PEOPLE',['overview','divisions','employees','milestones']],['OPERATIONS',['journey','kit','attendance']],['PERFORMANCE',['kpi','approvals']],['INTEGRATIONS',['sources']]];
     const navItems=function(ids){return ids.map(function(id){const item=items.find(function(x){return x[0]===id;});return item?'<a href="#'+id+'" data-nav="'+id+'" class="'+(ui.tab===id||(id==='divisions'&&ui.tab==='division')?'active':'')+'"><span class="nav-icon">'+item[1]+'</span>'+item[2]+'</a>':'';}).join('');};
-    return '<aside class="sidebar"><div class="brand"><span class="logo">m.</span><span><b>Maddie Journey</b><small>People & Culture</small></span></div>'+
+    return '<aside class="sidebar"><a href="#welcome" data-nav="welcome" class="brand brand-official-link" aria-label="Return to Maddie Journey landing page"><img class="sidebar-official-logo" src="./assets/madhouse-logo.png" alt="Madhouse Design Studio"><span class="brand-product-name">Maddie Journey</span></a>'+
       groups.map(function(g){return '<div class="sidebar-label">'+g[0]+'</div><nav class="nav" aria-label="'+g[0]+'">'+navItems(g[1])+'</nav>';}).join('')+
       '<div class="sidebar-bottom"><nav class="nav" aria-label="Settings">'+navItems(['audit'])+'</nav>'+
       '<div class="sidebar-user">'+avatar(v.name)+'<span><b>'+safe(v.name)+'</b><small>'+safe(v.title)+'</small></span></div>'+
@@ -615,7 +615,49 @@
     (t==='info'?'<div class="panel" style="margin-bottom:15px"><div class="form-grid"><div><span class="field-label">Start date</span><strong>'+dateLabel(e.startDate)+'</strong></div><div><span class="field-label">Employee ID</span><strong>'+safe(e.id)+'</strong></div><div><span class="field-label">Org level (sample)</span><strong>Level '+safe(e.orgLevel||'—')+'</strong></div><div><span class="field-label">Reports to (sample)</span><strong>'+safe((data.employees.find(function(p){return p.id===e.reportsTo;})||{}).name||'Department lead')+'</strong></div></div></div>':'')+
     detailContent(e,t)+'</div></section></div>';
   }
-  function render(){const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,milestones:milestonesView,journey:journey,kit:kitView,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,sources:sourcesView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open':'')+'">'+sidebar()+'<main id="main-content" class="main" tabindex="-1">'+topnav()+(views[ui.tab]||overview)()+'<footer class="footer"><span>Maddie Journey · Prototype v1.6</span><span>51 fictional employees · Local browser storage · No live integrations</span></footer></main></div>'+(ui.roleModal?workspaceModal():ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.employeeModalOpen?employeeModal():'');document.title=title(ui.tab)+' · Maddie Journey';if(ui.employeeModalOpen||ui.roleModal||ui.divisionModal||ui.employeePicker){const modal=$('app').querySelector('[role="dialog"]');if(modal&&typeof modal.focus==='function')modal.focus({preventScroll:true});}}
+  function landingView(){
+    const audience=[
+      {label:'HR',detail:'People, records and workforce tracking',role:'hr',theme:'pink',icon:'♙'},
+      {label:'Division Heads',detail:'Department performance and team overview',role:'head',theme:'yellow',icon:'◇'},
+      {label:'Executive overview',detail:'CEO, COO and CSO · organizational insights',role:'executive',theme:'blue',icon:'✧'}
+    ];
+    const feature=[
+      {name:'Summaries',detail:'Key insights at a glance',target:'overview',theme:'pink',icon:'▥'},
+      {name:'Org charts',detail:'Explore all eight divisions',target:'divisions',theme:'yellow',icon:'♧'},
+      {name:'Employees',detail:'Profiles and milestones',target:'employees',theme:'blue',icon:'♙'},
+      {name:'Data sources',detail:'Connection status and provenance',target:'sources',theme:'violet',icon:'▤'}
+    ];
+    return '<div class="landing-shell" id="main-content" tabindex="-1">'+
+      '<main class="landing-main">'+
+      '<header class="landing-header"><a class="landing-brand" href="#welcome" data-nav="welcome" aria-label="Maddie Journey home">'+
+      '<img src="./assets/madhouse-logo.png" alt="Madhouse Design Studio" class="landing-official-logo" width="720" height="117">'+
+      '<span class="landing-brand-separator" aria-hidden="true"></span><strong class="landing-brand-title">Maddie Journey</strong></a>'+
+      '<div class="landing-header-actions">'+themeControl()+'<span class="landing-demo-label">Sample data</span>'+
+      '<a class="landing-header-cta" href="#overview" data-nav="overview">Enter dashboard <span aria-hidden="true">↗</span></a></div></header>'+
+      '<section class="landing-hero" aria-labelledby="landing-title"><div class="landing-hero-inner">'+
+      '<span class="landing-kicker"><span class="landing-kicker-line"></span>People & Culture · Madhouse Design Studio</span>'+
+      '<h1 id="landing-title">Maddie Journey</h1>'+
+      '<p class="landing-hero-lead">People, division and executive tracking in one clear workspace.</p>'+
+      '<p class="landing-hero-copy">See what matters, explore your teams, and preview the information behind every summary.</p>'+
+      '<div class="landing-hero-actions"><a href="#overview" data-nav="overview" class="landing-primary-cta">Open dashboard <span aria-hidden="true">↗</span></a>'+
+      '<a href="#divisions" data-nav="divisions" class="landing-secondary-cta">View divisions <span aria-hidden="true">→</span></a></div></div></section>'+
+      '<section class="landing-audiences" aria-labelledby="landing-audiences-title"><div class="landing-section-heading"><h2 id="landing-audiences-title">Choose your workspace preview</h2>'+
+      '<p>Three ways to explore the same organized sample information.</p></div>'+
+      '<div class="landing-audience-grid">'+audience.map(function(a){
+        return '<button type="button" class="landing-audience-card" data-action="landing-role" data-role="'+a.role+'">'+
+        '<span class="landing-audience-icon tone-'+a.theme+'" aria-hidden="true">'+a.icon+'</span>'+
+        '<span class="landing-audience-copy"><strong>'+safe(a.label)+'</strong><small>'+safe(a.detail)+'</small></span>'+
+        '<span class="landing-card-chevron" aria-hidden="true">›</span></button>';
+      }).join('')+'</div></section>'+
+      '<section class="landing-shortcuts" aria-label="Explore features">'+feature.map(function(f){
+        return '<a href="#'+f.target+'" data-nav="'+f.target+'" class="landing-shortcut">'+
+          '<span class="landing-shortcut-icon tone-'+f.theme+'" aria-hidden="true">'+f.icon+'</span>'+
+          '<span><strong>'+safe(f.name)+'</strong><small>'+safe(f.detail)+'</small></span></a>';
+      }).join('')+'</section>'+
+      '<footer class="landing-footer"><span>Madhouse Design Studio · Maddie Journey</span><span>Prototype · 51 fictional employees · 8 divisions · Not live-connected</span></footer>'+
+      '</main></div>';
+  }
+  function render(){if(ui.tab==='welcome'){$('app').innerHTML=landingView();document.title='Maddie Journey · Madhouse Design Studio';return;}const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,milestones:milestonesView,journey:journey,kit:kitView,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,sources:sourcesView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open':'')+'">'+sidebar()+'<main id="main-content" class="main" tabindex="-1">'+topnav()+(views[ui.tab]||overview)()+'<footer class="footer"><span>Maddie Journey · Prototype v1.7</span><span>51 fictional employees · Local browser storage · No live integrations</span></footer></main></div>'+(ui.roleModal?workspaceModal():ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.employeeModalOpen?employeeModal():'');document.title=title(ui.tab)+' · Maddie Journey';if(ui.employeeModalOpen||ui.roleModal||ui.divisionModal||ui.employeePicker){const modal=$('app').querySelector('[role="dialog"]');if(modal&&typeof modal.focus==='function')modal.focus({preventScroll:true});}}
   function openDivision(id){if(!data.divisions.some(function(d){return d.id===id;}))return;ui.scope=id;ui.activeDivision=id;ui.divisionTab='summary';ensureEmployeeScope();persist();ui.tab='division';ui.employeeModalOpen=false;ui.roleModal=false;ui.divisionModal=false;ui.employeePicker=false;ui.mobile=false;ui.query='';ui.division='all';if(location.hash!=='#division/'+id)location.hash='#division/'+id;window.scrollTo({top:0,behavior:'instant'});render();}
   function navigate(tab){if(tab==='division'){openDivision(ui.activeDivision);return;}ui.scope='all';ensureEmployeeScope();ui.tab=tab;ui.employeeModalOpen=false;ui.roleModal=false;ui.divisionModal=false;ui.employeePicker=false;ui.mobile=false;ui.query='';ui.division='all';if(location.hash!=='#'+tab)location.hash='#'+tab;window.scrollTo({top:0,behavior:'instant'});render();}
   function invalidateEvaluation(e){
@@ -764,7 +806,7 @@
   }
   function toCSV(rows){return rows.map(function(row){return row.map(function(x){return '"'+String(x===null||x===undefined?'':x).replace(/"/g,'""')+'"';}).join(',');}).join('\r\n');}
   function download(filename,mime,text){const blob=new Blob([text],{type:mime});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},2500);}
-  function action(name,button){const e=emp();if(name==='mobile'){ui.mobile=!ui.mobile;render();return;}
+  function action(name,button){const e=emp();if(name==='landing-role'){const roles={hr:'giezelle',head:'aj',executive:'ceo'};const id=roles[button.dataset.role];if(!id)return;ui.viewer=id;ui.scope='all';ui.milestoneDivision='all';persist();navigate('overview');return;}if(name==='mobile'){ui.mobile=!ui.mobile;render();return;}
     if(name==='set-theme'){setTheme(button.dataset.themeValue);return;}
     if(name==='attention-filter'){ui.attentionFilter=['all','attendance','kpi','onboarding','reviews'].includes(button.dataset.kind)?button.dataset.kind:'all';ui.attentionShowAll=false;render();return;}
     if(name==='attention-more'){ui.attentionShowAll=!ui.attentionShowAll;render();return;}
@@ -825,7 +867,7 @@
     if(ev.shiftKey&&document.activeElement===first){ev.preventDefault();last.focus();}
     else if(!ev.shiftKey&&document.activeElement===last){ev.preventDefault();first.focus();}
   });
-  window.addEventListener('hashchange',function(){const target=location.hash.slice(1);if(target.startsWith('division/')){const id=target.slice(9);if(data.divisions.some(function(d){return d.id===id;})&&(ui.tab!=='division'||ui.activeDivision!==id))openDivision(id);}else if(items.some(function(a){return a[0]===target;})&&target!==ui.tab)navigate(target);});
-  const hash=location.hash.slice(1);if(hash.startsWith('division/')&&data.divisions.some(function(d){return d.id===hash.slice(9);})) {ui.tab='division';ui.activeDivision=hash.slice(9);ui.scope=ui.activeDivision;ensureEmployeeScope();}else if(items.some(function(a){return a[0]===hash;}))ui.tab=hash;
+  window.addEventListener('hashchange',function(){const target=location.hash.slice(1);if(target==='welcome'&&ui.tab!=='welcome'){navigate('welcome');}else if(target.startsWith('division/')){const id=target.slice(9);if(data.divisions.some(function(d){return d.id===id;})&&(ui.tab!=='division'||ui.activeDivision!==id))openDivision(id);}else if(items.some(function(a){return a[0]===target;})&&target!==ui.tab)navigate(target);});
+  const hash=location.hash.slice(1);if(hash.startsWith('division/')&&data.divisions.some(function(d){return d.id===hash.slice(9);})) {ui.tab='division';ui.activeDivision=hash.slice(9);ui.scope=ui.activeDivision;ensureEmployeeScope();}else if(items.some(function(a){return a[0]===hash;}))ui.tab=hash;else ui.tab='welcome';
   render();
 })();
