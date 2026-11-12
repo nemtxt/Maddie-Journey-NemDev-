@@ -120,7 +120,7 @@
     const team=ui.tab==='division'?data.employees.filter(function(e){return e.division===ui.activeDivision;}):all;
     let cards=[];
     if(ui.tab==='division'){
-      cards=[['Division members',team.length,'Fictional employee records'],['Average KPI score',meanOf(team,score).toString()+'%','Demonstration figures only'],['Journey completion',meanOf(team,journeyPct)+'%','All 7 onboarding stages'],['Submitted evaluations',team.filter(function(e){return reviewStatus(e,'division')==='Endorsed';}).length,'Division Head endorsements']];
+      cards=[['Division members',team.length,'Fictional employee records'],['Average KPI score',meanOf(team,score).toString()+'%','Demonstration figures only'],['Journey completion',meanOf(team,journeyPct)+'%','All 7 onboarding stages'],['Recorded endorsements',team.filter(function(e){return reviewStatus(e,'division')==='Endorsed';}).length,'Sample division reviews']];
     }else if(ui.tab==='divisions'){
       cards=[['Active divisions',data.divisions.length,'Dedicated evaluator workspaces'],['Sample employees',all.length,'Company-wide directory'],['Average KPI score',meanOf(all,score)+'%','Demonstration scores'],['Average onboarding',meanOf(all,journeyPct)+'%','Completion across 7 stages']];
     }else if(ui.tab==='milestones'){
@@ -269,7 +269,7 @@
       metricCard('Final approvals',done+' / '+n,(n-done)+' pending or in progress')+'</div>';
   }
 
-  function attentionItems(team,role){
+  function attentionItems(team){
     const items=[];
     const create=function(e,group,label,detail,weight){
       items.push({e:e,group:group,label:label,detail:detail,weight:weight});
@@ -285,8 +285,8 @@
     });
     return items.sort(function(a,b){return b.weight-a.weight||a.e.name.localeCompare(b.e.name);});
   }
-  function attentionPanel(team,role){
-    const all=attentionItems(team,role);
+  function attentionPanel(team){
+    const all=attentionItems(team);
     const categories=[['all','All'],['attendance','Attendance'],['kpi','KPI'],['onboarding','Onboarding'],['reviews','Reviews']];
     const active=categories.some(function(x){return x[0]===ui.attentionFilter;})?ui.attentionFilter:'all';
     const rows=active==='all'?all:all.filter(function(x){return x.group===active;});
@@ -354,7 +354,7 @@
       button('Explore divisions','nav','data-tab="divisions"','small'))+
       '<section class="grid metrics summary-metrics">'+cards.map(function(c){return metricCard(c[0],c[1],c[2]);}).join('')+'</section>'+
       dataProvenanceStrip()+
-      '<div class="workspace-action-center">'+attentionPanel(team,'all')+'</div>'+
+      '<div class="workspace-action-center">'+attentionPanel(team)+'</div>'+
       '<div class="dashboard-main dashboard-secondary"><div class="dashboard-side">'+
       '<section class="panel next-step-panel"><h2>Quick access</h2><p>Jump directly to a monitoring view.</p>'+
       '<div class="next-step-actions">'+button('Journey board','nav','data-tab="journey"','small')+
@@ -597,7 +597,7 @@
       '<div class="reader-policy-list"><div><strong>Organizes and previews</strong><p>Employee rosters, onboarding stages, attendance summaries, milestones, scorecards and review statuses.</p></div>'+
       '<div><strong>Does not submit records</strong><p>No HR input, employee editing, approvals, attendance verification, or KPI changes are made here.</p></div>'+
       '<div><strong>Fictional demonstration</strong><p>The current release reads 51 sample employees across eight divisions. There are no live Google Workspace or Airtable connections.</p></div>'+
-      '<div><strong>Viewer selection is not login</strong><p>The first-visit chooser personalizes the dashboard perspective. Real authentication will be required before using private source data.</p></div></div>'+
+      '<div><strong>Open demo navigation</strong><p>Every sample page is accessible without selecting a user. Any later use of private employee information requires authenticated, permission-controlled access.</p></div></div>'+
       '</section><section class="panel"><h2>Assigned division contacts</h2>'+
       '<p class="muted micro">Illustrative assignment map from the project brief</p>'+
       data.divisions.map(function(d){return '<div class="quick-item"><div class="grow"><b>'+safe(d.name)+'</b><p>'+
