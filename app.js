@@ -1464,6 +1464,15 @@
       target.focus({preventScroll:true});
     }
   }
+  function handleViewportResize(){
+    enhanceScrollableTables();
+    // Dismissing the mobile drawer when the viewport grows prevents an invisible
+    // aria-modal drawer and an inert desktop workspace after rotation/zoom.
+    if(ui.mobile&&typeof window.matchMedia==='function'&&
+       window.matchMedia('(min-width: 761px)').matches){
+      ui.mobile=false;render();focusWorkspaceHeading();
+    }
+  }
   function focusMobileMenu(opened){
     const root=$('app');if(!root||typeof root.querySelector!=='function')return;
     const target=root.querySelector(opened?'.workspace-sidebar .mobile-drawer-close':'.mobile-top [data-action="mobile"]');
@@ -1474,7 +1483,7 @@
       if(motion&&typeof motion[method]==='function')motion[method](kind);
     }catch(err){/* Decorative motion never blocks navigation. */}
   }
-  function render(){if(ui.tab==='welcome'){$('app').innerHTML=landingView();document.title='Maddie Journey · Madhouse Design Studio';optionalMotion('refresh','welcome');return;}const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,milestones:milestonesView,calendar:calendarView,journey:journey,kit:kitView,files201:files201View,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,sources:sourcesView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open ':'')+(ui.sidebarCollapsed?'sidebar-collapsed ':'')+(ui.density==='compact'?'density-compact':'density-comfortable')+'">'+sidebar()+'<button type="button" class="workspace-scrim" aria-label="Close navigation" tabindex="-1" aria-hidden="true" data-action="mobile"></button><main id="main-content" class="main" tabindex="-1"'+(ui.mobile?' inert':'')+'>'+topnav()+(views[ui.tab]||overview)()+'<footer class="footer"><span>Maddie Journey · Prototype v3.6</span><span>Fictional snapshot · No connected sources</span></footer></main></div>'+(ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.employeeModalOpen?employeeModal():'');document.title=title(ui.tab)+' · Maddie Journey';enhanceScrollableTables();optionalMotion('refresh',ui.tab);if(ui.employeeModalOpen||ui.divisionModal||ui.employeePicker){const modal=$('app').querySelector('[role="dialog"]');if(modal&&typeof modal.focus==='function')modal.focus({preventScroll:true});}}
+  function render(){if(ui.tab==='welcome'){$('app').innerHTML=landingView();document.title='Maddie Journey · Madhouse Design Studio';optionalMotion('refresh','welcome');return;}const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,milestones:milestonesView,calendar:calendarView,journey:journey,kit:kitView,files201:files201View,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,sources:sourcesView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open ':'')+(ui.sidebarCollapsed?'sidebar-collapsed ':'')+(ui.density==='compact'?'density-compact':'density-comfortable')+'"'+(ui.employeeModalOpen||ui.divisionModal||ui.employeePicker?' inert aria-hidden="true"':'')+'>'+sidebar()+'<button type="button" class="workspace-scrim" aria-label="Close navigation" tabindex="-1" aria-hidden="true" data-action="mobile"></button><main id="main-content" class="main" tabindex="-1"'+(ui.mobile?' inert':'')+'>'+topnav()+(views[ui.tab]||overview)()+'<footer class="footer"><span>Maddie Journey · Prototype v3.7</span><span>Fictional snapshot · No connected sources</span></footer></main></div>'+(ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.employeeModalOpen?employeeModal():'');document.title=title(ui.tab)+' · Maddie Journey';enhanceScrollableTables();optionalMotion('refresh',ui.tab);if(ui.employeeModalOpen||ui.divisionModal||ui.employeePicker){const modal=$('app').querySelector('[role="dialog"]');if(modal&&typeof modal.focus==='function')modal.focus({preventScroll:true});}}
   function openDivision(id,view,focusId){
     if(!data.divisions.some(function(d){return d.id===id;}))return;
     ui.scope=id;ui.activeDivision=id;
@@ -1632,7 +1641,7 @@
       openDivision(selected.division,'list',selected.id);return;
     }
     if(name==='close'||name==='viewer-return'){closeReader();return;}
-    if(name==='detail'){if(!['preview','milestones','kpi','journey','kit','files201','attendance','approvals','info'].includes(button.dataset.tab))return;ui.detail=button.dataset.tab;render();const selected=$('app').querySelector('.employee-modal-tabs .employee-tab.active');if(selected&&typeof selected.focus==='function')selected.focus({preventScroll:true});return;}
+    if(name==='detail'){if(!['preview','milestones','kpi','journey','kit','files201','attendance','approvals','info'].includes(button.dataset.tab))return;ui.detail=button.dataset.tab;render();const selected=$('app').querySelector('.employee-modal-tabs .employee-tab.active');if(selected&&typeof selected.focus==='function'){selected.focus({preventScroll:true});if(typeof selected.scrollIntoView==='function')selected.scrollIntoView({block:'nearest',inline:'nearest'});}return;}
     if(name==='export-csv'){const rows=[['Employee ID','Name','Division','Role','Start date','Journey %','Welcome kit %','KPI score %','Performance rating','Final approval']].concat(filtered().map(function(x){return [x.id,x.name,div(x.division).name,x.jobTitle,x.startDate,journeyPct(x),kitPct(x),score(x),rating(score(x)),x.review.coo.status];}));download('maddie-journey-directory-visible.csv','text/csv;charset=utf-8',toCSV(rows));return;}
     if(name==='attendance-csv'){const rows=[['Employee ID','Employee','Division','Date','Type','Approval','Verified','Reason','Supervisor remarks']];scopedEmployees().forEach(function(x){x.attendance.forEach(function(r){rows.push([x.id,x.name,div(x.division).name,r.date,r.type,r.approval,r.verified?'Yes':'No',r.reason,r.remarks]);});});download('maddie-journey-attendance.csv','text/csv;charset=utf-8',toCSV(rows));return;}
   }
@@ -1661,7 +1670,7 @@
     else if(el.dataset.ui==='query'){ui.query=el.value;render();}
   });
   document.addEventListener('input',function(ev){const el=ev.target;if(el.dataset.ui==='query'){const p=el.selectionStart;ui.query=el.value;const focus=document.activeElement;const list=filtered();const table=$('app').querySelector('.panel.no-pad');if(table){const existing=table.querySelector('.table-wrap, .empty');if(existing)existing.outerHTML=employeesTable(list);const count=table.querySelector('.directory-results-count');if(count)count.textContent=list.length+' of '+scopedEmployees().length+' employees';const clearSlot=table.querySelector('.directory-clear-slot');if(clearSlot){const hasClear=!!clearSlot.querySelector('[data-action="clear-search"]');if(ui.query&&!hasClear)clearSlot.innerHTML=button('Clear search','clear-search','','small');else if(!ui.query&&hasClear)clearSlot.innerHTML='';}enhanceScrollableTables();}if(focus!==el){el.focus();try{el.setSelectionRange(p,p);}catch(err){}}}});
-  window.addEventListener('resize',enhanceScrollableTables);
+  window.addEventListener('resize',handleViewportResize);
   document.addEventListener('toggle',enhanceScrollableTables,true);
   document.addEventListener('keydown',function(ev){
     const anyOpen=ui.employeeModalOpen||ui.divisionModal||ui.employeePicker;
@@ -1688,7 +1697,7 @@
         }
       }return;
     }
-    if(ev.key==='ArrowLeft'||ev.key==='ArrowRight'){
+    if(ev.key==='ArrowLeft'||ev.key==='ArrowRight'||ev.key==='Home'||ev.key==='End'){
       const group=ev.target&&typeof ev.target.closest==='function'?
         ev.target.closest('.employee-modal-tabs, .division-tabs'):null;
       if(group&&typeof group.querySelectorAll==='function'){
@@ -1696,7 +1705,8 @@
         const index=buttons.indexOf(ev.target);
         if(index>=0&&buttons.length>1){
           ev.preventDefault();const step=ev.key==='ArrowRight'?1:-1;
-          const target=buttons[(index+step+buttons.length)%buttons.length];
+          const target=buttons[ev.key==='Home'?0:ev.key==='End'?buttons.length-1:
+            (index+step+buttons.length)%buttons.length];
           if(target&&target.dataset)action(target.dataset.action,target);
           return;
         }

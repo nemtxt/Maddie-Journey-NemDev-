@@ -1,4 +1,4 @@
-/* Maddie Journey v3.3 — dependency-free read-only smoke checks.
+/* Maddie Journey v3.7 — dependency-free read-only smoke checks.
    Run from repository root: node tests/smoke.js
    Simulated interactions; browser/device visual QA is separate. */
 'use strict';
@@ -1809,4 +1809,85 @@ check('Phase 9 context actions retain consistent icons and 320px accessibility s
   assert(js.includes('function readerRecordCue(e)'));
   assert(js.includes("role=\"tabpanel\""));
 });
+
+// Phase 10: semantic DOM and event tests remain simulated, not rendered-device QA.
+check('Phase 10 centered employee previews isolate background without making the dialog inert',()=>{
+  const ctx=boot({},'#employees');
+  assert(!ctx.html().includes('inert aria-hidden="true"'));
+  ctx.click('open',{id:'MJ-001',detail:'files201'});
+  const h=ctx.html();
+  assert(h.includes('inert aria-hidden="true"><aside'), 'workspace isolated');
+  assert(h.includes('class="employee-modal" role="dialog" aria-modal="true"'));
+  assert(h.includes('No official employee file'));
+  ctx.click('viewer-return');
+  assert(!ctx.html().includes('inert aria-hidden="true"'));
+});
+check('Phase 10 division chooser and employee picker isolate their read-only background',()=>{
+  const ctx=boot({},'#employees');
+  ctx.click('choose-division');
+  assert(ctx.html().includes('inert aria-hidden="true"><aside'));
+  assert(ctx.html().includes('role="dialog" aria-modal="true"'));
+  ctx.click('close');
+  ctx.click('choose-employee');
+  assert(ctx.html().includes('inert aria-hidden="true"><aside'));
+  ctx.click('close');
+  assert(!ctx.html().includes('inert aria-hidden="true"'));
+});
+check('Phase 10 open mobile drawer survives mobile resize but closes at desktop breakpoint',()=>{
+  let desktop=false;
+  const ctx=boot({},'#employees',null,win=>{
+    win.matchMedia=query=>({matches:query==='(min-width: 761px)'&&desktop});
+  });
+  ctx.click('mobile');
+  assert(ctx.html().includes('menu-open'));
+  assert(ctx.html().includes('role="dialog" aria-modal="true" aria-label="Workspace navigation"'));
+  ctx.win.handlers.resize();
+  assert(ctx.html().includes('menu-open'));
+  desktop=true;ctx.win.handlers.resize();
+  assert(!ctx.html().includes('menu-open'));
+  assert(!ctx.html().includes('role="dialog" aria-modal="true" aria-label="Workspace navigation"'));
+  assert(!ctx.html().includes('inert aria-hidden="true"'));
+});
+check('Phase 10 Home and End keys select employee tab extremes without writing data',()=>{
+  const ctx=boot({},'#employees'),before=JSON.stringify(ctx.win.MJ_SEED.employees);
+  ctx.click('open',{id:'MJ-001',detail:'kpi'});
+  const names=['preview','milestones','kpi','journey','kit','files201','attendance','approvals','info'];
+  const buttons=names.map(tab=>({dataset:{action:'detail',tab}}));
+  const group={querySelectorAll(){return buttons;}};
+  const target={...buttons[2],closest(){return group;}};
+  const end=ctx.key('End',{target});
+  assert(end.prevented);
+  assert(ctx.html().includes('aria-labelledby="employee-tab-info"'));
+  const home=ctx.key('Home',{target});
+  assert(home.prevented);
+  assert(ctx.html().includes('aria-labelledby="employee-tab-preview"'));
+  assert.equal(JSON.stringify(ctx.win.MJ_SEED.employees),before);
+});
+check('Phase 10 selected employee tab is brought into view when narrow tab strip overflows',()=>{
+  const ctx=boot({},'#employees');
+  ctx.click('open',{id:'MJ-001',detail:'preview'});
+  const mount=ctx.doc.getElementById('app'),original=mount.querySelector;
+  let focusCount=0,scrolled;
+  mount.querySelector=function(selector){
+    if(selector==='.employee-modal-tabs .employee-tab.active')return{
+      focus(){focusCount++;},scrollIntoView(options){scrolled=options;}
+    };
+    return original.call(this,selector);
+  };
+  ctx.click('detail',{tab:'attendance'});
+  assert.equal(focusCount,1);
+  assert.deepEqual(scrolled,{block:'nearest',inline:'nearest'});
+  assert(ctx.html().includes('aria-labelledby="employee-tab-attendance"'));
+});
+check('Phase 10 CSS and acceptance document include narrow, short and forced-color safeguards',()=>{
+  const css=src['mono.css'];
+  assert(css.includes('scroll-margin-inline:16px'));
+  assert(css.includes('@media(max-width:380px)'));
+  assert(css.includes('@media(max-height:600px)'));
+  assert(css.includes('@media(forced-colors:active)'));
+  assert(src['app.js'].includes("window.matchMedia('(min-width: 761px)').matches"));
+  const qa=read('docs/PHASE10_ACCESSIBILITY_QA.md');
+  for(const required of ['320','375','430','768','1024','1440','1920','200%','NVDA','VoiceOver','Not verified'])assert(qa.includes(required),required);
+});
+
 console.log('\n'+results.length+' smoke tests passed. Physical-device visual QA is separate.');

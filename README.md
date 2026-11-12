@@ -1,4 +1,4 @@
-# Maddie Journey — Read-only Prototype v3.6
+# Maddie Journey — Read-only Prototype v3.7
 
 **Madhouse Design Studio · People & Culture**
 
@@ -27,6 +27,15 @@ The responsive frontend uses HTML, CSS and vanilla JavaScript, with a text-only 
 | Data & Sources | Data Sources · About the Prototype |
 
 All 13 screens are available to anyone using the fictional sample prototype. On desktop, the primary sidebar collapses to icon navigation and remembers the display preference locally; on mobile it remains a full-width accessible drawer. A division also offers its own Summary, Board, List and Org Chart tabs. Employee cards open centered view-only previews.
+
+### Phase 10 — v3.7 responsive and accessibility stabilization
+
+- **Dialog isolation:** Employee, division and person-picker dialogs now mark the underlying workspace inert and hidden from assistive technology while the dialog is open. Closing restores the same source filters and source control focus.
+- **Viewport transitions:** An open mobile navigation drawer automatically dismisses when the viewport crosses to desktop at 761px, preventing an invisible modal drawer from leaving the monitoring workspace inert.
+- **Employee section keyboard navigation:** The nine existing tabs now support Home/End in addition to Left/Right and focus the selected tab while scrolling it into the nearest visible section of the horizontal strip.
+- **Narrow/short-screen safeguards:** Employee return labels wrap on 320–380px widths instead of being unnecessarily cut off; the pager can take its own row, the dialog respects short viewport heights and forced-color active tabs retain a visible selection cue.
+- **Verification:** **119 dependency-free source and simulated-interaction regression checks** (113 prior + 6 Phase 10). These checks do not constitute physical-device, screenshot, screen-reader or 200%-zoom acceptance. [Phase 10 manual QA and evidence matrix](docs/PHASE10_ACCESSIBILITY_QA.md).
+- **Scope preserved:** 51 fictional employees, eight divisions, 13 existing read-only screens, identical filters and calculations, no login, editing, provider authorization or real employee records.
 
 ### Phase 9 — v3.6 contextual employee preview and workflow continuity
 
@@ -215,7 +224,7 @@ The later connected-account phase can implement source normalization against the
 - Open index.html in a modern browser or use VS Code Live Server.
 - Run: node tests/smoke.js
 - On main, the custom GitHub Actions validation workflow runs the regression tests. Anime.js and the Inter web font are optional third-party CDN resources; UI navigation and sample data do not depend on their availability. GitHub Pages uses its separate publishing workflow.
-- Confirm both test and Pages workflow statuses under GitHub Actions. The automated suite currently includes 113 cases; physical Windows/macOS/Android/iOS visual acceptance remains separate.
+- Confirm both test and Pages workflow statuses under GitHub Actions. The automated suite currently includes 119 cases; physical Windows/macOS/Android/iOS visual acceptance remains separate.
 
 ## Source files
 

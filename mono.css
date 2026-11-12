@@ -2191,3 +2191,24 @@ body .employee-context-match{
     border-color:CanvasText!important
   }
 }
+
+/* Phase 10 v3.7 — narrow/zoomed viewport navigation affordances. */
+body .employee-modal-tabs[role="tablist"] .employee-tab{scroll-margin-inline:16px}
+@media(max-width:380px){
+  body .employee-context-return span{
+    max-width:130px;white-space:normal;text-overflow:clip;
+    line-height:1.35;overflow-wrap:anywhere
+  }
+  body .employee-context-pager{
+    flex:1 1 100%;justify-content:flex-end;margin-left:0;min-width:0
+  }
+}
+@media(max-height:600px){
+  body .employee-overlay{padding:6px}
+  body .employee-modal{max-height:calc(100dvh - 12px)}
+}
+@media(forced-colors:active){
+  body .employee-modal-tabs[role="tablist"] .employee-tab[aria-selected="true"]{
+    outline-offset:-3px;box-shadow:none
+  }
+}
