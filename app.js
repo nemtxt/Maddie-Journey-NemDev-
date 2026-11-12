@@ -155,10 +155,9 @@
     }else if(ui.tab==='approvals'){
       cards=[['Division Head endorsed',all.filter(function(e){return reviewStatus(e,'division')==='Endorsed';}).length,'Initial evaluation'],['Corporate Ops endorsed',all.filter(function(e){return reviewStatus(e,'corp')==='Endorsed';}).length,'Review & endorsement'],['CSO reviewed',all.filter(function(e){return reviewStatus(e,'cso')==='Endorsed';}).length,'Strategic review'],['COO approved',all.filter(function(e){return reviewStatus(e,'coo')==='Approved';}).length,'Final approval tracked']];
     }else if(ui.tab==='sources'){
-      cards=[['Connected sources',0,'No live integrations configured'],['Demo employees',data.employees.length,'Stored in this browser'],['External sync','Off','Not available on GitHub Pages alone'],['Verified source records',0,'Awaiting secure integration']];
+      cards=[['Connected sources',0,'No live integrations configured'],['Demo employees',data.employees.length,'Fictional sample fixture'],['External sync','Off','Not available on GitHub Pages alone'],['Verified source records',0,'Awaiting secure integration']];
     }else if(ui.tab==='audit'){
-      const changed=all.filter(function(e){return e.audit.length>0;});
-      cards=[['Employee records',all.length,'All fictional'],['Edited employees',changed.length,'On this browser'],['Logged changes',all.reduce(function(n,e){return n+e.audit.length;},0),'Local activity history'],['Shared sync','Off','JSON backup available']];
+      cards=[['Sample employees',data.employees.length,'Fictional roster'],['Divisions',data.divisions.length,'Department summaries'],['Data submission','Disabled','Monitoring only'],['Live source sync','Not connected','Secure integration required']];
     }
     return cards.length?'<section class="screen-summary" aria-label="'+safe(title(ui.tab))+' summary"><div class="summary-heading"><span class="eyebrow">SCREEN SUMMARY</span><span class="muted micro">Calculated from sample data</span></div><div class="grid metrics">'+cards.map(function(c){return metricCard(c[0],c[1],c[2]);}).join('')+'</div></section>':'';
   }
@@ -356,7 +355,7 @@
   }
   function dataProvenanceStrip(){
     return '<div class="data-provenance"><span class="data-provenance-dot" aria-hidden="true"></span>'+
-      '<div><strong>Sample data</strong><span>Stored in this browser · No live Airtable or Google sync</span></div>'+
+      '<div><strong>Sample data</strong><span>Fictional sample snapshot · No live Airtable or Google sync</span></div>'+
       button('Source details','nav','data-tab="sources"','small')+'</div>';
   }
   function roleHome(){
@@ -609,7 +608,7 @@
     ];
     return header('INTEGRATION READINESS','Data sources','A transparent view of where official data will come from. No live connections are configured in this browser.')+
       '<div class="source-banner"><span class="source-banner-icon">i</span><div><strong>Preview mode — no external synchronization</strong>'+
-      '<p>The 51 employee records and all dashboard metrics are fictional. GitHub Pages cannot use Claude account connectors directly as a browser API.</p></div></div>'+
+      '<p>The 51 employee records and all dashboard metrics are fictional. This frontend never submits source updates. GitHub Pages cannot use Claude account connectors directly as a browser API.</p></div></div>'+
       '<section class="source-grid">'+sources.map(function(s){
         return '<article class="panel source-card"><div class="source-card-top"><h2>'+safe(s.name)+'</h2><span class="source-unlinked">Not connected</span></div>'+
           '<p>'+safe(s.purpose)+'</p><div class="source-card-bottom"><span>'+safe(s.data)+'</span><span>No last sync</span></div></article>';
@@ -619,7 +618,22 @@
       '<div class="source-policy-steps"><span>1. Read authorized sources</span><span>2. Match employee IDs</span><span>3. Validate records</span><span>4. Show source and sync time</span></div>'+
       '<p class="muted micro">Do not put passwords, API tokens or confidential HR records in this public repository or GitHub Pages.</p></section>';
   }
-  function activity(){const logs=[];scopedEmployees().forEach(function(e){(e.audit||[]).forEach(function(a){logs.push({date:a.date,employee:e.name,actor:a.actor,action:a.action});});});logs.sort(function(a,b){return b.date.localeCompare(a.date);});return header('WORKSPACE SETTINGS','Activity & data','Review local changes and manage your demonstration dataset.',button('Download JSON backup','export','','primary'))+'<div class="grid dashboard-grid"><section class="panel"><h2>Data controls</h2><p class="muted micro" style="margin:8px 0 17px">Edits are saved to this browser only. They do not automatically sync across devices or evaluators.</p><div class="actions">'+button('Export all data (JSON)','export','','small')+button('Import backup','import','','small')+button('Download employee CSV','export-csv','','small')+button('Reset 51 sample employees','reset','','small danger')+'</div><input type="file" id="import-file" accept=".json,application/json" hidden><div class="hr"></div><div class="callout orange"><strong>Privacy & security:</strong> This is a public-repository prototype with simulated role permissions. It is not suitable for live employee, confidential compensation, or authentication data. Use a secure backend and verified access controls before any production rollout.</div></section><section class="panel"><h2>Assigned evaluators</h2><p class="muted micro" style="margin:7px 0 16px">Current roster per project instruction</p>'+data.divisions.map(function(d){return '<div class="quick-item"><div class="grow"><b>'+safe(d.name)+'</b><p>'+safe(d.evaluators.map(function(id){const v=data.viewers.find(function(p){return p.id===id;});return v?v.name:id;}).join(' / '))+'</p></div></div>';}).join('')+'<div class="hr"></div><p class="muted micro">HR: GIEZELLE · KURT</p></section></div><section class="panel"><div class="panel-head"><div><h2>Local activity log</h2><p>Actions recorded in this browser by the selected demo viewer</p></div><span class="tag info">'+logs.length+' events</span></div><div class="audit-list">'+(logs.length?logs.slice(0,60).map(function(a){return '<div class="audit-row"><span class="avatar">↗</span><div><p><strong>'+safe(a.actor)+'</strong> · '+safe(a.action)+'</p><small>'+safe(a.employee)+' · '+safe(new Date(a.date).toLocaleString('en-PH'))+'</small></div></div>';}).join(''):'<div class="empty">No edits recorded yet. Edit any sample entry to see its audit trail.</div>')+'</div></section>';}
+  function activity(){
+    return header('DATA & GOVERNANCE','About this prototype',
+      'Maddie Journey is a reader and monitoring interface. Source systems retain ownership of all records.',
+      button('Data sources','nav','data-tab="sources"','small'))+
+      '<div class="grid dashboard-grid"><section class="panel"><h2>What the dashboard does</h2>'+
+      '<div class="reader-policy-list"><div><strong>Organizes and previews</strong><p>Employee rosters, onboarding stages, attendance summaries, milestones, scorecards and review statuses.</p></div>'+
+      '<div><strong>Does not submit records</strong><p>No HR input, employee editing, approvals, attendance verification, or KPI changes are made here.</p></div>'+
+      '<div><strong>Fictional demonstration</strong><p>The current release reads 51 sample employees across eight divisions. There are no live Google Workspace or Airtable connections.</p></div>'+
+      '<div><strong>Viewer selection is not login</strong><p>The first-visit chooser personalizes the dashboard perspective. Real authentication will be required before using private source data.</p></div></div>'+
+      '</section><section class="panel"><h2>Assigned division contacts</h2>'+
+      '<p class="muted micro">Illustrative assignment map from the project brief</p>'+
+      data.divisions.map(function(d){return '<div class="quick-item"><div class="grow"><b>'+safe(d.name)+'</b><p>'+
+        safe(divisionEvaluatorNames(d))+'</p></div></div>';}).join('')+
+      '<div class="hr"></div><p class="muted micro">HR: GIEZELLE · KURT</p></section></div>';
+  }
+
   function detailContent(e,t){if(t==='journey')return '<div class="panel"><div class="panel-head"><h2>Seven-stage checklist</h2><span class="tag info">'+journeyPct(e)+'% done</span></div>'+stageCards(e)+'</div>';if(t==='kit')return '<div class="panel"><div class="panel-head"><h2>Welcome Maddie Kit</h2><span class="tag info">'+kitPct(e)+'% ready</span></div>'+kitSection(e)+'</div>';if(t==='attendance')return '<section class="panel"><div class="heading-line"><h2>Attendance records</h2></div>'+attendanceSummary(e)+'<div class="hr"></div>'+attendanceRows(e)+'</section>';if(t==='kpi')return kpiDetail(e);if(t==='approvals')return approvalsDetail(e);if(t==='milestones')return milestoneDetail(e);if(t==='preview')return previewCharts(e);if(t==='info')return '<section class="panel"><h2>Employee information</h2><p class="muted micro" style="margin:6px 0 15px">Profile details and department assignment</p>'+profileForm(e)+'</section>';return '';}
   function profileForm(e){
     const fields=[['Full name',e.name],['Job title',e.jobTitle],['Sample email',e.email],['Hiring date',dateLabel(e.startDate)],
