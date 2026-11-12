@@ -295,3 +295,80 @@
   .workspace-trigger-copy b{max-width:88px}
   .topbar{height:66px}
 }
+
+
+/* v1.4 — quiet navigation and a single focused milestone category at a time */
+.sidebar{gap:0}
+.sidebar>.sidebar-label{margin-top:15px;padding-top:10px}
+.sidebar>.sidebar-label:first-of-type{margin-top:0}
+.sidebar>.nav{gap:2px}
+.sidebar .nav a{padding-top:9px;padding-bottom:9px;font-size:12px}
+.sidebar-bottom .sidebar-user{margin-top:13px;padding-top:12px;border-top:1px solid #36383a}
+.sidebar-bottom .nav a{font-size:11px;padding:8px 12px}
+.sidebar-switch{font-size:11px}
+.topbar{min-height:69px}
+.topbar-context{font-size:11px;color:#98999e;font-weight:500}
+.milestone-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 11px}
+.milestone-toolbar h2{font-size:15px;margin-bottom:3px}
+.milestone-toolbar>.button{font-size:11px}
+.milestone-tabs{display:flex;align-items:center;gap:6px;overflow-x:auto;padding:2px 0 14px;scrollbar-width:thin}
+.milestone-tab{flex:0 0 auto;white-space:nowrap;border:1px solid #e7e5e2;background:#fff;border-radius:10px;padding:9px 12px;color:#686a70;font-size:11px;font-weight:800}
+.milestone-tab:hover{border-color:#ddb4a7;color:#5a4d49}
+.milestone-tab.active{color:#22242b;background:#fff3ed;border-color:#edb5a2}
+.milestone-results{padding:19px 21px}
+.milestone-results .panel-head{align-items:center;margin-bottom:12px}
+.milestone-results .panel-head h2{font-size:17px}
+.milestone-people{display:grid;gap:0}
+.milestone-person{display:flex;align-items:center;gap:11px;border-bottom:1px solid #efeeec;min-height:62px;padding:9px 0}
+.milestone-person:last-child{border-bottom:0}
+.milestone-person>.avatar{width:36px;height:36px;flex:0 0 auto;border-radius:10px}
+.milestone-person-name{min-width:0;flex:1}
+.milestone-person-name>b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+.milestone-person-name small{display:block;color:#93949a;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.milestone-status{border-radius:7px;padding:5px 8px;font-size:10px;flex:0 0 auto;background:#f5f4f1;color:#64676d}
+.milestone-person .button{flex:0 0 auto}
+.milestone-list-footer{display:flex;justify-content:center;padding:15px 0 4px}
+.milestone-help{margin-top:13px;border-top:1px solid var(--line);padding:13px 0 0;color:#909299;font-size:10px;line-height:1.5}
+.milestone-private{border:1px solid #e8e6e4;border-radius:11px;background:#f8f8f6;padding:22px}
+.milestone-private b{font-size:12px}
+.milestone-private p{font-size:12px;color:#868991;max-width:540px;margin-top:5px}
+.milestone-profile{display:grid;gap:12px}
+.milestone-profile-highlights{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.milestone-profile-highlights>div{border:1px solid #eceae7;background:#fff;border-radius:11px;padding:15px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.milestone-profile-highlights strong{font:800 15px Manrope;letter-spacing:-.045em}
+.milestone-profile-highlights small{font-size:10px;color:#95979d}
+.milestone-profile>.panel{padding:17px}
+.milestone-profile .heading-line{margin-bottom:10px}
+.milestone-profile .heading-line h3{font-size:13px}
+.milestone-mini-row{display:flex;align-items:center;justify-content:space-between;gap:11px;border-top:1px solid #f0eeeb;padding:11px 0}
+.milestone-mini-row>div{flex:1;min-width:0}
+.milestone-mini-row b{font-size:12px;display:block;overflow:hidden;text-overflow:ellipsis}
+.milestone-mini-row small{font-size:10px;color:#8b8e95;display:block;margin-top:3px}
+.milestone-edit-overlay{z-index:70}
+.milestone-editor-panel{width:min(560px,100%);max-height:min(90dvh,830px)}
+.milestone-form{padding-top:14px;gap:13px}
+.milestone-form .textarea{min-height:85px}
+.milestone-form-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;border-top:1px solid #eceae7;padding-top:17px}
+.milestone-form-actions [data-milestone-delete]{margin-right:auto}
+.milestone-form .form-grid{gap:12px}
+@media(max-width:760px){
+  .topbar-context{display:none}
+  .sidebar>.sidebar-label{padding-top:7px;margin-top:6px}
+  .sidebar .nav a{padding:8px 11px}
+  .milestone-toolbar{align-items:flex-start}
+  .milestone-toolbar .button{flex:0 0 auto}
+  .milestone-tabs{gap:6px}
+  .milestone-tab{font-size:10px;padding:9px}
+  .milestone-profile-highlights{grid-template-columns:1fr 1fr}
+  .milestone-profile-highlights>div:last-child{grid-column:span 2}
+  .milestone-results{padding:15px}
+  .milestone-person{gap:7px}
+  .milestone-status{font-size:9px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .milestone-editor-panel{max-height:calc(100dvh - 16px)}
+  .milestone-form-actions{flex-wrap:wrap}
+}
+@media(max-width:400px){
+  .milestone-person .avatar{display:none}
+  .milestone-person-name small{max-width:155px}
+  .milestone-status{max-width:67px}
+}
