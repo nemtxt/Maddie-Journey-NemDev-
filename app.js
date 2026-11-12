@@ -1,8 +1,24 @@
 /* Maddie Journey · local-first static prototype, no authentication or remote persistence. */
 (function () {
   'use strict';
+  function showBootError(heading,message){
+    const app=document.getElementById('app');
+    if(!app)return;
+    // Only static application strings; no provider content is interpolated.
+    app.innerHTML='<main id="main-content" class="data-error-screen" tabindex="-1">'+
+      '<section class="data-error-card" role="alert" aria-labelledby="data-error-title">'+
+      '<span class="boot-eyebrow">MADDIE JOURNEY / SAMPLE WORKSPACE</span>'+
+      '<h1 id="data-error-title">'+heading+'</h1><p>'+message+'</p>'+
+      '<a class="button primary" href="./">Reload dashboard</a>'+
+      '<p class="data-error-footnote">No live employee data was accessed or modified.</p>'+
+      '</section></main>';
+    document.title='Sample unavailable · Maddie Journey';
+  }
   const seed = window.MJ_SEED;
-  if (!seed) { document.getElementById('app').textContent='Sample data could not be loaded.'; return; }
+  if (!seed) {
+    showBootError('Sample data unavailable','The fictional records did not load. Reload the sample workspace to try again.');
+    return;
+  }
   // Read-only UI: data comes exclusively from the immutable fictional fixture.
   // Previous local demo edits are intentionally ignored, never deleted or overwritten.
   const $=function(id){return document.getElementById(id);};
@@ -12,10 +28,8 @@
   try{
     data=window.MJ_SOURCE_ADAPTER.getSnapshot();
   }catch(err){
-    const app=document.getElementById('app');
-    if(app)app.innerHTML='<main class="data-error-screen" role="alert"><div class="data-error-card">'+
-      '<h1>Sample data unavailable</h1><p>The monitoring dashboard could not load its demonstration records. No information was changed.</p>'+
-      '<a class="button primary" href="./">Reload dashboard</a></div></main>';
+    showBootError('Sample data unavailable',
+      'The fictional monitoring snapshot could not be verified. No provider connection is required.');
     return;
   }
   let ui={tab:'welcome',division:'all',activeDivision:'rmd',scope:'all',divisionPickerMode:'view',query:'',employeeSort:'name',employee:data.employees[0].id,detail:'preview',employeeModalOpen:false,divisionModal:false,employeePicker:false,pickerDivision:'rmd',frequency:'monthly',mobile:false,milestoneCategory:'birthday',milestoneDivision:'all',milestoneShowAll:false,milestonePicking:false,divisionTab:'summary',attentionFilter:'all',attentionShowAll:false,workView:'list',journeyView:'board',journeyShowAll:false,sidebarCollapsed:false,highlightMember:'',viewerIds:[],viewerOrigin:'',};
