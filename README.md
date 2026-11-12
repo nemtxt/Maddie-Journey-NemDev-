@@ -1,166 +1,91 @@
-# Maddie Journey · Prototype v1.9
+# Maddie Journey — Read-only Monitoring Prototype v2.0
 
-A lightweight, button-first People & Culture prototype built using **HTML, CSS and vanilla JavaScript only**. No build tools, paid subscriptions, login, Airtable or cloud service are needed for demonstration.
+**Madhouse Design Studio · People & Culture**
 
-**Repository:** https://github.com/nemtxt/Maddie-Journey-NemDev-
+[Open the GitHub Pages prototype](https://nemtxt.github.io/Maddie-Journey-NemDev-/) · [Repository](https://github.com/nemtxt/Maddie-Journey-NemDev-)
 
-## Open and deploy
+## Purpose
 
-Open `index.html` in a modern browser for a local test. The first screen is the official-logo landing page.
+Maddie Journey is a **reader, organizer, summary dashboard, and monitoring tracker** for HR (People & Culture), Division Heads and executive observers (CEO, COO and CSO). **It does not create, edit, validate, endorse, approve, or send employee records to other systems.**
 
-To deploy with the included test-and-deploy workflow: open **GitHub repository → Settings → Pages → Build and deployment → Source: GitHub Actions**. Save this one-time setting. Every subsequent push to `main` runs `node tests/smoke.js`, then deploys the static site if the tests pass. View results in the repository's **Actions** tab. A public repository can use this workflow without adding a paid backend. After GitHub reports a successful Pages publication, the expected URL is:
+- The frontend is **HTML, CSS and vanilla JavaScript** deployed to **GitHub Pages**.
+- The current data fixture contains **exactly 51 fictional employees in eight divisions**, intended for demonstration.
+- The **original Madhouse Design Studio PNG logo** and **original Madhalloween JPEG photograph** are retained as separate assets. The third-party screenshot reference guides the layout, not branding.
+- **Light / Dark** appearance is supported; the aesthetic is primarily neutral white with restrained pink, pastel yellow and blue accents.
 
-https://nemtxt.github.io/Maddie-Journey-NemDev-/
+## How to use
 
-The URL is not assumed live until Pages publication is verified. GitHub Pages must be enabled for this repository; committing the workflow alone does not prove that deployment succeeded.
+1. Open the landing page and choose **Enter dashboard** or one of its HR, Division Head or Executive audience cards.
+2. **On your first entry, select your actual demo identity:** first the workspace type (HR / Division Head / Executive), then your name. There is no assumed default identity and no login requirement for this prototype.
+3. The choice is remembered **on the current device** using localStorage under \`maddie-journey-viewer-v2\`. Click the viewer profile control in the top-right header to change it at any time. This choice adjusts the overview and sample data presentation; **it is not authentication or server-side authorization**.
+4. Use the **single grouped sidebar** to navigate. The top bar contains the current location, employee search shortcut, appearance controls, sample-data indicator and viewer switch. On mobile, use the menu button and dismiss the drawer using its backdrop.
+5. Click an employee in a table, Kanban card, org chart or tracker to open the **centered read-only employee preview**. Any edit, attendance verification, save or approval button from older versions has been removed.
+6. Use **Data sources** to see integration readiness and **About data** for the operating model and role assignments.
 
-## v1.9 — Professional task-management-style monitoring workspace
+## Navigation
 
-The UI now follows the **structure and usability** of the two user-supplied white admin/task-manager references, not their third-party names or logos.
+| Section | Destinations | Main job |
+|---|---|---|
+| Overview | Overview, Divisions | Company/assigned-team metrics, follow-up summaries, eight-division comparison |
+| People | Employees, Milestones | Searchable sample directory; birthdays, hiring, tenure, promotions, attendance recognitions |
+| Monitoring | Journey board, Welcome Kit, Attendance, KPI scorecards, Reviews | Read and compare progress; inspect individual sample records |
+| Information | Data sources, About data | Source-of-truth status, integration readiness, scope and privacy boundaries |
 
-- **Two-level navigation:** compact left icon rail for primary destinations and a restrained grouped sidebar for HR, Division Head and executive workflows. The official Madhouse logo remains the only logo used.
-- **Clean header:** contextual location, fast navigation to Overview, Divisions, People and Milestones, working Search people shortcut, and persistent Light/Dark controls.
-- **Board / List in the overview:** switch the same real sample follow-ups between an aligned list and a four-lane Kanban display (Attendance, Onboarding, KPI, Reviews). These are **categories**, not fabricated due dates or workflow stages.
-- **Board / List in every division:** department members are grouped by derived onboarding/review stage (To do, In progress, Ready for review, Completed), or displayed in a compact employee comparison table. Summary and Org chart views remain available.
-- **Read-first, drill-down-second:** tables, boards and charts open the existing centered employee preview and relevant tracker details. No new forms are put on the overview page.
-- **Subtle pastel palette:** neutral white surfaces and light dividers predominate; pink is an action accent, with pastel yellow/blue/lavender reserved for supporting status and category details. \`workspace.css\` is loaded last so the same rules apply to all dashboard pages and to the landing page.
-- **Responsive:** desktop uses the icon rail plus sidebar; tablets adapt the header; mobile uses an accessible slide-out navigation with a backdrop and compact row/board layouts. Data tables/boards scroll where necessary without collapsing the content into unreadably small text.
-- **Persistence:** board/list preference is retained for the browser session; theme preference remains saved separately and longer-term. Sample employee edits, scores, hierarchy and milestones are unaffected.
-- **Scope:** still exactly 51 fictional employees across eight divisions. Sources remain disconnected. UI demo workspaces are not real accounts, authentication, or authorization.
-- **Verification:** \`node tests/smoke.js\` now covers board/list transitions, department boards and tables, navigation, search, mobile drawer, employee role rules and legacy data migrations. Visual device/browser review remains a separate acceptance step.
+### Journey Kanban
 
-**Files changed:** \`app.js\`, \`index.html\`, \`workspace.css\` (new), \`tests/smoke.js\`, and this README. Original Madhouse logo PNG and Madhalloween photograph JPEG remain unchanged.
+Journey has **seven onboarding stages plus one Completed column**.
 
-## v1.8 — Original artwork and unified pastel operations interface
+- Each sample employee appears **exactly once**, grouped under the **first stage that is not fully complete**. Completed employees occupy the final column.
+- The employee card shows their name, division, job title, progress in that stage and overall completion.
+- The **Board** view scrolls horizontally; the **Table** view lists all matching employees, their current stage, completed stages and total progress.
+- Choose a division to narrow either view, or return to all eight divisions.
+- The stage checklist in an employee modal is **a non-interactive visual status list**; cards cannot be dragged to change data.
+- All data is **fictional**; a stage labeled "Complete" does not confirm that official onboarding documents have been approved in a real source system.
 
-This release follows the approved landing-page reference and uses **the exact uploaded files**, not re-generated or WebP-derived images.
+### Other previews
 
-- **Official logo:** `assets/madhouse-logo.png`, unchanged original PNG, 720 × 117 pixels, SHA-256 `c3659c9b6e2e671074c82c313e70938556f65ef6f69850524a801684ecd2decc`.
-- **Event photograph:** `assets/madhalloween.jpg`, unchanged original JPEG, 1800 × 1072 pixels, SHA-256 `e69297164df142ade9ceecb9287dfe30814b6e9fb89619502fc0c3dc7a06fe29`. The second upload was JPEG, so preserving its original bytes avoids changing its format or introducing additional compression.
-- **No WebP assets:** The previous optimized WebP was removed, and all photo references now use the original JPEG.
-- **Approved landing layout:** translucent header positioned over the event photograph, bold left-aligned introduction, three audience cards (HR, Division Heads, executive overview), feature shortcuts and pastel-wave footer. The supplied third screenshot is the layout reference, not used as a flattened webpage.
-- **Consistent product palette:** `palette.css` applies warm blush backgrounds, pink primary buttons, pastel yellow and blue summary cards, readable plum text, and subtle lavender accents to navigation, dashboard cards, org charts, tables and centered modals.
-- **Light / Dark:** Light is the default for a new visitor. Switching appearance is persistent, and both palettes work on internal screens. Earlier saved preferences are respected.
-- **Operational model:** All 51 sample employees, eight divisions and existing tracker functionality are retained. HR and assigned Division Heads can preview/edit the demo fields permitted by the existing simulated role logic. CEO/COO/CSO demonstrations remain observer-oriented.
-- **Data policy:** No actual Airtable/Google connector or authenticated multi-user backend is claimed or deployed. Static GitHub Pages cannot enforce real HR permissions.
+- **Division page:** Summary / Board / List / Org chart. Department boards are derived from Journey, Welcome Kit and sample review states.
+- **Employees:** Filter/search, compare, view centered profile and optional CSV export of the displayed fictional snapshot.
+- **KPI:** Weighted score, recorded objectives, target/actual values, verification notes and comments **without forms**.
+- **Attendance:** Incidents, trends and recorded verification flags **without new/edit record actions**.
+- **Reviews:** Existing sample timeline and fictional compensation figures **without endorsement or approval buttons**.
+- **Milestones and Welcome Kit:** Read-only events, item statuses and source notes.
 
-Regression checks: run `node tests/smoke.js`. A live desktop/mobile browser visual review is a separate acceptance step.
+## Sources and privacy
 
-## v1.5 — Earlier typography and appearance foundations
+Maddie Journey is **not** a second HR database. Airtable, Google Sheets, Google Docs, Google Drive and email are the intended original sources. **None are connected to the current GitHub Pages prototype.** Claude account connectors do not automatically provide a callable API to static browser JavaScript.
 
-The interface now follows the design language of the **Nemesis Corporation** website supplied with this project: **Inter typography, restrained dark canvas, fine dividers, low-emphasis card surfaces, subtle department accents, compact pill buttons and a translucent sticky header**. It does not copy the corporate website's brand assets or introduce marketing-page animations into operational workflows.
+For later real-data integration, use a controlled synchronization service or authenticated backend that reads authorized provider records, matches employee IDs, validates data and returns **permission-filtered** snapshots with source/time provenance. Keep API keys, secrets, OAuth tokens and private employee information off the public GitHub Pages site.
 
-- **Appearance:** Use the **Light / Dark** segmented control in the **top-right header**. The current choice is stored in the browser under \`maddie-journey-theme\`, separately from HR sample records. The initial dark prototype was superseded by the v1.8 light-first pastel palette; both themes continue to cover the application.
-- **Progressive transition:** Theme colors blend gently instead of flashing. Modal entrances and card hover states are subtle; the CSS respects \`prefers-reduced-motion\` and disables nonessential movement when required.
-- **Eight divisions:** Each division has a small, consistent accent used on its cards and department header only. This keeps divisions identifiable without making the dashboard overly colorful.
-- **HR workflow:** Overview → People directory or Milestones → select division/employee → open a centered modal to edit permitted fields.
-- **Division Head workflow:** Overview → assigned department → employee card → KPI/Journey/Kit/other relevant modal. Department owners can edit only their designated demo inputs.
-- **Executive observer:** Read-only overview and report previews; demonstration roles are not secure login accounts.
-- **Keyboard access:** Visible focus indicators and a Skip to main content link. Theme switching does not re-render forms or discard open modal state.
+**No employee data is saved or updated by the v2.0 frontend.** All fictional records are read from \`data.js\` on each load. Older locally edited demonstration data under \`maddie-journey-demo-v3\` is **ignored but not erased**. Only the selected viewer, theme and temporary board/list preferences are remembered locally. CSV exports are read-only copies of fictional data and do not mutate the fixture.
 
-Appearance changes need no build process and no backend. All new styling lives in \`theme.css\`, layered after the original \`styles.css\` to keep future refinements separate.
+The viewer chooser can simulate perspectives but **cannot protect confidential HR information**. Do not publish real employee or compensation records without authenticated access and server-enforced permissions.
 
-## v1.7 — Official Madhouse landing page
+## Run and deploy
 
-The root URL (no hash, or `#welcome`) now opens a lightweight, responsive landing screen before the dashboard.
+1. Open \`index.html\` locally in a modern browser, or use VS Code Live Server.
+2. Run \`node tests/smoke.js\` in the repository root. The tests use only built-in Node modules.
+3. Open **GitHub → Settings → Pages** and select **GitHub Actions** as the build/deployment source if not already enabled.
+4. Commits to \`main\` trigger the repository's test-and-deploy workflow. Verify both its test result and the Pages deployment in **Actions** before treating the live site as updated.
 
-- **Authentic branding only:** the provided Madhouse Design Studio logo is used in the landing header, dashboard sidebar and mobile header. The invented pink “M” symbol from the earlier illustration is intentionally not part of the project.
-- **Real supplied photo:** the Madhalloween team photograph is the landing hero background, preserved as the original upload `assets/madhalloween.jpg`. The original source was supplied for this prototype; the source photograph already contains its original event lettering, which is preserved rather than recreated.
-- **Pastel interface:** pink, white, soft yellow and blue, with the existing persistent Light / Dark control. Light is the initial appearance for new browsers; previously saved choices remain unchanged.
-- **Direct navigation:** Open dashboard, View divisions, and links to Org charts, Employees and Data sources. The HR, Division Heads and Executive overview cards set a fictional demo workspace and open the overview; these are not login or authorization controls.
-- **Preserved routes:** `#overview`, `#divisions`, `#division/rmd`, and all other direct dashboard links still work. A new `#welcome` destination returns to the landing screen.
-- **Preserved information:** no employee data, scores, milestones, evaluators or sources were replaced. The 51 sample employees in eight divisions are still stored in the local browser.
-- **Accessibility:** keyboard-reachable links and buttons, focus outlines, calm responsive layouts and reduced-motion support. No new JS framework, sign-in dependency or billing is required.
+The automated tests check JavaScript parsing, 51-person fixture, first-visit identity selection, navigation, Journey board and table, all eight division pages, source transparency, inert old edit actions, and browser preference behavior. **Automated DOM/browser screenshot comparison across physical Windows, Mac, Android and iOS devices is not covered by the smoke tests.**
 
-Landing styling lives in `landing.css`. The design is built using normal HTML/CSS/JS; it is **not** a screenshot used as a website background. Images are kept as separate files so they can be replaced or compressed without changing navigation.
+## Source structure
 
-## v1.6 changes
+| Path | Function |
+|---|---|
+| \`index.html\` | Static GitHub Pages entry and stylesheet order |
+| \`data.js\` | 51 fictional employee fixtures, division/evaluator assignment, Journey and Kit definitions |
+| \`app.js\` | View-only rendering, navigation, filtering, previews and first-visit viewer choice |
+| \`styles.css\` / \`theme.css\` | Existing base styles and Light/Dark system |
+| \`operations.css\` / \`palette.css\` | Existing tracker and Madhouse color system |
+| \`landing.css\` | Original-image landing layout |
+| \`workspace.css\` | White admin dashboard structure and reference-inspired list/board styles |
+| \`reader.css\` | **v2.0** single navigation, first-visit chooser, Journey Kanban, read-only detail layouts |
+| \`tests/smoke.js\` | Dependency-free Node regression tests |
+| \`assets/madhouse-logo.png\` | Original user-provided PNG |
+| \`assets/madhalloween.jpg\` | Original user-provided JPEG |
 
-- A focused home dashboard: four KPIs, a category-filtered action queue, quick links and an eight-division table.
-- Each division now has Summary, Org chart and Employees tabs, with clickable six-level fictional hierarchies.
-- An honest Data Sources screen shows Airtable, Google Sheets, Google Drive, Google Docs and email as not connected.
-- All 51 sample employees and older saved scores are preserved; the new hierarchy fields use data version 6.
-- Additional visual and accessibility refinements are in operations.css.
-- Run `node tests/smoke.js` for regression testing; see `docs/UX_DASHBOARD_DECISIONS.md` for research rationale.
+### Known limitations
 
-## Simple user flow
-
-1. **Overview** — a company-wide starting point with practical summary cards. The top header has no demo-role selector, sample badge, or global division dropdown.
-2. **Divisions** — all eight departments are always accessible. Choose a department to see only its member cards, assigned evaluators and scoring summaries.
-3. **Employees** — a 51-person fictional directory. Open an employee in a centered modal; their details remain available without leaving the current screen.
-4. **Milestones** — choose **one** of six categories at a time: Birthdays, Tenure, Hiring, Promotions, Perfect attendance and Disciplinary actions. The one-page list can be filtered by department inside this screen.
-5. **Journey / Welcome Kit / Attendance / KPI scorecards / Reviews** — the main screen shows **eight departmental summaries**. Select **View team**, then **Open** beside the desired member to work in a centered modal. Full forms are deliberately not shown under the overview.
-6. **Data & settings** — local backup, CSV export, import, activity log and demo reset.
-
-Navigation is grouped into **People**, **Operations** and **Performance**. A discreet **Switch demo view** button at the bottom of the sidebar allows testing HR, Division Head and executive observer experiences. It is not a secure login system.
-
-## Eight demonstration divisions and evaluators
-
-| Division | Evaluator |
-| --- | --- |
-| Revenue Management | TRIZIA BALDOVI — Chief Experience Officer |
-| Design | AR. AJ TRABADO — Design Operations Manager |
-| Design Operations | AR. AJ TRABADO — Design Operations Manager |
-| Corporate Operations | RENATO RENDON / ZSARINA MAE LACUMBA |
-| Media | MICHELLE OROCIO |
-| IT | INIGO ARELLANO |
-| GenCon | INIGO ARELLANO |
-| Business Development | MA. CRISTINE ORTIZ |
-
-**HR:** GIEZELLE and KURT. **Executive observers:** CEO, CSO, COO. Since no separate Design Operations evaluator was supplied, both Design groups share Ar. AJ Trabado for the prototype. Inigo has separate COO Observer and IT/GenCon evaluator preview contexts.
-
-The sample dataset stays at **exactly 51 fictional employees**.
-
-## New employee milestone records
-
-| Category | How it works | Demo editor |
-| --- | --- | --- |
-| Birthday | Upcoming birthday calculated from the fictional employee's date of birth | HR updates date in Profile |
-| Tenure | Completed years and next anniversary derived from hiring date | HR updates hiring date in Profile |
-| Hiring | Joining date and new hire status derived from start date | HR updates hiring date in Profile |
-| Promotions | Dated prior/new positions, proposed or approved status and notes | HR can edit/approve; assigned Division Heads can propose/recommend |
-| Perfect attendance | A specific month's award is recorded explicitly; **not automatically inferred from incomplete attendance data** | HR verifies and edits awards |
-| Disciplinary actions | Case category, action level, status and internal note; sample data only | HR-only detail and edit controls |
-
-To add a promotion, award or case, choose the employee and open **Milestones** in their centered employee popup. Use **Add**, **Edit** or **Remove**. Dates and status choices are validated.
-
-Disciplinary details are hidden from non-HR demo roles. **These role restrictions are interface simulations, not security controls.** Do not use actual HR cases or employee personal data.
-
-## Other features retained
-
-- Seven-stage onboarding, Welcome Maddie Kit and issuance notes.
-- Verified attendance entry editor, approval/excuse states, monthly charts and individual history.
-- 2026 weighted KPI evaluation: **Division 15%, Individual 45%, Values 15%, Job Behavior 25%**.
-- Division Head → Corporate Operations → CSO → COO review status tracking. CEO/CSO/COO previews are read-only; final sample approvals are fictional.
-- Local action history; employee and attendance CSV exports; JSON backup, import and reset.
-
-## Persistence and privacy
-
-All sample data is stored in your own browser's **localStorage**. The prototype does **not** sync edits to GitHub or between users/devices. GitHub Pages only hosts the static files. The demo role chooser is **not authentication**.
-
-The current fixtures are **v6**. Compatible v3/v4/v5 browser data and JSON imports are upgraded without wiping existing employee scores or manually edited profiles; missing milestone fields are added. **Reset** replaces local data with new fictional fixtures, so export a JSON backup before resetting.
-
-Do not store real employee details, disciplinary actions, salaries, passwords, access tokens or private Airtable links in this public GitHub Pages prototype. Secure multi-user access requires a real authenticated backend before production use.
-
-## Files
-
-- `index.html` — landing and dashboard entry point
-- `styles.css` — core responsive screens and centered dialogs
-- `theme.css` — underlying typography and Light/Dark design tokens
-- `operations.css` — responsive org charts, work queues and division tracking
-- `palette.css` — unified pastel palette for all interior screens
-- `landing.css` — approved responsive landing page and original JPG background
-- `tests/smoke.js` — dependency-free regression checks
-- `data.js` — fictional 51-person dataset and initial milestone records
-- `app.js` — workflows, charts, edit dialogs, local storage and exports
-
-### GitHub Pages automation
-
-The repository includes `.github/workflows/pages.yml`. It tests before attempting deployment; a failed test blocks publication. Choose **GitHub Actions** as the Pages source under Settings. Do not publish confidential HR data or credentials in this static project.
-
-### Branding assets
-
-- `assets/madhouse-logo.png` — unchanged original PNG logo supplied by the user.
-- `assets/madhalloween.jpg` — unchanged original JPEG photograph supplied by the user.
-- `landing.css` — responsive pastel landing appearance and official branding in the dashboard shell.
-
+This is a **complete sample-data monitoring prototype**, not a production HR integration. Real accounts, authentication/authorization, connector data, reliable live synchronization, source timestamps, error handling for live sources and usability verification with actual users remain outside the current release.
