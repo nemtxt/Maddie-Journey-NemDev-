@@ -1,4 +1,4 @@
-/* Maddie Journey v2.9 — dependency-free read-only smoke checks.
+/* Maddie Journey v3.0 — dependency-free read-only smoke checks.
    Run from repository root: node tests/smoke.js
    Simulated interactions; browser/device visual QA is separate. */
 'use strict';
@@ -604,5 +604,53 @@ check('Phase 3 division follow-ups use one issue per person with accurate detail
   assert(!h.includes('division-next-actions'));
   const ids=[...section.matchAll(/data-action="open" data-id="([^"]+)"/g)].map(x=>x[1]);
   assert.equal(new Set(ids).size,ids.length);
+});
+check('Phase 3 employee preview browses only division members and retains detail',()=>{
+  user.click('goto-division',{division:'rmd'});
+  user.click('division-tab',{tab:'list'});
+  const team=user.win.MJ_SEED.employees.filter(e=>e.division==='rmd').sort((a,b)=>a.name.localeCompare(b.name));
+  assert(team.length>1);
+  user.click('open',{id:team[0].id,detail:'kpi'});
+  let h=user.html();
+  assert(h.includes('employee-context-bar'));
+  assert(h.includes('1 of '+team.length));
+  assert(h.includes('data-action="viewer-prev" aria-label="No previous employee" disabled'));
+  assert(h.includes('data-tab="kpi" aria-current="page"'));
+  user.click('viewer-next');
+  h=user.html();
+  assert(h.includes('EMPLOYEE · '+team[1].id));
+  assert(h.includes('2 of '+team.length));
+  assert(h.includes('data-tab="kpi" aria-current="page"'));
+  user.click('viewer-prev');
+  assert(user.html().includes('EMPLOYEE · '+team[0].id));
+  user.click('close');
+  assert(user.html().includes('department-table'));
+  assert.equal(user.loc.hash,'#division/rmd/list');
+});
+check('Phase 3 directory reader stays within filtered result set',()=>{
+  user.navigate('employees');
+  user.setFilter('query','MJ-003');
+  user.click('open',{id:'MJ-003'});
+  const h=user.html();
+  assert(h.includes('1 of 1'));
+  assert(h.includes('data-action="viewer-prev" aria-label="No previous employee" disabled'));
+  assert(h.includes('data-action="viewer-next" aria-label="No next employee" disabled'));
+  user.click('viewer-next');
+  assert(user.html().includes('EMPLOYEE · MJ-003'));
+  user.click('close');
+  assert(user.html().includes('value="MJ-003"'));
+});
+check('Phase 3 employee to division drill-down highlights the selected person',()=>{
+  user.navigate('overview');
+  user.click('open',{id:'MJ-003',detail:'journey'});
+  assert(user.html().includes(' of 51'));
+  const division=user.win.MJ_SEED.employees.find(e=>e.id==='MJ-003').division;
+  user.click('viewer-division',{division});
+  const h=user.html();
+  assert(!h.includes('role="dialog"'));
+  assert(h.includes('department-table'));
+  assert(h.includes('department-focus-row'));
+  assert.equal(user.loc.hash,'#division/'+division+'/list');
+  assert(h.includes(user.win.MJ_SEED.employees.find(e=>e.id==='MJ-003').name));
 });
 console.log('\n'+results.length+' smoke tests passed. Physical-device visual QA is separate.');

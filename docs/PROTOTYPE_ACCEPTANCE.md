@@ -1,6 +1,6 @@
 # Maddie Journey — Prototype Acceptance Checklist
 
-Release: **v2.9**. Scope: **HTML/CSS/vanilla JavaScript + fictional fixture only**.
+Release: **v3.0**. Scope: **HTML/CSS/vanilla JavaScript + fictional fixture only**.
 
 This document distinguishes code-level verification from human visual acceptance. The automated smoke checks confirm the named routing and data contracts but cannot prove pixel-level accuracy on physical Windows, macOS, Android or iOS devices.
 
@@ -25,7 +25,7 @@ This document distinguishes code-level verification from human visual acceptance
 
 Division detail must expose **Summary / Board / List / Org chart** in one workspace without creating extra top-level sections.
 
-Employee previews must support **Overview, Milestones, KPI, Journey, Welcome Kit, Attendance, Review and Profile** using centered modal presentation. All visible fields are status summaries, not editable form inputs.
+Employee previews must support **Overview, Milestones, KPI, Journey, Welcome Kit, Attendance, Review and Profile** using centered modal presentation. The Previous/Next controls browse only the current division team or filtered directory, retaining the selected detail. View division opens the existing department List with the selected employee highlighted. All information is read-only.
 
 ## Automated validation
 
@@ -37,7 +37,7 @@ The smoke suite covers:
 - Correct static asset references and module/script order, including canonical monochrome CSS and the optional Anime.js script.
 - Read-only data adapter, 51 distinct sample IDs, eight divisions, source status and quality.
 - Functional landing and all 11 main routes, deep links and contextual top navigation.
-- All eight division boards, lists and org chart panels.
+- All eight division boards, lists and org chart panels, including shareable subview deep links and contextual employee browsing.
 - Journey Kanban and 51-row table.
 - Employee modal previews and absence of edit/approval actions.
 - Directory search/sort/filter/clear behavior, visible-only CSV and formula-like text protection.

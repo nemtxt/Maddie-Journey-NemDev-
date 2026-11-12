@@ -18,7 +18,7 @@
       '<a class="button primary" href="./">Reload dashboard</a></div></main>';
     return;
   }
-  let ui={tab:'welcome',division:'all',activeDivision:'rmd',scope:'all',divisionPickerMode:'view',query:'',employeeSort:'name',employee:data.employees[0].id,detail:'preview',employeeModalOpen:false,divisionModal:false,employeePicker:false,pickerDivision:'rmd',frequency:'monthly',mobile:false,milestoneCategory:'birthday',milestoneDivision:'all',milestoneShowAll:false,milestonePicking:false,divisionTab:'summary',attentionFilter:'all',attentionShowAll:false,workView:'list',journeyView:'board',journeyShowAll:false,sidebarCollapsed:false,highlightMember:'',};
+  let ui={tab:'welcome',division:'all',activeDivision:'rmd',scope:'all',divisionPickerMode:'view',query:'',employeeSort:'name',employee:data.employees[0].id,detail:'preview',employeeModalOpen:false,divisionModal:false,employeePicker:false,pickerDivision:'rmd',frequency:'monthly',mobile:false,milestoneCategory:'birthday',milestoneDivision:'all',milestoneShowAll:false,milestonePicking:false,divisionTab:'summary',attentionFilter:'all',attentionShowAll:false,workView:'list',journeyView:'board',journeyShowAll:false,sidebarCollapsed:false,highlightMember:'',viewerIds:[],viewerOrigin:'',};
   // UI preferences do not alter or store employee records.
   try{
     const remembered=sessionStorage.getItem('maddie-journey-workview');
@@ -910,13 +910,42 @@
   }
   function employeeMini(e){const a=attend(e);return '<div class="employee-mini-summary" aria-label="Employee summary"><span><small>Journey</small><strong>'+journeyPct(e)+'%</strong></span><span><small>Welcome kit</small><strong>'+kitPct(e)+'%</strong></span><span><small>Weighted KPI</small><strong>'+score(e).toFixed(1)+'%</strong></span><span><small>Verified lates / absences</small><strong>'+a.lates+' / '+a.absences+'</strong></span></div>';}
   function approvalPolicy(){return '<div class="callout" style="margin-bottom:16px"><strong>Read-only review timeline.</strong> These records are fictional previews. Evaluations and approvals must be handled in their authorized source systems, not in Maddie Journey.</div>';}
+  // Keep browsing within the employee roster that opened this reader.
+  function viewerRoster(){
+    if(ui.tab==='division')return data.employees.filter(function(e){return e.division===ui.activeDivision;})
+      .sort(function(a,b){return a.name.localeCompare(b.name);});
+    if(ui.tab==='employees')return filtered();
+    if(ui.tab==='milestones')return filteredMilestoneTeam().slice()
+      .sort(function(a,b){return a.name.localeCompare(b.name);});
+    return scopedEmployees().slice().sort(function(a,b){return a.name.localeCompare(b.name);});
+  }
+  function startViewer(id){
+    ui.viewerIds=viewerRoster().map(function(e){return e.id;});
+    if(!ui.viewerIds.includes(id))ui.viewerIds=[id];
+    ui.viewerOrigin=ui.tab==='division'?div(ui.activeDivision).name:
+      ui.tab==='employees'?'People directory':ui.tab==='milestones'?'Milestones':title(ui.tab);
+  }
   function employeeModal(){
     const e=emp(),t=ui.detail;
+    if(!e)return '';
+    const roster=ui.viewerIds.filter(function(id){return !!emp(id);});
+    const position=roster.indexOf(e.id),count=roster.length||1;
+    const prev=position>0?emp(roster[position-1]):null;
+    const next=position>=0&&position<roster.length-1?emp(roster[position+1]):null;
     const tabs=[['preview','Overview'],['milestones','Milestones'],['kpi','KPI'],['journey','Journey'],['kit','Welcome Kit'],['attendance','Attendance'],['approvals','Review'],['info','Profile']];
     return '<div class="overlay center-overlay employee-overlay" data-overlay="employee">'+
-    '<section class="employee-modal" role="dialog" aria-modal="true" aria-labelledby="employee-modal-title" tabindex="-1">'+
+    '<section class="employee-modal" role="dialog" aria-modal="true" aria-labelledby="employee-modal-title" aria-describedby="employee-context-description" tabindex="-1">'+
     '<div class="employee-modal-top"><div class="profile">'+avatar(e.name)+'<div><span class="eyebrow">EMPLOYEE · '+safe(e.id)+'</span><h2 id="employee-modal-title">'+safe(e.name)+'</h2><p class="muted micro">'+safe(e.jobTitle)+' · '+safe(div(e.division).name)+'</p></div></div>'+
     '<button class="modal-close" data-action="close" aria-label="Close employee preview" type="button">×</button></div>'+
+    '<div class="employee-context-bar"><p id="employee-context-description" class="employee-context-origin">'+safe(ui.viewerOrigin||'Monitoring')+
+      '<span aria-hidden="true"> / </span>'+safe(div(e.division).short)+
+      '<strong>'+(position>=0?position+1:1)+' of '+count+'</strong></p>'+
+      '<div class="employee-context-actions">'+
+        '<button type="button" class="employee-context-division" data-action="viewer-division" data-division="'+safe(e.division)+'" aria-label="Open '+safe(div(e.division).name)+' employee list">View division <span aria-hidden="true">↗</span></button>'+
+        '<div class="employee-context-pager" role="group" aria-label="Browse employees in this view">'+
+        '<button type="button" data-action="viewer-prev" aria-label="'+(prev?'Previous employee: '+safe(prev.name):'No previous employee')+'"'+(prev?'':' disabled')+'>← <span>Previous</span></button>'+
+        '<button type="button" data-action="viewer-next" aria-label="'+(next?'Next employee: '+safe(next.name):'No next employee')+'"'+(next?'':' disabled')+'><span>Next</span> →</button>'+
+        '</div></div></div>'+
     '<nav class="employee-modal-tabs" aria-label="Employee sections">'+tabs.map(function(a){return '<button type="button" class="employee-tab '+(t===a[0]?'active':'')+'" data-action="detail" data-tab="'+a[0]+'" aria-current="'+(t===a[0]?'page':'false')+'">'+a[1]+'</button>';}).join('')+'</nav>'+
     '<div class="employee-modal-body">'+(t==='preview'?'':employeeMini(e))+
     (t==='info'?'<div class="panel" style="margin-bottom:15px"><div class="form-grid"><div><span class="field-label">Start date</span><strong>'+dateLabel(e.startDate)+'</strong></div><div><span class="field-label">Employee ID</span><strong>'+safe(e.id)+'</strong></div><div><span class="field-label">Org level (sample)</span><strong>Level '+safe(e.orgLevel||'—')+'</strong></div><div><span class="field-label">Reports to (sample)</span><strong>'+safe((data.employees.find(function(p){return p.id===e.reportsTo;})||{}).name||'Department lead')+'</strong></div></div></div>':'')+
@@ -956,20 +985,20 @@
       '<footer class="landing-footer"><span>MADHOUSE DESIGN STUDIO</span>'+
       '<span>Fictional data · Demonstration only</span></footer></main></div>';
   }
-  function render(){if(ui.tab==='welcome'){$('app').innerHTML=landingView();document.title='Maddie Journey · Madhouse Design Studio';if(window.MJ_MOTION)window.MJ_MOTION.refresh('welcome');return;}const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,milestones:milestonesView,journey:journey,kit:kitView,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,sources:sourcesView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open ':'')+(ui.sidebarCollapsed?'sidebar-collapsed':'')+'">'+sidebar()+'<button type="button" class="workspace-scrim" aria-label="Close navigation" data-action="mobile"></button><main id="main-content" class="main" tabindex="-1">'+topnav()+(views[ui.tab]||overview)()+'<footer class="footer"><span>Maddie Journey · Prototype v2.9</span><span>Fictional snapshot · No connected sources</span></footer></main></div>'+(ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.employeeModalOpen?employeeModal():'');document.title=title(ui.tab)+' · Maddie Journey';if(window.MJ_MOTION)window.MJ_MOTION.refresh(ui.tab);if(ui.employeeModalOpen||ui.divisionModal||ui.employeePicker){const modal=$('app').querySelector('[role="dialog"]');if(modal&&typeof modal.focus==='function')modal.focus({preventScroll:true});}}
+  function render(){if(ui.tab==='welcome'){$('app').innerHTML=landingView();document.title='Maddie Journey · Madhouse Design Studio';if(window.MJ_MOTION)window.MJ_MOTION.refresh('welcome');return;}const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,milestones:milestonesView,journey:journey,kit:kitView,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,sources:sourcesView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open ':'')+(ui.sidebarCollapsed?'sidebar-collapsed':'')+'">'+sidebar()+'<button type="button" class="workspace-scrim" aria-label="Close navigation" data-action="mobile"></button><main id="main-content" class="main" tabindex="-1">'+topnav()+(views[ui.tab]||overview)()+'<footer class="footer"><span>Maddie Journey · Prototype v3.0</span><span>Fictional snapshot · No connected sources</span></footer></main></div>'+(ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.employeeModalOpen?employeeModal():'');document.title=title(ui.tab)+' · Maddie Journey';if(window.MJ_MOTION)window.MJ_MOTION.refresh(ui.tab);if(ui.employeeModalOpen||ui.divisionModal||ui.employeePicker){const modal=$('app').querySelector('[role="dialog"]');if(modal&&typeof modal.focus==='function')modal.focus({preventScroll:true});}}
   function openDivision(id,view,focusId){
     if(!data.divisions.some(function(d){return d.id===id;}))return;
     ui.scope=id;ui.activeDivision=id;
     ui.divisionTab=['summary','board','list','chart'].includes(view)?view:'summary';
     ui.highlightMember=focusId&&data.employees.some(function(e){return e.id===focusId&&e.division===id;})?focusId:'';
-    modalOrigin=null;ensureEmployeeScope();
+    modalOrigin=null;ui.viewerIds=[];ui.viewerOrigin='';ensureEmployeeScope();
     ui.tab='division';ui.employeeModalOpen=false;ui.divisionModal=false;ui.employeePicker=false;
     ui.mobile=false;ui.query='';ui.division='all';
     const route='#division/'+id+(ui.divisionTab==='summary'?'':'/'+ui.divisionTab);
     if(location.hash!==route)location.hash=route;
     window.scrollTo({top:0,behavior:'instant'});render();
   }
-  function navigate(tab){modalOrigin=null;if(tab==='division'){openDivision(ui.activeDivision,ui.divisionTab);return;}ui.highlightMember='';ui.scope='all';ensureEmployeeScope();ui.tab=tab;ui.employeeModalOpen=false;ui.divisionModal=false;ui.employeePicker=false;ui.mobile=false;ui.query='';ui.division='all';if(location.hash!=='#'+tab)location.hash='#'+tab;window.scrollTo({top:0,behavior:'instant'});render();}
+  function navigate(tab){modalOrigin=null;if(tab==='division'){openDivision(ui.activeDivision,ui.divisionTab);return;}ui.highlightMember='';ui.viewerIds=[];ui.viewerOrigin='';ui.scope='all';ensureEmployeeScope();ui.tab=tab;ui.employeeModalOpen=false;ui.divisionModal=false;ui.employeePicker=false;ui.mobile=false;ui.query='';ui.division='all';if(location.hash!=='#'+tab)location.hash='#'+tab;window.scrollTo({top:0,behavior:'instant'});render();}
   // All data-editing functions were removed: this frontend never mutates employee records.
   function toCSV(rows){
     return rows.map(function(row){return row.map(function(value){
@@ -1020,13 +1049,37 @@
     if(name==='picker-division'){if(!data.divisions.some(function(d){return d.id===button.dataset.division;}))return;ui.pickerDivision=button.dataset.division;render();return;}
     if(name==='pick-member'){const selected=emp(button.dataset.id);if(!selected)return;ui.employee=selected.id;ui.scope=selected.division;ui.employeePicker=false;if(ui.milestonePicking){ui.milestonePicking=false;ui.detail='milestones';ui.employeeModalOpen=true;}render();return;}
     if(name==='goto-division'){ui.divisionModal=false;openDivision(button.dataset.division);return;}
-    if(name==='open'){const requested=button.dataset.id||ui.employee;if(!emp(requested)){modalOrigin=null;return;}ui.employee=requested;ui.detail=button.dataset.detail||'preview';ui.divisionModal=false;ui.employeeModalOpen=true;render();return;}
-    if(name==='close'){ui.employeeModalOpen=false;ui.divisionModal=false;ui.employeePicker=false;ui.milestonePicking=false;render();restoreModalOrigin();return;}
+    if(name==='open'){
+      const requested=button.dataset.id||ui.employee;
+      if(!emp(requested)){modalOrigin=null;return;}
+      startViewer(requested);ui.employee=requested;
+      ui.detail=['preview','milestones','kpi','journey','kit','attendance','approvals','info'].includes(button.dataset.detail)?
+        button.dataset.detail:'preview';
+      ui.divisionModal=false;ui.employeePicker=false;ui.employeeModalOpen=true;render();return;
+    }
+    if(name==='viewer-prev'||name==='viewer-next'){
+      if(!ui.employeeModalOpen)return;
+      const index=ui.viewerIds.indexOf(ui.employee),offset=name==='viewer-next'?1:-1;
+      const selected=ui.viewerIds[index+offset];
+      if(index<0||!selected||!emp(selected))return;
+      ui.employee=selected;render();
+      const control=$('app').querySelector('[data-action="'+name+'"]');
+      if(control&&!control.disabled&&typeof control.focus==='function')control.focus({preventScroll:true});
+      else {const tab=$('app').querySelector('.employee-modal-tabs .employee-tab.active');
+        if(tab&&typeof tab.focus==='function')tab.focus({preventScroll:true});}
+      return;
+    }
+    if(name==='viewer-division'){
+      const selected=emp(ui.employee);
+      if(!ui.employeeModalOpen||!selected||selected.division!==button.dataset.division)return;
+      openDivision(selected.division,'list',selected.id);return;
+    }
+    if(name==='close'){ui.employeeModalOpen=false;ui.divisionModal=false;ui.employeePicker=false;ui.milestonePicking=false;ui.viewerIds=[];ui.viewerOrigin='';render();restoreModalOrigin();return;}
     if(name==='detail'){ui.detail=button.dataset.tab;render();const selected=$('app').querySelector('.employee-modal-tabs .employee-tab.active');if(selected&&typeof selected.focus==='function')selected.focus({preventScroll:true});return;}
     if(name==='export-csv'){const rows=[['Employee ID','Name','Division','Role','Start date','Journey %','Welcome kit %','KPI score %','Performance rating','Final approval']].concat(filtered().map(function(x){return [x.id,x.name,div(x.division).name,x.jobTitle,x.startDate,journeyPct(x),kitPct(x),score(x),rating(score(x)),x.review.coo.status];}));download('maddie-journey-directory-visible.csv','text/csv;charset=utf-8',toCSV(rows));return;}
     if(name==='attendance-csv'){const rows=[['Employee ID','Employee','Division','Date','Type','Approval','Verified','Reason','Supervisor remarks']];scopedEmployees().forEach(function(x){x.attendance.forEach(function(r){rows.push([x.id,x.name,div(x.division).name,r.date,r.type,r.approval,r.verified?'Yes':'No',r.reason,r.remarks]);});});download('maddie-journey-attendance.csv','text/csv;charset=utf-8',toCSV(rows));return;}
   }
-  document.addEventListener('click',function(ev){const dept=ev.target.closest('[data-nav-division]');if(dept){ev.preventDefault();openDivision(dept.dataset.navDivision);return;}const nav=ev.target.closest('[data-nav]');if(nav){ev.preventDefault();navigate(nav.dataset.nav);return;}const act=ev.target.closest('[data-action]');if(act){ev.preventDefault();if(['open','choose-division','choose-scope','choose-employee','milestone-division'].includes(act.dataset.action))rememberModalOrigin(act);action(act.dataset.action,act);return;}if(['employee','division','picker'].includes(ev.target.dataset.overlay)){ui.employeeModalOpen=false;ui.divisionModal=false;ui.employeePicker=false;render();restoreModalOrigin();}});
+  document.addEventListener('click',function(ev){const dept=ev.target.closest('[data-nav-division]');if(dept){ev.preventDefault();openDivision(dept.dataset.navDivision);return;}const nav=ev.target.closest('[data-nav]');if(nav){ev.preventDefault();navigate(nav.dataset.nav);return;}const act=ev.target.closest('[data-action]');if(act){ev.preventDefault();if(['open','choose-division','choose-scope','choose-employee','milestone-division'].includes(act.dataset.action))rememberModalOrigin(act);action(act.dataset.action,act);return;}if(['employee','division','picker'].includes(ev.target.dataset.overlay)){ui.employeeModalOpen=false;ui.divisionModal=false;ui.employeePicker=false;ui.viewerIds=[];ui.viewerOrigin='';render();restoreModalOrigin();}});
   document.addEventListener('change',function(ev){
     const el=ev.target;
     if(!el.dataset.ui)return;
@@ -1052,7 +1105,7 @@
     }
     if(!anyOpen)return;
     if(ev.key==='Escape'){
-      ui.employeeModalOpen=false;ui.divisionModal=false;ui.employeePicker=false;render();restoreModalOrigin();return;
+      ui.employeeModalOpen=false;ui.divisionModal=false;ui.employeePicker=false;ui.viewerIds=[];ui.viewerOrigin='';render();restoreModalOrigin();return;
     }
     if(ev.key!=='Tab')return;
     // Keep keyboard navigation within whichever centered dialog is on top.

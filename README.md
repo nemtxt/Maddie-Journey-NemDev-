@@ -1,4 +1,4 @@
-# Maddie Journey — Read-only Prototype v2.9
+# Maddie Journey — Read-only Prototype v3.0
 
 **Madhouse Design Studio · People & Culture**
 
@@ -92,6 +92,15 @@ The final design tokens and overrides are in **mono.css**. New features should u
 - **Boundaries:** All values come from the same immutable 51-person fixture. No login, inputs for HR data, approval changes, live sync claims, third-party secrets or remote persistence. The full-viewport landing and optional Anime.js motion are retained.
 - **Verification:** Automated smoke suite expanded with design-system, source-derived attendance, division matrix and priority-inspection assertions. Manual visual acceptance is still a separate milestone.
 
+### Phase 3 — v3.0 employee and division workflows
+
+- **Context-aware employee reader:** Employee previews browse the originating roster. A division is limited to its own members; a filtered directory keeps its matching and sorted results. Previous/Next retains the selected detail tab and indicates the current position.
+- **Single direct return:** View division opens the existing department List with the currently inspected employee highlighted. The return action does not require finding the same employee again.
+- **Shareable division subviews:** `#division/{id}` remains Summary; `#division/{id}/board`, `/list`, and `/chart` open corresponding views on reload. Division tabs update the address fragment, with no new page or route family.
+- **Consistent follow-up details:** Division Summary uses the same prioritized, distinct-employee signals as the organization overview; Inspect links directly to the correct employee detail tab. Duplicated division-tab shortcuts were removed.
+- **Accessibility:** Responsive Previous/Next controls, disabled list boundaries, keyboard focus continuity and an origin description. All employee information remains view-only; the app still uses 51 fictional employees, eight divisions and optional Anime.js.
+- **Validation:** Five new workflow regression tests plus the existing full suite. Physical-device visual QA remains pending.
+
 ### Seven-stage Journey
 
 The Journey monitoring screen contains **seven stages plus Completed**, with one card per employee grouped by the first incomplete stage. The Board scrolls horizontally; Table view shows all matching members and aggregate progress. All status rows are non-editable.
@@ -115,7 +124,7 @@ The later connected-account phase can implement source normalization against the
 - Open index.html in a modern browser or use VS Code Live Server.
 - Run: node tests/smoke.js
 - On main, the custom GitHub Actions validation workflow runs the regression tests. Anime.js and the Inter web font are optional third-party CDN resources; UI navigation and sample data do not depend on their availability. GitHub Pages uses its separate publishing workflow.
-- Confirm both test and Pages workflow statuses under GitHub Actions. The automated suite currently includes 40 cases; physical Windows/macOS/Android/iOS visual acceptance remains separate.
+- Confirm both test and Pages workflow statuses under GitHub Actions. The automated suite currently includes 45 cases; physical Windows/macOS/Android/iOS visual acceptance remains separate.
 
 ## Source files
 
@@ -130,7 +139,7 @@ The later connected-account phase can implement source normalization against the
 | landing.css | Landing page and source photo |
 | workspace.css / reader.css | Global workspace, primary/secondary navigation and read-only views |
 | refined.css | Dashboard metrics, searchable directory, source quality panel and responsive summaries |
-| mono.css | **v2.9 canonical styles:** shared UI tokens, neutral Light/Dark modes, one-font monitoring hierarchy, full-viewport landing and responsive comparison matrix |
+| mono.css | **v3.0 canonical styles:** shared UI tokens, neutral Light/Dark modes, contextual employee viewer, full-viewport landing and responsive comparison matrix |
 | motion.js | Reduced-motion-aware, nonessential Anime.js entrance transitions |
 | tests/smoke.js | Regression tests for navigation, adapters, fixtures and read-only operation |
 | docs/CLAUDE_CONNECTORS_HANDOFF.md | Future connector development instructions |
