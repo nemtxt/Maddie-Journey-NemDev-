@@ -2172,3 +2172,22 @@ body .employee-modal [role="tabpanel"]:focus-visible{
     border-bottom:3px solid Highlight
   }
 }
+
+
+/* Contextual record cue follows the currently previewed employee, never a stale opener. */
+body .employee-context-match{
+  margin:3px 0 0;padding:6px 9px;min-width:0;
+  background:var(--mj-pastel-lilac);border:1px solid var(--mono-border);
+  border-radius:7px;color:var(--mono-text);
+  font-size:10.5px;font-weight:590;line-height:1.5;
+  overflow-wrap:anywhere;word-break:normal
+}
+@media(max-width:620px){
+  body .employee-context-match{padding:7px 9px}
+}
+@media(forced-colors:active){
+  body .employee-context-match{
+    background:Canvas!important;color:CanvasText!important;
+    border-color:CanvasText!important
+  }
+}
