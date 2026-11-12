@@ -24,7 +24,11 @@
   function clone(value){return JSON.parse(JSON.stringify(value));}
   function validate(snapshot){
     if(!snapshot || !Array.isArray(snapshot.divisions) || !Array.isArray(snapshot.employees) ||
-       !Array.isArray(snapshot.stages) || !Array.isArray(snapshot.kit))return false;
+       !Array.isArray(snapshot.stages) || !Array.isArray(snapshot.kit) ||
+       !Array.isArray(snapshot.documents201) || !snapshot.documents201.length)return false;
+    const docIds=snapshot.documents201.map(function(doc){return doc&&doc.id;});
+    if(new Set(docIds).size!==docIds.length||docIds.some(function(id){return typeof id!=='string'||!id;}))return false;
+    const docStatuses=new Set(['complete','missing','not-checked','not-applicable']);
     const validDivisions=new Set(snapshot.divisions.map(function(d){return d.id;}));
     const seen=new Set();
     return snapshot.employees.every(function(person){
@@ -32,14 +36,21 @@
       seen.add(person.id);
       return typeof person.name==='string' && Array.isArray(person.journey) &&
         person.journey.length===snapshot.stages.length && Array.isArray(person.kit) &&
-        person.kit.length===snapshot.kit.length;
+        person.kit.length===snapshot.kit.length &&
+        !!person.files201 && typeof person.files201==='object' &&
+        Object.keys(person.files201).length===docIds.length &&
+        docIds.every(function(id){return docStatuses.has(person.files201[id]);});
     });
   }
   function getQualityReport(){
     const snapshot=root.MJ_SEED;
     const divisions=new Set(snapshot.divisions.map(function(d){return d.id;}));
     const employeeIds=new Set();
+    const docs=new Set((snapshot.documents201||[]).map(function(d){return d.id;}));
+    const valid201=new Set(['complete','missing','not-checked','not-applicable']);
     const issues=[];
+    if(!Array.isArray(snapshot.documents201)||docs.size!==(snapshot.documents201||[]).length)
+      issues.push('201 Files requirement catalog missing or duplicated');
     snapshot.employees.forEach(function(person,index){
       const id=person&&person.id||'employee-'+(index+1);
       if(!person||typeof person.id!=='string'||employeeIds.has(person.id))issues.push(id+': missing or duplicate employee ID');
@@ -51,6 +62,9 @@
         issues.push(id+': incomplete Journey structure');
       }
       if(!person||!Array.isArray(person.kit)||person.kit.length!==snapshot.kit.length)issues.push(id+': incomplete Welcome Kit structure');
+      if(!person||!person.files201||Object.keys(person.files201).length!==docs.size||
+          !Array.from(docs).every(function(key){return valid201.has(person.files201[key]);}))
+        issues.push(id+': incomplete fictional 201 Files statuses');
     });
     const ids=new Set(snapshot.employees.map(function(p){return p&&p.id;}));
     snapshot.employees.forEach(function(person){
@@ -58,6 +72,7 @@
     });
     return {mode:'sample',recordCount:snapshot.employees.length,divisionCount:snapshot.divisions.length,
       uniqueEmployeeIds:employeeIds.size,stageCount:snapshot.stages.length,kitItemCount:snapshot.kit.length,
+      document201Count:docs.size,
       structureValid:issues.length===0,issueCount:issues.length,issues:issues};
   }
   function getSnapshot(){

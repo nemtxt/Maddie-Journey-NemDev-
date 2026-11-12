@@ -106,5 +106,31 @@
       e.reportsTo=supervisor?supervisor.id:null;
     });
   });
-  window.MJ_SEED={version:6,divisions:divisions,viewers:viewers,stages:stages,kit:kit,employees:employees};
+  // Additional 201 Files CHECKLIST DEMO. These records are invented examples,
+  // not Drive files, official HR documents, or inferred from Journey checkmarks.
+  const documents201=[
+    {id:'probation-contract',label:'Probationary Employment Contract',group:'Employment'},
+    {id:'regularization-contract',label:'Regularization Contract',group:'Employment'},
+    {id:'nda',label:'Non-Disclosure Agreement',group:'Contracts'},
+    {id:'ncc',label:'Non-Compete Contract',group:'Contracts'},
+    {id:'personal-data',label:'Personal Data Sheet / 201 Profile',group:'Personal'},
+    {id:'identity',label:'Government-issued Identification',group:'Personal'},
+    {id:'tax',label:'Tax Registration / TIN Details',group:'Government'},
+    {id:'benefits',label:'SSS / PhilHealth / Pag-IBIG Details',group:'Government'},
+    {id:'emergency-contact',label:'Emergency Contact Form',group:'Personal'}
+  ];
+  employees.forEach(function(person,i){
+    const unchecked=i%9===0,missingMode=i%5!==1&&i%5!==2;
+    person.files201={};
+    documents201.forEach(function(doc,j){
+      // Explicit synthetic applicability, NOT a conclusion about actual tenure.
+      const notApplicable=doc.id==='regularization-contract'&&i%3===0;
+      const missing=missingMode&&(j===(i*3+1)%documents201.length||
+        (i%4===0&&j===(i+4)%documents201.length));
+      person.files201[doc.id]=notApplicable?'not-applicable':
+        unchecked?'not-checked':missing?'missing':'complete';
+    });
+  });
+  window.MJ_SEED={version:7,divisions:divisions,viewers:viewers,stages:stages,
+    kit:kit,documents201:documents201,employees:employees};
 })();
