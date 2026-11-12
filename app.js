@@ -934,7 +934,7 @@
       '<th scope="col">Category</th><th scope="col">Raw score</th><th scope="col">Weight</th>'+
       '<th scope="col">Contribution</th></tr></thead><tbody>'+
       parts.map(function(part){
-        return '<tr><th scope="row">'+safe(part.name)+'</th><td>'+part.raw.toFixed(1)+' / 100</td>'+
+        return '<tr><th scope="row">'+safe(part.name)+'</th><td class="report-num">'+part.raw.toFixed(1)+' / 100</td>'+
           '<td class="report-num">'+part.weight+'%</td><td class="report-num"><strong>'+
           part.points.toFixed(2)+' pts</strong></td></tr>';
       }).join('')+
