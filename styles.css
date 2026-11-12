@@ -205,3 +205,31 @@
   .profile-action-buttons .button{flex:1 1 140px}
 }
 @media(prefers-reduced-motion:reduce){.role-choice:hover,.division-picker-item:hover{transform:none}}
+
+/* Friendly employee chooser instead of a 51-name dropdown */
+.employee-picker-trigger{display:flex;align-items:center;gap:11px;width:100%;min-height:57px;padding:9px 12px;text-align:left;border:1px solid #e0deda;border-radius:12px;background:#fff;transition:.15s}
+.employee-picker-trigger:hover{border-color:#e4a28e;background:#fffbf9}
+.employee-picker-trigger .avatar{width:35px;height:35px}
+.employee-picker-trigger>span:nth-child(2){flex:1;min-width:0}
+.employee-picker-trigger b{display:block;font-size:12px}
+.employee-picker-trigger small{color:#91939b;font-size:10px;display:block}
+.employee-picker-trigger>strong{font-size:11px;color:#e37151;white-space:nowrap}
+.member-picker-modal{max-height:min(88vh,830px)}
+.picker-department-buttons{display:flex;gap:7px;overflow-x:auto;scrollbar-width:thin;padding:13px 1px 16px;white-space:nowrap}
+.picker-department{padding:8px 11px;border:1px solid #e5e3df;border-radius:9px;color:#6e7076;background:#fff;font-size:11px;font-weight:800;flex-shrink:0}
+.picker-department:hover{border-color:#e8ac96;color:#7c5b4f}
+.picker-department.active{background:#303038;color:#fff;border-color:#303038}
+.picker-list-title{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:2px 0 10px}
+.picker-employee-list{display:grid;gap:7px}
+.picker-person{border:1px solid #eae8e4;background:#fff;border-radius:11px;padding:10px 12px;display:flex;align-items:center;gap:11px}
+.picker-person>.avatar{width:35px;height:35px;border-radius:10px}
+.picker-person-info{flex:1;min-width:0}
+.picker-person-info b{display:block;font-size:12px}
+.picker-person-info small{display:block;color:#91939a;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.picker-person-score{font-weight:800;font-size:11px;color:#72747c}
+@media(max-width:760px){
+  .picker-person{gap:8px;padding:10px}
+  .picker-person-score{display:none}
+  .employee-picker-trigger>strong{font-size:10px}
+  .member-picker-modal{max-height:calc(100dvh - 16px)}
+}
