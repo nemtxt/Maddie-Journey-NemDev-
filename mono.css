@@ -2083,3 +2083,8 @@ body .layout.density-compact .calendar-date{
   }
   body .page-header .density-toggle.active{outline:2px solid Highlight;outline-offset:-2px}
 }
+
+/* Align numeric headers with their measured data cells. */
+body .panel.no-pad > .table-wrap > .table thead th:nth-child(4),
+body .panel.no-pad > .table-wrap > .table thead th:nth-child(5),
+body .journey-table thead th:nth-child(5){text-align:right}
