@@ -1522,13 +1522,18 @@ check('Phase 8 directory table exposes real denominators and accessible column l
   assert(part.includes('class="report-cell-sub"'));
 });
 check('Phase 8 empty employee search explains filters without inventing empty source data',()=>{
-  const ctx=boot({},'#employees');
+  const ctx=boot({},'#employees'),root=ctx.doc.getElementById('app');
+  const result={outerHTML:''},count={textContent:''};
+  const clear={innerHTML:'',querySelector(){return null;}};
+  const panel={querySelector(q){return q==='.table-wrap, .empty'?result:
+    q==='.directory-results-count'?count:q==='.directory-clear-slot'?clear:null;}};
+  root.querySelector=q=>q==='.panel.no-pad'?panel:null;
   ctx.typeSearch('no-matching-employee-record-999');
-  const h=ctx.html();
+  const h=result.outerHTML;
   assert(h.includes('class="empty report-empty" role="status"'));
   assert(h.includes('No employees match these filters.'));
   assert(h.includes('Try another name, division or search term.'));
-  assert(h.includes('0 of 51 employees'));
+  assert.equal(count.textContent,'0 of 51 employees');
   assert(!h.includes('No source records found'));
 });
 check('Phase 8 an empty attendance record means unrecorded, never perfect attendance',()=>{
