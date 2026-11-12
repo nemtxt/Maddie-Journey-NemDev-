@@ -407,19 +407,46 @@
           '<strong>'+label+'</strong>'+button('Open','open','data-id="'+safe(e.id)+'" data-detail="'+kind+'"','small')+'</div>';
       }).join('')+'</div></section>';
   }
-  function stageCards(e){return '<div class="grid step-grid">'+data.stages.map(function(s,si){let done=e.journey[si].filter(Boolean).length;return '<div class="step-card"><div class="step-title"><div><div class="step-number">STAGE '+(si+1)+' · '+safe(s.timing)+'</div><h3>'+safe(s.name)+'</h3></div><span class="tag '+(done===s.items.length?'ok':'warn')+'">'+done+'/'+s.items.length+'</span></div>'+progress(Math.round(done/s.items.length*100))+'<div style="margin-top:10px">'+s.items.map(function(item,ii){return '<label class="check-row '+(canTrack(e)?'':'disabled')+'"><input type="checkbox" data-stage="'+si+'" data-item="'+ii+'" '+(e.journey[si][ii]?'checked ':'')+(canTrack(e)?'':'disabled ')+'><span>'+safe(item)+'</span></label>';}).join('')+'</div></div>';}).join('')+'</div>';}
+  function stageCards(e){
+    return '<div class="grid step-grid">'+data.stages.map(function(stage,si){
+      const total=stage.items.length,done=e.journey[si].filter(Boolean).length;
+      return '<section class="step-card"><div class="step-title"><div><span class="step-number">STAGE '+(si+1)+' · '+safe(stage.timing)+'</span><h3>'+safe(stage.name)+'</h3></div>'+
+        '<span class="tag '+(done===total?'ok':'warn')+'">'+done+'/'+total+'</span></div>'+
+        progress(Math.round(done/total*100))+'<div class="reader-checklist">'+stage.items.map(function(item,ii){
+          const completed=!!e.journey[si][ii];
+          return '<div class="reader-check'+(completed?' is-complete':'')+'"><span class="reader-check-icon" aria-hidden="true">'+(completed?'✓':'–')+'</span>'+
+          '<span>'+safe(item)+'</span><small>'+(completed?'Complete':'Pending')+'</small></div>';
+        }).join('')+'</div></section>';
+    }).join('')+'</div>';
+  }
+
   function employeeSelector(){ensureEmployeeScope();const e=emp();return '<label class="field-label">Selected employee</label><button type="button" class="employee-picker-trigger" data-action="choose-employee" aria-haspopup="dialog" aria-label="Choose an employee">'+avatar(e.name)+'<span><b>'+safe(e.name)+'</b><small>'+safe(div(e.division).short)+' · '+safe(e.id)+'</small></span><strong>Change member ↗</strong></button>';}
   function journey(){
     return header('ONBOARDING','Journey tracker','Select a department, then open an employee to update their seven-stage checklist.',button('Browse divisions','nav','data-tab="divisions"','small'))+
       trackerRoster('journey');
   }
-  function kitSection(e){return '<div class="kit-grid">'+data.kit.map(function(k,i){return '<div class="kit-item"><label class="check-row '+(canTrack(e)?'':'disabled')+'"><input type="checkbox" data-kit="'+i+'" '+(e.kit[i]?'checked ':'')+(canTrack(e)?'':'disabled ')+'><strong>'+safe(k.label)+'</strong></label><label class="field-label">'+(k.type==='equipment'?'Item / issuance details':'Setup / access notes')+'</label>'+input('kitnote.'+k.id,e.kitNotes[k.id]||'',{disabled:!canTrack(e),placeholder:'Reference or status only — never passwords'})+'</div>';}).join('')+'</div>';}
+  function kitSection(e){
+    return '<div class="kit-grid">'+data.kit.map(function(k,i){
+      const note=e.kitNotes[k.id]||'',ready=!!e.kit[i];
+      return '<article class="kit-item reader-kit-item"><div class="reader-kit-title"><span class="reader-check-icon'+(ready?' is-complete':'')+'" aria-hidden="true">'+(ready?'✓':'–')+'</span><strong>'+safe(k.label)+'</strong>'+
+        pill(ready?'Complete':'Pending')+'</div><p class="reader-kit-type">'+(k.type==='equipment'?'Issuance details':'Access reference')+'</p>'+
+        '<p class="reader-kit-note">'+safe(note||'No additional source details in sample')+'</p></article>';
+    }).join('')+'</div>';
+  }
+
   function kitView(){
     return header('EMPLOYEE SETUP','Welcome Maddie Kit','Select a department, then open an employee to review equipment, tools and access.',button('Browse divisions','nav','data-tab="divisions"','small'))+
       trackerRoster('kit')+'<p class="muted micro tracker-footnote">Do not put passwords or private credentials in sample access notes.</p>';
   }
   function attendanceSummary(e){const a=attend(e);return '<div class="grid metrics"><div class="metric"><div class="metric-label">Verified late arrivals</div><strong>'+a.lates+'</strong><div class="metric-sub">Last: '+dateLabel(a.lastLate)+'</div></div><div class="metric"><div class="metric-label">Verified absences</div><strong>'+a.absences+'</strong><div class="metric-sub">Last: '+dateLabel(a.lastAbs)+'</div></div><div class="metric"><div class="metric-label">Attendance concerns</div><strong>'+a.concerns+'</strong><div class="metric-sub">Excused late entries excluded</div></div><div class="metric"><div class="metric-label">Attendance status</div><strong style="font-size:21px">'+(a.records.length?'With records':'No record')+'</strong><div class="metric-sub">Only verified entries are counted</div></div></div>';}
-  function attendanceRows(e){const rs=e.attendance.slice().sort(function(a,b){return b.date.localeCompare(a.date);});return '<div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Type</th><th>Approval</th><th>Verification</th><th>Reason / remarks</th><th></th></tr></thead><tbody>'+rs.map(function(r){return '<tr><td>'+dateLabel(r.date)+'</td><td><strong>'+safe(r.type)+'</strong></td><td>'+pill(r.approval)+'</td><td>'+pill(r.verified?'Verified':'Pending')+'</td><td><strong>'+safe(r.reason)+'</strong><small>'+safe(r.remarks)+'</small></td><td>'+(isHR()?button('Edit','edit-record','data-id="'+safe(r.id)+'"','small'):'')+'</td></tr>';}).join('')+'</tbody></table></div>';}
+  function attendanceRows(e){
+    const rows=e.attendance.slice().sort(function(a,b){return b.date.localeCompare(a.date);});
+    return '<div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Type</th><th>Approval</th><th>Verification</th><th>Reason / remarks</th></tr></thead><tbody>'+
+      rows.map(function(r){return '<tr><td>'+dateLabel(r.date)+'</td><td><strong>'+safe(r.type)+'</strong></td><td>'+pill(r.approval)+'</td>'+
+        '<td>'+pill(r.verified?'Verified':'Pending')+'</td><td><strong>'+safe(r.reason)+'</strong><small>'+safe(r.remarks)+'</small></td></tr>';}).join('')+
+      '</tbody></table></div>';
+  }
+
   function series(){const months=[];const dt=new Date();dt.setDate(1);for(let i=5;i>=0;i--){const d=new Date(dt.getFullYear(),dt.getMonth()-i,1);const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');let late=0,abs=0;scopedEmployees().forEach(function(e){e.attendance.forEach(function(r){if(r.verified&&r.date.slice(0,7)===key){if(r.type==='Late')late++;if(r.type==='Absent')abs++;}});});months.push({label:d.toLocaleDateString('en-PH',{month:'short'}),late:late,abs:abs});}return months;}
   function chart(){
     const periods=series(),max=Math.max(1,...periods.map(function(p){return p.late+p.abs;}));
@@ -475,10 +502,14 @@
   }
   function activity(){const logs=[];scopedEmployees().forEach(function(e){(e.audit||[]).forEach(function(a){logs.push({date:a.date,employee:e.name,actor:a.actor,action:a.action});});});logs.sort(function(a,b){return b.date.localeCompare(a.date);});return header('WORKSPACE SETTINGS','Activity & data','Review local changes and manage your demonstration dataset.',button('Download JSON backup','export','','primary'))+'<div class="grid dashboard-grid"><section class="panel"><h2>Data controls</h2><p class="muted micro" style="margin:8px 0 17px">Edits are saved to this browser only. They do not automatically sync across devices or evaluators.</p><div class="actions">'+button('Export all data (JSON)','export','','small')+button('Import backup','import','','small')+button('Download employee CSV','export-csv','','small')+button('Reset 51 sample employees','reset','','small danger')+'</div><input type="file" id="import-file" accept=".json,application/json" hidden><div class="hr"></div><div class="callout orange"><strong>Privacy & security:</strong> This is a public-repository prototype with simulated role permissions. It is not suitable for live employee, confidential compensation, or authentication data. Use a secure backend and verified access controls before any production rollout.</div></section><section class="panel"><h2>Assigned evaluators</h2><p class="muted micro" style="margin:7px 0 16px">Current roster per project instruction</p>'+data.divisions.map(function(d){return '<div class="quick-item"><div class="grow"><b>'+safe(d.name)+'</b><p>'+safe(d.evaluators.map(function(id){const v=data.viewers.find(function(p){return p.id===id;});return v?v.name:id;}).join(' / '))+'</p></div></div>';}).join('')+'<div class="hr"></div><p class="muted micro">HR: GIEZELLE · KURT</p></section></div><section class="panel"><div class="panel-head"><div><h2>Local activity log</h2><p>Actions recorded in this browser by the selected demo viewer</p></div><span class="tag info">'+logs.length+' events</span></div><div class="audit-list">'+(logs.length?logs.slice(0,60).map(function(a){return '<div class="audit-row"><span class="avatar">↗</span><div><p><strong>'+safe(a.actor)+'</strong> · '+safe(a.action)+'</p><small>'+safe(a.employee)+' · '+safe(new Date(a.date).toLocaleString('en-PH'))+'</small></div></div>';}).join(''):'<div class="empty">No edits recorded yet. Edit any sample entry to see its audit trail.</div>')+'</div></section>';}
   function detailContent(e,t){if(t==='journey')return '<div class="panel"><div class="panel-head"><h2>Seven-stage checklist</h2><span class="tag info">'+journeyPct(e)+'% done</span></div>'+stageCards(e)+'</div>';if(t==='kit')return '<div class="panel"><div class="panel-head"><h2>Welcome Maddie Kit</h2><span class="tag info">'+kitPct(e)+'% ready</span></div>'+kitSection(e)+'</div>';if(t==='attendance')return '<section class="panel"><div class="heading-line"><h2>Attendance records</h2>'+(isHR()?button('Add record','new-record','','small primary'):'')+'</div>'+attendanceSummary(e)+'<div class="hr"></div>'+attendanceRows(e)+'</section>';if(t==='kpi')return kpiDetail(e);if(t==='approvals')return approvalsDetail(e);if(t==='milestones')return milestoneDetail(e);if(t==='preview')return previewCharts(e);if(t==='info')return '<section class="panel"><h2>Employee information</h2><p class="muted micro" style="margin:6px 0 15px">Profile details and department assignment</p>'+profileForm(e)+'</section>';return '';}
-  function profileForm(e){const edit=isHR();return '<details class="panel" style="margin-bottom:14px"><summary style="font-size:12px;font-weight:800;cursor:pointer">Employee information'+'</summary><div class="form-grid" style="margin-top:18px"><div><label class="field-label">Full name</label>'+input('profile.name',e.name,{disabled:!edit})+'</div><div><label class="field-label">Job title</label>'+input('profile.jobTitle',e.jobTitle,{disabled:!edit})+'</div><div><label class="field-label">Demo email</label>'+input('profile.email',e.email,{disabled:!edit,type:'email'})+'</div><div><label class="field-label">Start date</label>'+input('profile.startDate',e.startDate,{disabled:!edit,type:'date'})+'</div><div><label class="field-label">Birthday</label>'+input('profile.birthday',e.birthday||'',{disabled:!edit,type:'date'})+'</div><div class="span2"><label class="field-label">Assigned division</label>'+select('profile.division',e.division,data.divisions.map(function(d){return {label:d.name,value:d.id};}),!edit)+'</div></div></details>';}
+  function profileForm(e){
+    const fields=[['Full name',e.name],['Job title',e.jobTitle],['Sample email',e.email],['Hiring date',dateLabel(e.startDate)],
+      ['Birthday',dateLabel(e.birthday)],['Division',div(e.division).name]];
+    return '<dl class="reader-profile-grid">'+fields.map(function(field){
+      return '<div><dt>'+field[0]+'</dt><dd>'+safe(field[1]||'—')+'</dd></div>';
+    }).join('')+'</dl>';
+  }
 
-
-  /* Milestones: distinct positive events and confidential HR records. All demo data. */
   function todayStamp(){const d=new Date();return Date.UTC(d.getFullYear(),d.getMonth(),d.getDate());}
   function daysToBirthday(ymd){
     if(!/^\d{4}-\d{2}-\d{2}$/.test(ymd||''))return 9999;
