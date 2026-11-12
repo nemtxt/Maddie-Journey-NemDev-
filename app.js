@@ -237,16 +237,49 @@
       '<div class="member-card-buttons">'+button('Preview charts','open','data-id="'+safe(e.id)+'" data-detail="preview"','small')+
       button(edit?'Open evaluation':'View KPI','open','data-id="'+safe(e.id)+'" data-detail="kpi"','small primary')+'</div></article>';
   }
+  function divisionStage(e){
+    const journey=journeyPct(e),kit=kitPct(e),review=reviewStatus(e,'division');
+    if(journey===100&&kit===100&&review==='Endorsed')return 'complete';
+    if(journey>=85&&review!=='Endorsed')return 'review';
+    if(journey>0||kit>0)return 'progress';
+    return 'todo';
+  }
+  function divisionBoard(team){
+    const groups=[['todo','To do'],['progress','In progress'],['review','Ready for review'],['complete','Completed']];
+    return '<section class="department-board" aria-label="Team onboarding status board">'+groups.map(function(g){
+      const members=team.filter(function(e){return divisionStage(e)===g[0];});
+      return '<div class="department-board-lane lane-'+g[0]+'"><div class="department-lane-head"><strong>'+g[1]+'</strong><span>'+members.length+'</span></div>'+
+        '<div class="department-lane-cards">'+(members.length?members.map(function(e){
+          return '<button class="department-person-card" data-action="open" data-id="'+safe(e.id)+'" data-detail="preview" type="button" aria-label="Open '+safe(e.name)+'">'+
+            '<strong>'+safe(e.name)+'</strong><small>'+safe(e.jobTitle)+'</small>'+
+            '<span class="department-person-progress"><span>Journey</span><b>'+journeyPct(e)+'%</b></span>'+
+            '<span class="work-card-progress"><span style="width:'+Math.min(100,Math.max(0,journeyPct(e)))+'%"></span></span>'+
+            '<span class="department-person-footer">'+avatar(e.name)+'<span>Welcome Kit '+kitPct(e)+'%</span></span></button>';
+        }).join(''):'<p class="work-lane-empty">No sample members</p>')+'</div></div>';
+    }).join('')+'</section><p class="muted micro department-stage-note">Board grouping uses sample Journey, Welcome Kit and division review states. Open a person to review the actual details.</p>';
+  }
+  function divisionList(team){
+    const order=team.slice().sort(function(a,b){return a.name.localeCompare(b.name);});
+    const names={todo:'To do',progress:'In progress',review:'For review',complete:'Completed'};
+    return '<section class="panel department-table-panel"><div class="panel-head"><div><h2>Team directory</h2><p>Progress and review status for all '+team.length+' sample members</p></div></div>'+
+      '<div class="table-wrap"><table class="table department-table"><thead><tr><th scope="col">Employee</th><th scope="col">Status</th><th scope="col">Journey</th><th scope="col">Welcome Kit</th><th scope="col">KPI</th><th scope="col"></th></tr></thead>'+
+      '<tbody>'+order.map(function(e){const stage=divisionStage(e);return '<tr><td><div class="name-cell">'+avatar(e.name)+'<div><strong>'+safe(e.name)+'</strong><small>'+safe(e.jobTitle)+'</small></div></div></td>'+
+      '<td><span class="work-type work-stage-'+stage+'">'+names[stage]+'</span></td>'+
+      '<td>'+journeyPct(e)+'%</td><td>'+kitPct(e)+'%</td><td>'+score(e).toFixed(1)+'%</td>'+
+      '<td>'+button('Preview','open','data-id="'+safe(e.id)+'" data-detail="preview"','small')+'</td></tr>';}).join('')+'</tbody></table></div></section>';
+  }
   function divisionView(){
     const d=div(ui.activeDivision),team=data.employees.filter(function(e){return e.division===d.id;});
     if(!team.length)return header('DIVISION','No team members','Choose another division.',button('All divisions','nav','data-tab="divisions"','small'));
     const sub={
       summary:divisionPulse(d,team),
+      board:divisionBoard(team),
+      list:divisionList(team),
       chart:orgChart(d),
       team:'<section class="member-grid">'+team.slice().sort(function(a,b){return a.orgLevel===b.orgLevel?a.name.localeCompare(b.name):b.orgLevel-a.orgLevel;}).map(employeeCard).join('')+'</section>'
     };
     return header('DIVISION OVERVIEW',d.name,team.length+' sample employees · '+divisionEvaluatorNames(d),button('All divisions','nav','data-tab="divisions"','small'))+
-      '<nav class="division-tabs" aria-label="Division views">'+divisionTabButton('summary','Summary')+divisionTabButton('chart','Org chart')+divisionTabButton('team','Employees')+'</nav>'+
+      '<nav class="division-tabs" aria-label="Division views">'+divisionTabButton('summary','Summary')+divisionTabButton('board','Board')+divisionTabButton('list','List')+divisionTabButton('chart','Org chart')+'</nav>'+
       (sub[ui.divisionTab]||sub.summary);
   }
   function quickDivisionAccess(){
@@ -283,17 +316,37 @@
     const categories=[['all','All'],['attendance','Attendance'],['kpi','KPI'],['onboarding','Onboarding'],['reviews','Reviews']];
     const active=categories.some(function(x){return x[0]===ui.attentionFilter;})?ui.attentionFilter:'all';
     const rows=active==='all'?all:all.filter(function(x){return x.group===active;});
-    const limit=ui.attentionShowAll?Math.min(24,rows.length):6;
-    return '<section class="panel work-queue"><div class="panel-head"><div><h2>Needs attention</h2><p>Priority-ordered sample follow-ups — not verified live tasks or deadlines</p></div><span class="queue-count">'+rows.length+' items</span></div>'+
-      '<div class="queue-filters" role="group" aria-label="Filter action list">'+categories.map(function(c){
+    const listLimit=ui.attentionShowAll?Math.min(30,rows.length):8;
+    const boardLimit=ui.attentionShowAll?9:4;
+    const tabs='<div class="workspace-view-switch" role="group" aria-label="Choose tracker view">'+
+      ['list','board'].map(function(mode){return '<button type="button" data-action="work-view" data-mode="'+mode+'" aria-pressed="'+(ui.workView===mode)+'" class="'+(ui.workView===mode?'active':'')+'">'+landingIcon(mode==='board'?'grid':'list')+(mode==='board'?'Board':'List')+'</button>';}).join('')+'</div>';
+    const list='<div class="work-list-table"><div class="work-list-head"><span>Employee</span><span>Follow-up</span><span>Department</span><span></span></div>'+
+      (rows.length?rows.slice(0,listLimit).map(function(item){
+        return '<div class="work-list-row">'+
+          '<div class="work-list-person">'+avatar(item.e.name)+'<div><strong>'+safe(item.e.name)+'</strong><small>'+safe(item.e.jobTitle)+'</small></div></div>'+
+          '<div class="work-list-subject"><span class="work-type work-type-'+item.group+'">'+safe(item.group==='kpi'?'KPI':item.group==='reviews'?'Review':item.group==='onboarding'?'Onboarding':'Attendance')+'</span><span>'+safe(item.label)+'</span></div>'+
+          '<span class="work-list-division">'+safe(div(item.e.division).short)+'</span>'+button('Open','open','data-id="'+safe(item.e.id)+'" data-detail="'+item.detail+'"','small')+'</div>';
+      }).join(''):'<p class="empty">No sample follow-ups in this category.</p>')+'</div>';
+    const groups=categories.slice(1).filter(function(c){return active==='all'||active===c[0];});
+    const board='<div class="work-board" role="group" aria-label="Follow-up categories">'+groups.map(function(c){
+      const subset=all.filter(function(x){return x.group===c[0];}),shown=subset.slice(0,boardLimit);
+      return '<section class="work-lane work-lane-'+c[0]+'"><header class="work-lane-head"><strong>'+c[1]+'</strong><span>'+subset.length+'</span></header>'+
+        '<div class="work-lane-cards">'+(shown.length?shown.map(function(item){
+          const percent=item.group==='onboarding'?journeyPct(item.e):item.group==='kpi'?score(item.e):null;
+          return '<button type="button" class="work-card" data-action="open" data-id="'+safe(item.e.id)+'" data-detail="'+item.detail+'" aria-label="Open '+safe(item.e.name)+': '+safe(item.label)+'">'+
+            '<strong>'+safe(item.label)+'</strong><span class="work-card-employee">'+avatar(item.e.name)+'<span>'+safe(item.e.name)+'</span></span>'+
+            '<span class="work-card-meta">'+safe(div(item.e.division).short)+(percent!==null?' · '+Math.round(percent)+'%':'')+'</span>'+
+            (percent!==null?'<span class="work-card-progress"><span style="width:'+Math.min(100,Math.max(0,percent))+'%"></span></span>':'')+'</button>';
+        }).join(''):'<p class="work-lane-empty">No sample follow-ups</p>')+'</div>'+
+        (subset.length>boardLimit?'<p class="work-lane-count">Showing '+shown.length+' of '+subset.length+'</p>':'')+'</section>';
+    }).join('')+'</div>';
+    return '<section class="panel work-queue"><div class="panel-head"><div><h2>Needs attention</h2><p>Sample follow-ups based on recorded progress · select a row or card to preview</p></div>'+
+      '<div class="work-queue-tools"><span class="queue-count">'+rows.length+' items</span>'+tabs+'</div></div>'+
+      '<div class="queue-filters" role="group" aria-label="Filter follow-ups">'+categories.map(function(c){
         const count=c[0]==='all'?all.length:all.filter(function(x){return x.group===c[0];}).length;
         return '<button type="button" data-action="attention-filter" data-kind="'+c[0]+'" class="queue-filter'+(active===c[0]?' active':'')+'" aria-pressed="'+(active===c[0])+'">'+c[1]+' <span>'+count+'</span></button>';
-      }).join('')+'</div>'+
-      '<div class="queue-list">'+(rows.length?rows.slice(0,limit).map(function(item){
-        return '<div class="queue-row">'+avatar(item.e.name)+'<div class="queue-person"><strong>'+safe(item.e.name)+'</strong><small>'+safe(div(item.e.division).short)+' · '+safe(item.label)+'</small></div>'+
-          button('Open','open','data-id="'+safe(item.e.id)+'" data-detail="'+item.detail+'"','small')+'</div>';
-      }).join(''):'<div class="empty">No matching sample follow-ups in this category.</div>')+'</div>'+
-      (rows.length>6?'<div class="queue-footer">'+button(ui.attentionShowAll?'Show fewer':'Show more','attention-more','','small')+'</div>':'')+'</section>';
+      }).join('')+'</div>'+(ui.workView==='board'?board:list)+
+      (rows.length>(ui.workView==='board'?boardLimit*groups.length:listLimit)?'<div class="queue-footer">'+button(ui.attentionShowAll?'Show fewer':'Show more','attention-more','','small')+'</div>':'')+'</section>';
   }
   function divisionPulseTable(divisions){
     return '<section class="panel pulse-panel"><div class="panel-head"><div><h2>Division snapshot</h2><p>Eight departments with consistent sample progress measures</p></div>'+
@@ -337,7 +390,7 @@
     return header('DASHBOARD',heading,desc,button('Browse divisions','nav','data-tab="divisions"','small'))+
       '<section class="grid metrics summary-metrics">'+cards.map(function(c){return metricCard(c[0],c[1],c[2]);}).join('')+'</section>'+
       dataProvenanceStrip()+
-      '<div class="dashboard-main"><div>'+attentionPanel(team,role)+'</div><div class="dashboard-side">'+
+      '<div class="workspace-action-center">'+attentionPanel(team,role)+'</div><div class="dashboard-main dashboard-secondary"><div class="dashboard-side">'+
       '<section class="panel next-step-panel"><h2>Quick access</h2><p>Choose a destination. You can return here at any time.</p>'+
       '<div class="next-step-actions">'+button('Employee directory','nav','data-tab="employees"','small')+
       button('Milestones','nav','data-tab="milestones"','small')+
@@ -835,7 +888,7 @@
     if(name==='work-view'){ui.workView=button.dataset.mode==='board'?'board':'list';render();return;}
     if(name==='attention-filter'){ui.attentionFilter=['all','attendance','kpi','onboarding','reviews'].includes(button.dataset.kind)?button.dataset.kind:'all';ui.attentionShowAll=false;render();return;}
     if(name==='attention-more'){ui.attentionShowAll=!ui.attentionShowAll;render();return;}
-    if(name==='division-tab'){ui.divisionTab=['summary','chart','team'].includes(button.dataset.tab)?button.dataset.tab:'summary';render();return;}
+    if(name==='division-tab'){ui.divisionTab=['summary','board','list','chart','team'].includes(button.dataset.tab)?button.dataset.tab:'summary';render();return;}
     if(name==='open-org'){openDivision(button.dataset.division);ui.divisionTab='chart';render();return;}
     if(name==='choose-workspace'){ui.roleModal=true;ui.divisionModal=false;ui.employeePicker=false;ui.employeeModalOpen=false;render();return;}
     if(name==='select-viewer'){if(!data.viewers.some(function(v){return v.id===button.dataset.id;}))return;ui.viewer=button.dataset.id;ui.milestoneDivision='all';ui.scope='all';ensureEmployeeScope();ui.roleModal=false;ui.divisionModal=false;ui.employeeModalOpen=false;persist();navigate('overview');toast('Workspace: '+viewer().name);return;}
