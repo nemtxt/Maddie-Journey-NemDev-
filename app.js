@@ -92,7 +92,7 @@
       '<header class="topbar workspace-topbar"><div class="workspace-location"><span class="workspace-location-prefix">'+safe(group.label)+'</span>'+
       '<span class="workspace-location-sep">/</span><strong>'+safe(title(ui.tab))+'</strong></div>'+
       '<div class="top-actions workspace-top-actions">'+
-      '<button type="button" class="workspace-search" data-action="quick-search" aria-label="Find an employee">'+landingIcon('search')+'<span>Find employee</span></button>'+
+      '<button type="button" class="workspace-search" data-action="quick-search" aria-label="Find an employee" title="Search employees · Ctrl/Command + K">'+landingIcon('search')+'<span>Find employee</span></button>'+
       themeControl()+
       '<span class="reader-source-status" title="Fictional data, no live integrations">Sample data</span>'+
       '</div></header>'+
@@ -961,6 +961,15 @@
   document.addEventListener('input',function(ev){const el=ev.target;if(el.dataset.ui==='query'){const p=el.selectionStart;ui.query=el.value;const focus=document.activeElement;const list=filtered();const table=$('app').querySelector('.panel.no-pad');if(table){const existing=table.querySelector('.table-wrap, .empty');if(existing)existing.outerHTML=employeesTable(list);const count=table.querySelector('.directory-results-count');if(count)count.textContent=list.length+' of '+scopedEmployees().length+' employees';}if(focus!==el){el.focus();try{el.setSelectionRange(p,p);}catch(err){}}}});
   document.addEventListener('keydown',function(ev){
     const anyOpen=ui.employeeModalOpen||ui.divisionModal||ui.employeePicker;
+    const typing=!!(ev.target&&((/^(INPUT|TEXTAREA|SELECT)$/.test(ev.target.tagName||''))||ev.target.isContentEditable));
+    if(!anyOpen&&((ev.key==='/'&&!typing)||((ev.ctrlKey||ev.metaKey)&&String(ev.key).toLowerCase()==='k'))){
+      ev.preventDefault();
+      action('quick-search',{dataset:{}});
+      return;
+    }
+    if(ev.key==='Escape'&&ui.mobile){
+      ui.mobile=false;render();return;
+    }
     if(!anyOpen)return;
     if(ev.key==='Escape'){
       ui.employeeModalOpen=false;ui.divisionModal=false;ui.employeePicker=false;render();return;
