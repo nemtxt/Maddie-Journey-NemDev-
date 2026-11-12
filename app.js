@@ -82,31 +82,48 @@
     });
   }
   function topnav(){
-    const links=[['overview','Overview'],['divisions','Divisions'],['employees','People'],['milestones','Milestones']];
-    const here=ui.tab==='division'?'divisions':ui.tab;
-    return '<div class="mobile-top"><a href="#welcome" data-nav="welcome" class="brand mobile-brand" aria-label="Maddie Journey welcome"><img src="./assets/madhouse-logo.png" alt="Madhouse Design Studio" class="mobile-official-logo"><b>Maddie Journey</b></a>'+button('☰','mobile','','small')+'</div>'+
-      '<div class="topbar workspace-topbar"><div class="workspace-location"><span class="workspace-location-prefix">Maddie Journey</span><span class="workspace-location-sep">/</span><strong>'+safe(title(ui.tab))+'</strong></div>'+
-      '<nav class="workspace-toplinks" aria-label="Quick navigation">'+links.map(function(item){return '<a href="#'+item[0]+'" data-nav="'+item[0]+'" class="'+(here===item[0]?'active':'')+'">'+item[1]+'</a>';}).join('')+'</nav>'+
-      '<div class="top-actions workspace-top-actions"><button type="button" class="workspace-search" data-action="quick-search" aria-label="Search employee directory">'+landingIcon('search')+'<span>Search people</span></button>'+
-      themeControl()+'</div></div>';
+    const place=ui.tab==='division'?div(ui.activeDivision).name:title(ui.tab);
+    return '<div class="mobile-top"><a href="#welcome" data-nav="welcome" class="brand mobile-brand" aria-label="Maddie Journey landing">'+
+      '<img src="./assets/madhouse-logo.png" alt="Madhouse Design Studio" class="mobile-official-logo"><b>Maddie Journey</b></a>'+
+      '<button type="button" class="button small" data-action="mobile" aria-label="'+(ui.mobile?'Close':'Open')+' navigation" aria-expanded="'+ui.mobile+'">☰ Menu</button></div>'+
+      '<header class="topbar workspace-topbar"><div class="workspace-location"><span class="workspace-location-prefix">Workspace</span>'+
+      '<span class="workspace-location-sep">/</span><strong>'+safe(place)+'</strong></div>'+
+      '<div class="top-actions workspace-top-actions"><span class="reader-source-status" title="Fictional data · No live integration">Sample data</span>'+
+      '<button type="button" class="workspace-search" data-action="quick-search" aria-label="Find an employee">'+landingIcon('search')+
+      '<span>Find employee</span></button>'+themeControl()+
+      '<button type="button" class="workspace-persona" data-action="choose-workspace" aria-label="Change dashboard viewer: '+safe(viewer().name)+'">'+
+      avatar(viewer().name)+'<span><strong>'+safe(viewer().name)+'</strong><small>'+safe(viewer().role==='hr'?'HR':viewer().role==='head'||viewer().role==='corp'?'Division Head':'Executive overview')+'</small></span>'+
+      '<span aria-hidden="true">⌄</span></button></div></header>';
   }
-  const items=[['overview','◫','Overview'],['divisions','▦','Divisions'],['employees','◎','Employees'],['milestones','✦','Milestones'],['journey','◷','Journey'],['kit','▣','Welcome Kit'],['attendance','◩','Attendance'],['kpi','◈','KPI scorecards'],['approvals','✓','Reviews'],['sources','↗','Data sources'],['audit','≡','Data & settings']];
+  const items=[['overview','◫','Overview'],['divisions','▦','Divisions'],['employees','◎','Employees'],['milestones','✦','Milestones'],['journey','◷','Journey board'],['kit','▣','Welcome Kit'],['attendance','◩','Attendance'],['kpi','◈','KPI scorecards'],['approvals','✓','Reviews'],['sources','↗','Data sources'],['audit','≡','About data']];
   function sidebar(){
-    const v=viewer();
-    const groups=[['WORKSPACE',['overview','divisions','employees','milestones']],['TRACKERS',['journey','kit','attendance','kpi','approvals']],['SYSTEM',['sources','audit']]];
-    const navItems=function(ids){return ids.map(function(id){const item=items.find(function(x){return x[0]===id;});return item?'<a href="#'+id+'" data-nav="'+id+'" class="'+(ui.tab===id||(id==='divisions'&&ui.tab==='division')?'active':'')+'"><span class="nav-icon">'+item[1]+'</span><span>'+item[2]+'</span></a>':'';}).join('');};
-    const rail=[['overview','grid'],['divisions','hierarchy'],['employees','users'],['kpi','chart'],['sources','database']];
-    return '<aside class="sidebar workspace-sidebar" aria-label="Primary navigation">'+
-      '<nav class="workspace-rail" aria-label="Quick sections"><a href="#welcome" data-nav="welcome" class="rail-home" title="Maddie Journey landing" aria-label="Landing page">'+landingIcon('home')+'</a>'+
-      rail.map(function(item){const label=({overview:'Overview',divisions:'Divisions',employees:'People',kpi:'KPI scorecards',sources:'Data sources'})[item[0]];return '<a href="#'+item[0]+'" data-nav="'+item[0]+'" title="'+label+'" aria-label="'+label+'" class="'+((ui.tab===item[0]||(item[0]==='divisions'&&ui.tab==='division'))?'active':'')+'">'+landingIcon(item[1])+'</a>';}).join('')+'</nav>'+
-      '<div class="workspace-sidepanel"><a href="#welcome" data-nav="welcome" class="brand brand-official-link" aria-label="Return to Maddie Journey landing page"><img class="sidebar-official-logo" src="./assets/madhouse-logo.png" alt="Madhouse Design Studio"><span class="brand-product-name">Maddie Journey</span></a>'+
-      '<div class="workspace-sidebar-caption">PEOPLE & CULTURE</div>'+
-      groups.map(function(g){return '<div class="sidebar-label">'+g[0]+'</div><nav class="nav" aria-label="'+g[0]+'">'+navItems(g[1])+'</nav>';}).join('')+
-      '<div class="sidebar-bottom"><div class="sidebar-user">'+avatar(v.name)+'<span><b>'+safe(v.name)+'</b><small>'+safe(v.title)+'</small></span></div>'+
-      '<button class="sidebar-switch" data-action="choose-workspace" type="button">Switch demo workspace</button></div></div></aside>';
+    const groups=[
+      ['OVERVIEW',['overview','divisions']],
+      ['PEOPLE',['employees','milestones']],
+      ['MONITORING',['journey','kit','attendance','kpi','approvals']],
+      ['INFORMATION',['sources','audit']]
+    ];
+    const navItems=function(ids){
+      return ids.map(function(id){
+        const item=items.find(function(x){return x[0]===id;});if(!item)return '';
+        const active=ui.tab===id||(id==='divisions'&&ui.tab==='division');
+        return '<a href="#'+id+'" data-nav="'+id+'" '+(active?'aria-current="page" ':'')+'class="'+(active?'active':'')+'">'+
+          '<span class="nav-icon" aria-hidden="true">'+item[1]+'</span><span>'+item[2]+'</span></a>';
+      }).join('');
+    };
+    return '<aside class="sidebar workspace-sidebar" aria-label="Main dashboard navigation"><div class="workspace-sidepanel">'+
+      '<a href="#welcome" data-nav="welcome" class="brand brand-official-link" aria-label="Maddie Journey landing">'+
+      '<img class="sidebar-official-logo" src="./assets/madhouse-logo.png" alt="Madhouse Design Studio">'+
+      '<span class="brand-product-name">Maddie Journey</span></a>'+
+      '<div class="workspace-sidebar-caption">PEOPLE MONITORING</div>'+
+      groups.map(function(group){return '<div class="sidebar-label">'+group[0]+'</div>'+
+        '<nav class="nav" aria-label="'+group[0]+'">'+navItems(group[1])+'</nav>';}).join('')+
+      '<div class="sidebar-bottom"><div class="reader-sidebar-status"><span class="data-provenance-dot"></span>'+
+      '<div><strong>Preview mode</strong><small>Read-only · 51 sample employees</small></div></div>'+
+      '<p class="reader-sidebar-footnote">Original records belong to the connected source applications, not this dashboard.</p></div>'+
+      '</div></aside>';
   }
-
-  function title(t){if(t==='division')return div(ui.activeDivision).name+' · Evaluation';return {divisions:'Divisions',overview:'Overview',milestones:'Employee milestones',employees:'People directory',journey:'Employee journey',kit:'Welcome Maddie Kit',attendance:'Attendance analytics',kpi:'2026 KPI evaluations',approvals:'Executive approvals',sources:'Data sources',audit:'Activity & data'}[t]||'Overview';}
+  function title(t){if(t==='division')return div(ui.activeDivision).name;return {divisions:'Divisions',overview:'Overview',milestones:'Employee milestones',employees:'People directory',journey:'Employee journey',kit:'Welcome Maddie Kit',attendance:'Attendance analytics',kpi:'2026 KPI evaluations',approvals:'Reviews',sources:'Data sources',audit:'About this prototype'}[t]||'Overview';}
   function header(eyebrow,heading,description,actions){return '<div class="page-header"><div><div class="eyebrow">'+safe(eyebrow)+'</div><h1>'+safe(heading)+'</h1><p>'+safe(description)+'</p></div><div class="actions">'+(actions||'')+'</div></div>'+(ui.tab==='overview'?'':screenSummary());}
 
   /* Summaries use the same calculated sample records displayed in each screen. */
