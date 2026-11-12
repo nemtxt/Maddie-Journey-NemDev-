@@ -1,4 +1,4 @@
-# Maddie Journey — Read-only Prototype v3.4
+# Maddie Journey — Read-only Prototype v3.4.1
 
 **Madhouse Design Studio · People & Culture**
 
@@ -27,6 +27,16 @@ The responsive frontend uses HTML, CSS and vanilla JavaScript, with a text-only 
 | Data & Sources | Data Sources · About the Prototype |
 
 All 13 screens are available to anyone using the fictional sample prototype. On desktop, the primary sidebar collapses to icon navigation and remembers the display preference locally; on mobile it remains a full-width accessible drawer. A division also offers its own Summary, Board, List and Org Chart tabs. Employee cards open centered view-only previews.
+
+### v3.4.1 — Soft pastel categorization and desktop hover
+
+- **Pastel backgrounds:** Four subtle, WCAG-contrast-checked accent families now distinguish the dashboard's sample monitoring indicators. Pink remains the core navigation/focus accent. Sky, sage, lilac and peach tints clarify category groupings without replacing the black/white framework.
+- **201 Files:** Employment, Contracts, Personal and Government document cards use consistent category-tinted backgrounds; Missing, Not checked and Complete badges retain their exact fictional status text and are never represented as officially verified files.
+- **Calendar:** Read-only event categories use subtle pastel summary chips and colored markers while keeping dates, text labels and existing evidence/provenance notices.
+- **Mouse interaction:** On fine-pointer devices, monitoring cards, navigation, lists, filters, calendar dates and employee drill-downs have subtle background or border responses; clickable overview tiles move up by a maximum of 2px. No staggered or looping list motion.
+- **Accessible fallback:** Keyboard-visible focus is preserved; touch input does not rely on sticky hover; reduced-motion removes all new CSS transitions; forced-colors mode uses system colors; text contrast is tested in light/dark pastel surfaces.
+- **Read-only boundary:** Same 51 fictional employees, eight divisions and 13 screens. No login, input, file submission or live source integration was added.
+- **Verification:** 88 dependency-free regression tests pass; visual QA in real browsers/devices remains a separate acceptance step.
 
 ### Phase 7 — v3.4 connected monitoring experience
 
@@ -172,7 +182,7 @@ The later connected-account phase can implement source normalization against the
 - Open index.html in a modern browser or use VS Code Live Server.
 - Run: node tests/smoke.js
 - On main, the custom GitHub Actions validation workflow runs the regression tests. Anime.js and the Inter web font are optional third-party CDN resources; UI navigation and sample data do not depend on their availability. GitHub Pages uses its separate publishing workflow.
-- Confirm both test and Pages workflow statuses under GitHub Actions. The automated suite currently includes 84 cases; physical Windows/macOS/Android/iOS visual acceptance remains separate.
+- Confirm both test and Pages workflow statuses under GitHub Actions. The automated suite currently includes 88 cases; physical Windows/macOS/Android/iOS visual acceptance remains separate.
 
 ## Source files
 

@@ -1,6 +1,6 @@
 # Maddie Journey — Prototype Acceptance Checklist
 
-Release: **v3.4**. Scope: **HTML/CSS/vanilla JavaScript + fictional fixture only**.
+Release: **v3.4.1**. Scope: **HTML/CSS/vanilla JavaScript + fictional fixture only**.
 
 This document distinguishes code-level verification from human visual acceptance. The automated smoke checks confirm the named routing and data contracts but cannot prove pixel-level accuracy on physical Windows, macOS, Android or iOS devices.
 
@@ -128,3 +128,12 @@ For the intended integration boundary, see [Claude Connector Handoff](CLAUDE_CON
 - **Responsive visual:** The operational strip is three columns on wide desktop, two with one full-width at medium desktop and one column on phones. No page-wide horizontal overflow at 320px, and all focus styles remain visible. This requires real browser QA.
 - **Read-only:** 51 synthetic employees, eight divisions, 13 monitoring routes, five parent navigation groups. All filters and drill-downs only change client presentation. No provider, write, login or role-gate introduced.
 - **Tests:** 84 source-level smoke checks passed. Manual screen-reader, keyboard, 200% zoom and physical-device visual acceptance is still pending.
+
+## v3.4.1 — Pastel and pointer-feedback acceptance
+
+- **Palette:** Light-mode blush, sky, sage, lilac and peach tints have neutral, high-contrast text. Dark mode uses deep desaturated variants rather than bright blocks. Pink remains the primary interactive/focus accent.
+- **Semantic colors:** Document requirement groups derive from the existing fixture's Employment, Contracts, Personal and Government labels. Calendar type labels remain visible; no color alone conveys official verification, event timing, or severity.
+- **Hover:** Fine-pointer hover subtly changes backgrounds/borders of actionable navigation, summary tiles, queue filters, employee previews, calendar dates and follow-up buttons. Non-editable document cards may receive a border emphasis but must not gain a pointer cursor or submit action.
+- **Accessible interaction:** Keyboard focus always shows a strong outline. Hover is scoped to mouse/trackpad pointers; reduced-motion mode disables new transitions and transforms; high-contrast Windows mode retains readable system borders and text.
+- **Data integrity:** All 51 fictional employee records, eight divisions, 201 status counts, calendar date calculations and 13 reader routes remain unmodified.
+- **Verification:** 88 smoke tests pass, including light/dark contrast arithmetic, semantic DOM attributes, pointer-only hover and preference fallbacks. Physical hover/touch/keyboard visual QA is not represented by these source tests.
