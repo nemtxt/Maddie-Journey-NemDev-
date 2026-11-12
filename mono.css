@@ -867,3 +867,33 @@ body:has(.employee-overlay){overflow:hidden}
 @media(prefers-reduced-motion:reduce){
   .employee-context-division,.employee-context-pager button{transition:none}
 }
+
+
+/* Phase 4 v3.1 — explicit KPI arithmetic and Journey denominators. */
+.report-source-note{margin:13px 0 0;color:var(--mono-secondary);font-size:11px;line-height:1.6}
+.kpi-composition-panel{margin-top:16px;padding:var(--mj-space-5)}
+.kpi-composition-table{min-width:530px}
+.kpi-composition-table th:first-child{text-align:left}
+.kpi-composition-table td{text-align:right;font-variant-numeric:tabular-nums}
+.kpi-composition-table th:not(:first-child){text-align:right}
+.kpi-composition-total{background:var(--mono-soft);font-weight:750}
+.kpi-composition-total td:last-child{color:var(--mono-accent)}
+.report-weighted-points{display:block;text-align:right;margin:4px 0 0;color:var(--mono-secondary);font-size:10px}
+.journey-distribution{margin-bottom:16px;padding:var(--mj-space-5)}
+.journey-distribution .panel-head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.journey-distribution-total{
+  color:var(--mono-text);background:var(--mono-soft);border:1px solid var(--mono-border);
+  padding:7px 10px;border-radius:7px;font-size:11px;font-weight:700;font-variant-numeric:tabular-nums
+}
+.journey-distribution-table th:first-child{width:52%;text-align:left}
+.journey-distribution-table td:nth-child(2){font-variant-numeric:tabular-nums;white-space:nowrap}
+.journey-distribution-table td:last-child{min-width:130px}
+.report-distribution-cell{display:flex;align-items:center;gap:9px;justify-content:flex-end}
+.report-distribution-cell>span:last-child{font-variant-numeric:tabular-nums;min-width:38px;text-align:right}
+.report-distribution-track{display:block;flex:1 1 auto;width:90px;max-width:190px;height:5px;border-radius:99px;background:var(--mono-soft);overflow:hidden}
+.report-distribution-track>span{display:block;height:100%;background:var(--mono-accent);border-radius:99px}
+@media(max-width:760px){
+  .journey-distribution,.kpi-composition-panel{padding:var(--mj-space-4)}
+  .journey-distribution .panel-head{align-items:flex-start;flex-direction:column}
+  .journey-distribution-table{min-width:450px}
+}

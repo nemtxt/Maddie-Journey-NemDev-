@@ -60,7 +60,19 @@
   function toast(msg){let t=$('toast');if(!t){t=document.createElement('div');t.id='toast';t.className='toast';document.body.appendChild(t);}t.textContent=msg;setTimeout(function(){if(t.textContent===msg)t.remove();},3800);}
   function journeyPct(e){const bits=e.journey.flat();return Math.round(bits.filter(Boolean).length/Math.max(1,bits.length)*100);}
   function kitPct(e){return Math.round(e.kit.filter(Boolean).length/Math.max(1,e.kit.length)*100);}
-  function score(e){return Math.round((e.scores.division*.15+e.scores.individual*.45+e.scores.values*.15+e.scores.behavior*.25)*100)/100;}
+  const KPI_WEIGHTS=[
+    {key:'division',name:'Division objectives',weight:15},
+    {key:'individual',name:'Individual objectives',weight:45},
+    {key:'values',name:'Values alignment',weight:15},
+    {key:'behavior',name:'Job behavior',weight:25}
+  ];
+  function kpiComponents(e){
+    return KPI_WEIGHTS.map(function(part){
+      const raw=Number(e.scores[part.key])||0;
+      return {key:part.key,name:part.name,weight:part.weight,raw:raw,points:raw*part.weight/100};
+    });
+  }
+  function score(e){return Math.round(kpiComponents(e).reduce(function(n,p){return n+p.points;},0)*100)/100;}
   function rating(v){return v>=95?'Excellent':v>=90?'Above Average':v>=80?'Average':v>=70?'Below Average':'Poor';}
   function attend(e){const a=e.attendance.filter(function(r){return r.verified;});const l=a.filter(function(r){return r.type==='Late';});const ab=a.filter(function(r){return r.type==='Absent';});const concerns=a.filter(function(r){return (r.type==='Late'&&r.approval!=='Excused')||(r.type==='Absent'&&r.approval==='Unapproved');});return {lates:l.length,absences:ab.length,concerns:concerns.length,lastLate:l.map(function(x){return x.date;}).sort().reverse()[0]||'',lastAbs:ab.map(function(x){return x.date;}).sort().reverse()[0]||'',records:a,clean:l.length===0&&ab.length===0};}
   const totalAvg=function(fn){return Math.round(data.employees.reduce(function(a,e){return a+fn(e);},0)/data.employees.length);};
@@ -433,14 +445,14 @@
       return {name:stage.name,count:staff.filter(function(e){return journeyStage(e)===i;}).length,index:i};
     });
     stages.push({name:'Completed',count:staff.filter(function(e){return journeyStage(e)===7;}).length,index:7});
-    const max=Math.max(1,...stages.map(function(stage){return stage.count;}));
+    const denominator=Math.max(1,staff.length);
     return '<section class="panel overview-insight-panel"><div class="panel-head"><div><h2>Journey by stage</h2>'+
-      '<p>First incomplete stage · '+staff.length+' fictional employees</p></div>'+
+      '<p>First incomplete stage · share of '+staff.length+' fictional employees</p></div>'+
       button('Open Kanban','nav','data-tab="journey"','small')+'</div>'+
       '<div class="overview-stage-rows">'+stages.map(function(stage){
         return '<div class="overview-stage-row"><span title="'+safe(stage.name)+'">'+safe(stage.name)+'</span>'+
-          '<div class="overview-stage-track" role="img" aria-label="'+stage.count+' of '+staff.length+' people at '+safe(stage.name)+'"><span style="width:'+(stage.count/max*100)+'%"></span></div>'+
-          '<b>'+stage.count+'</b></div>';
+          '<div class="overview-stage-track" role="img" aria-label="'+stage.count+' of '+staff.length+' people at '+safe(stage.name)+'"><span style="width:'+(stage.count/denominator*100)+'%"></span></div>'+
+          '<b>'+stage.count+' / '+staff.length+'</b></div>';
       }).join('')+'</div></section>';
   }
   function overviewMilestonesPanel(){
@@ -609,10 +621,36 @@
         const i=journeyStage(e),label=i===7?'Completed':'Stage '+(i+1)+' · '+data.stages[i].name;
         return '<tr><td><div class="name-cell">'+avatar(e.name)+'<div><strong>'+safe(e.name)+'</strong><small>'+safe(e.jobTitle)+'</small></div></div></td>'+
           '<td>'+safe(div(e.division).short)+'</td><td><span class="journey-stage-pill">'+safe(label)+'</span></td>'+
-          '<td><div class="progress-wrapper">'+progress(journeyPct(e))+'<span>'+journeyPct(e)+'%</span></div></td>'+
+          '<td><div class="progress-wrapper">'+progress(journeyPct(e))+'<span>'+e.journey.flat().filter(Boolean).length+
+      ' / '+e.journey.flat().length+' tasks · '+journeyPct(e)+'%</span></div></td>'+
           '<td>'+e.journey.filter(function(a){return a.every(Boolean);}).length+' / 7</td>'+
           '<td>'+button('Preview','open','data-id="'+safe(e.id)+'" data-detail="journey"','small')+'</td></tr>';
       }).join('')+'</tbody></table></div></section>';
+  }
+  function journeyDistribution(team){
+    const total=team.length;
+    const stages=data.stages.map(function(stage,i){
+      return {label:'Stage '+(i+1)+' · '+stage.name,count:team.filter(function(e){return journeyStage(e)===i;}).length};
+    });
+    stages.push({label:'Completed',count:team.filter(function(e){return journeyStage(e)===7;}).length});
+    const tasks=team.reduce(function(n,e){return n+e.journey.flat().filter(Boolean).length;},0);
+    const possible=team.reduce(function(n,e){return n+e.journey.flat().length;},0);
+    return '<section class="panel journey-distribution" aria-label="Journey stage distribution">'+
+      '<div class="panel-head"><div><h2>Stage distribution</h2>'+
+      '<p>Each employee is counted once, at their first incomplete stage</p></div>'+
+      '<div class="journey-distribution-total">'+tasks+' / '+possible+' checklist tasks completed</div></div>'+
+      '<div class="table-wrap"><table class="table journey-distribution-table">'+
+      '<thead><tr><th scope="col">Current stage</th><th scope="col">People</th>'+
+      '<th scope="col">Share of selected employees</th></tr></thead><tbody>'+
+      stages.map(function(stage){
+        const share=total?Math.round(stage.count/total*100):0;
+        return '<tr><th scope="row">'+safe(stage.label)+'</th>'+
+          '<td><strong>'+stage.count+' / '+total+'</strong></td>'+
+          '<td><div class="report-distribution-cell">'+
+          '<span class="report-distribution-track" aria-hidden="true"><span style="width:'+share+'%"></span></span>'+
+          '<span>'+share+'%</span></div></td></tr>';
+      }).join('')+'</tbody></table></div>'+
+      '<p class="report-source-note">Stage share uses '+total+' selected employees as the denominator. Checklist task completion uses all recorded tasks; later stages may contain completed tasks even if an earlier stage remains incomplete.</p></section>';
   }
   function journey(){
     const team=scopedEmployees(),stageCounts=Array.from({length:8},function(_,i){return team.filter(function(e){return journeyStage(e)===i;}).length;});
@@ -624,7 +662,7 @@
       '<div class="workspace-view-switch" role="group" aria-label="Journey presentation">'+
       ['board','table'].map(function(mode){return '<button type="button" data-action="journey-view" data-mode="'+mode+'" class="'+(ui.journeyView===mode?'active':'')+'" aria-pressed="'+(ui.journeyView===mode)+'">'+
       landingIcon(mode==='board'?'grid':'list')+(mode==='board'?'Board':'Table')+'</button>';}).join('')+'</div></div>'+
-      (ui.journeyView==='table'?journeyTable(team):journeyKanban(team))+
+      journeyDistribution(team)+(ui.journeyView==='table'?journeyTable(team):journeyKanban(team))+
       '<p class="journey-explainer">This is a read-only sample snapshot. If a later stage contains completed tasks, the board still groups the employee under the earliest incomplete stage. View any employee for the full seven-stage checklist.</p>';
   }
 
@@ -668,26 +706,33 @@
       '<details class="panel compact-details"><summary>See late and absence rankings</summary><div class="grid subgrid" style="margin-top:18px"><div><h3>Late arrivals</h3>'+rankRows('lates')+'</div><div><h3>Absences</h3>'+rankRows('absences')+'</div></div></details>';
   }
   function scoresPanel(e){
-    const categories=[['division','Division objectives',15],['individual','Individual objectives',45],['values','Values alignment',15],['behavior','Job behavior',25]];
-    return '<section class="reader-score-panel" aria-label="Category score preview">'+categories.map(function(cat){
-      const val=e.scores[cat[0]],weight=cat[2];
-      return '<div class="reader-score-card"><span class="muted micro">'+weight+'% weight</span><h3>'+cat[1]+'</h3>'+
-        '<strong>'+Number(val).toFixed(1)+'%</strong>'+progress(val)+
-        '<small>Weighted contribution '+(val*weight/100).toFixed(2)+' points</small></div>';
-    }).join('')+'</section>';
+    const parts=kpiComponents(e);
+    return '<section class="panel kpi-composition-panel" aria-label="KPI weighted score composition">'+
+      '<div class="panel-head"><div><h2>Score composition</h2>'+
+      '<p>Raw category score × weight = weighted contribution</p></div></div>'+
+      '<div class="table-wrap"><table class="table kpi-composition-table"><thead><tr>'+
+      '<th scope="col">Category</th><th scope="col">Raw score</th><th scope="col">Weight</th>'+
+      '<th scope="col">Contribution</th></tr></thead><tbody>'+
+      parts.map(function(part){
+        return '<tr><th scope="row">'+safe(part.name)+'</th><td>'+part.raw.toFixed(1)+' / 100</td>'+
+          '<td>'+part.weight+'%</td><td><strong>'+part.points.toFixed(2)+' pts</strong></td></tr>';
+      }).join('')+
+      '<tr class="kpi-composition-total"><th scope="row">Weighted total</th>'+
+      '<td>—</td><td>100%</td><td><strong>'+score(e).toFixed(2)+' / 100</strong></td></tr>'+
+      '</tbody></table></div>'+
+      '<p class="report-source-note">All category scores are fictional. Contributions are weighted percentage points; they sum to the displayed weighted total. No official KPI source is connected.</p></section>';
   }
-
   function kpiDetail(e){
     const s=score(e);
     return '<div class="grid dashboard-grid"><section class="panel"><div class="panel-head"><div><h2>Weighted evaluation</h2>'+
-      '<p>Division 15% · Individual 45% · Values 15% · Behavior 25%</p></div>'+pill(rating(s))+'</div>'+
+      '<p>Four sample category scores, weighted to 100%</p></div>'+pill(rating(s))+'</div>'+
       '<div class="big-score">'+s.toFixed(2)+'%</div>'+
       '<div class="score-meter" aria-label="Weight proportions: 15, 45, 15, 25"><span></span><span></span><span></span><span></span></div>'+
-      '<p class="muted micro">Fictional sample scores, not verified KPI reports.</p></section>'+
+      '<p class="report-source-note">Computed from fictional category scores, not an externally verified KPI report.</p></section>'+
       '<section class="panel"><h2>KPI source</h2><div class="hr"></div>'+
-      pill(e.kpiValidated?'Sample validation recorded':'Not verified')+
+      pill(e.kpiValidated?'Demo validation flag set':'Demo validation flag unset')+
       '<p class="reader-source-value">'+safe(e.kpiSource||'No source reference provided in the sample dataset')+'</p>'+
-      '<p class="muted micro">Official Google Sheets and Airtable integrations are not connected.</p></section></div>'+
+      '<p class="report-source-note">This flag is part of the fictional fixture, not an external verification. Official Google Sheets and Airtable integrations are not connected.</p></section></div>'+
       scoresPanel(e)+
       '<section class="panel" style="margin-top:16px"><div class="panel-head"><div><h2>Objectives and accomplishments</h2>'+
       '<p>Read-only sample placeholders, not imported official targets</p></div></div>'+
@@ -898,11 +943,11 @@
   }
   function previewCharts(e){
     const v=score(e),overall=Number(v.toFixed(1)),a=attend(e);
-    const dimensions=[['Division objectives',e.scores.division,15,'coral'],['Individual objectives',e.scores.individual,45,'lilac'],['Values alignment',e.scores.values,15,'mint'],['Job behavior',e.scores.behavior,25,'gold']];
+    const dimensions=kpiComponents(e).map(function(p){return [p.name,p.raw,p.weight,p.points];});
     const stageSummary=data.stages.map(function(stage,i){return {label:'Stage '+(i+1),percent:Math.round(e.journey[i].filter(Boolean).length/e.journey[i].length*100),title:stage.name};});
     return '<div class="profile-intro"><p>Performance, onboarding and attendance at a glance. Figures are fictional and not synced to external sources.</p></div>'+
     '<div class="employee-charts-grid">'+
-      '<section class="chart-card performance-chart"><div class="chart-card-heading"><h3>2026 KPI performance</h3><span class="tag warn">Demo scores</span></div><div class="performance-chart-inner"><div class="score-donut" style="--score:'+overall+'%" role="img" aria-label="Overall KPI score '+overall+' percent"><div><strong>'+overall+'%</strong><small>'+safe(rating(v))+'</small></div></div><div class="score-breakdown">'+dimensions.map(function(x){return '<div class="score-breakdown-row"><div class="score-label"><span>'+safe(x[0])+' <small>· '+x[2]+'%</small></span><b>'+Number(x[1]).toFixed(1)+'%</b></div><div class="chart-track"><span class="'+x[3]+'" style="width:'+Math.min(100,Math.max(0,x[1]))+'%"></span></div></div>';}).join('')+'</div></div></section>'+
+      '<section class="chart-card performance-chart"><div class="chart-card-heading"><h3>2026 KPI performance</h3><span class="tag warn">Demo scores</span></div><div class="performance-chart-inner"><div class="score-donut" style="--score:'+overall+'%" role="img" aria-label="Overall KPI score '+overall+' percent"><div><strong>'+overall+'%</strong><small>'+safe(rating(v))+'</small></div></div><div class="score-breakdown">'+dimensions.map(function(x){return '<div class="score-breakdown-row"><div class="score-label"><span>'+safe(x[0])+' <small>· '+x[2]+'%</small></span><b>'+Number(x[1]).toFixed(1)+'%</b></div><div class="chart-track"><span style="width:'+Math.min(100,Math.max(0,x[1]))+'%"></span></div><small class="report-weighted-points">'+x[3].toFixed(2)+' weighted points</small></div>';}).join('')+'</div></div></section>'+
       '<section class="chart-card"><div class="chart-card-heading"><h3>7-stage journey</h3><strong>'+journeyPct(e)+'%</strong></div><div class="stage-preview-bars">'+stageSummary.map(function(x){return '<div class="stage-preview-row" title="'+safe(x.title)+'"><span>'+x.label+'</span><div class="chart-track"><span style="width:'+x.percent+'%"></span></div><b>'+x.percent+'%</b></div>';}).join('')+'</div></section>'+
       '<section class="chart-card"><div class="chart-card-heading"><h3>Attendance · recent months</h3><span class="tag info">Verified only</span></div>'+attendanceMicrochart(e)+'<p class="chart-note">'+a.lates+' late arrivals · '+a.absences+' absences · '+a.concerns+' unexcused concerns</p></section>'+
       '<section class="chart-card preview-status"><div class="chart-card-heading"><h3>Onboarding & review</h3></div><div class="preview-check"><span>Welcome Maddie Kit</span><strong>'+kitPct(e)+'% complete</strong></div>'+progress(kitPct(e))+'<div class="preview-check"><span>Division evaluation</span>'+pill(reviewStatus(e,'division'))+'</div><div class="preview-check"><span>Executive review</span>'+pill(reviewStatus(e,'coo'))+'</div></section>'+
