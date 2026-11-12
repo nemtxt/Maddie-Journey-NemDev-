@@ -1,4 +1,4 @@
-/* Maddie Journey v2.2 — dependency-free read-only smoke checks.
+/* Maddie Journey v2.3 — dependency-free read-only smoke checks.
    Run from repository root: node tests/smoke.js
    Simulated interactions; browser/device visual QA is separate. */
 'use strict';
@@ -13,8 +13,9 @@ const src=Object.fromEntries(files.map(name=>[name,read(name)]));
 const results=[];
 function check(name,fn){fn();results.push(name);console.log('PASS '+name);}
 
-function boot(initial={},hash=''){
-  const mem={...initial},events={},nodes={};
+function boot(initial={},hash='',mutateFixture){
+  const mem={...initial},events={},nodes={},downloads=[];
+  let currentDownloadBlob=null;
   const mount={innerHTML:'',querySelector(selector){return selector==='[role="dialog"]'?{focus(){},querySelectorAll(){return [];}}:null;}};
   nodes.app=mount;
   const doc={
@@ -25,28 +26,31 @@ function boot(initial={},hash=''){
     querySelectorAll(){return[];},
     addEventListener(name,fn){events[name]=fn;},
     createElement(tag){return{tagName:tag,id:'',className:'',textContent:'',setAttribute(){},
-      remove(){},addEventListener(){},querySelectorAll(){return[{addEventListener(){}}];},
+      click(){downloads.push({filename:this.download,text:currentDownloadBlob&&currentDownloadBlob.text,mime:currentDownloadBlob&&currentDownloadBlob.type});},remove(){},addEventListener(){},querySelectorAll(){return[{addEventListener(){}}];},
       querySelector(){return{focus(){},addEventListener(){}};}};}
   };
   const win={handlers:{},addEventListener(name,fn){this.handlers[name]=fn;},scrollTo(){}};
   const loc={hash};
   const store={getItem(k){return Object.prototype.hasOwnProperty.call(mem,k)?mem[k]:null;},setItem(k,v){mem[k]=v;}};
   new Function('window',src['data.js'])(win);
+  if(mutateFixture)mutateFixture(win.MJ_SEED);
   new Function('window',src['data-adapter.js'])(win);
-  new Function('window','document','localStorage','sessionStorage','location','setTimeout',src['app.js'])(win,doc,store,store,loc,()=>{});
+  function TestBlob(chunks,options){this.text=chunks.join('');this.type=options.type;}
+  const testURL={createObjectURL(blob){currentDownloadBlob=blob;return 'blob:test-download';},revokeObjectURL(){}};
+  new Function('window','document','localStorage','sessionStorage','location','setTimeout','Blob','URL',src['app.js'])(
+    win,doc,store,store,loc,()=>{},TestBlob,testURL);
   return{
-    win,doc,mem,loc,html:()=>mount.innerHTML,
+    win,doc,mem,loc,downloads,html:()=>mount.innerHTML,
     click(name,attrs={}){
       events.click({target:{dataset:{},closest(selector){return selector==='[data-action]'?{dataset:{action:name,...attrs}}:null;}},preventDefault(){}});
     },
     changeField(name,value){
       events.change({target:{dataset:{field:name},value,checked:true}});
     },
-    navigate(tab){this.click('nav',{tab});},
-    selectViewer(id,category='hr'){
-      this.click('workspace-category',{category});
-      this.click('select-viewer',{id});
-    }
+    setFilter(name,value){
+      events.change({target:{dataset:{ui:name},value,checked:true}});
+    },
+    navigate(tab){this.click('nav',{tab});}
   };
 }
 
