@@ -7,7 +7,8 @@
   // Previous local demo edits are intentionally ignored, never deleted or overwritten.
   const $=function(id){return document.getElementById(id);};
   const clone=function(x){return JSON.parse(JSON.stringify(x));};
-  const data=clone(seed);
+  // All views use one read-only source adapter. Live integrations are not loaded on GitHub Pages.
+  const data=window.MJ_SOURCE_ADAPTER.getSnapshot();
   let ui={tab:'welcome',division:'all',activeDivision:'rmd',scope:'all',divisionPickerMode:'view',query:'',employee:data.employees[0].id,detail:'preview',employeeModalOpen:false,divisionModal:false,employeePicker:false,pickerDivision:'rmd',frequency:'monthly',mobile:false,milestoneCategory:'birthday',milestoneDivision:'all',milestoneShowAll:false,milestonePicking:false,divisionTab:'summary',attentionFilter:'all',attentionShowAll:false,workView:'list',journeyView:'board',journeyShowAll:false,};
   // Layout preferences are not employee records and may be stored locally.
   try{const remembered=sessionStorage.getItem('maddie-journey-workview');if(remembered==='board'||remembered==='list')ui.workView=remembered;}catch(err){}
@@ -338,34 +339,84 @@
       '<div><strong>Sample data</strong><span>Fictional sample snapshot · No live Airtable or Google sync</span></div>'+
       button('Source details','nav','data-tab="sources"','small')+'</div>';
   }
+  function overviewDivisionRail(){
+    const colors=['pink','yellow','blue','violet'];
+    const cards=data.divisions.map(function(d,i){
+      const team=data.employees.filter(function(e){return e.division===d.id;}),pct=meanOf(team,journeyPct);
+      return '<article class="overview-division-card tone-'+colors[i%colors.length]+'">'+
+        '<div class="overview-division-meta"><span class="overview-division-label">'+safe(d.short)+'</span>'+
+        '<span>'+team.length+' people</span></div>'+
+        '<h3>'+safe(d.name)+'</h3><p>'+safe(divisionEvaluatorNames(d))+'</p>'+
+        '<div class="overview-division-progress"><div class="overview-division-progress-label"><span>Journey completion</span><b>'+pct+'%</b></div>'+
+        '<div class="overview-division-track"><span style="width:'+pct+'%"></span></div></div>'+
+        '<button type="button" class="overview-division-open" data-action="goto-division" data-division="'+safe(d.id)+'">Open division <span aria-hidden="true">→</span></button>'+
+        '</article>';
+    });
+    return '<section class="overview-spotlight"><div class="overview-section-heading"><div><h2>Division overview</h2>'+
+      '<p>Eight divisions · select a card for its complete sample dashboard</p></div>'+
+      button('All divisions','nav','data-tab="divisions"','small')+'</div>'+
+      '<div class="overview-division-rail" aria-label="Explore division summaries">'+cards.join('')+'</div></section>';
+  }
+  function overviewStagePanel(){
+    const staff=data.employees,stages=data.stages.map(function(stage,i){
+      return {name:stage.name,count:staff.filter(function(e){return journeyStage(e)===i;}).length,index:i};
+    });
+    stages.push({name:'Completed',count:staff.filter(function(e){return journeyStage(e)===7;}).length,index:7});
+    const max=Math.max(1,...stages.map(function(stage){return stage.count;}));
+    return '<section class="panel overview-insight-panel"><div class="panel-head"><div><h2>Journey by stage</h2>'+
+      '<p>First incomplete stage · '+staff.length+' fictional employees</p></div>'+
+      button('Open Kanban','nav','data-tab="journey"','small')+'</div>'+
+      '<div class="overview-stage-rows">'+stages.map(function(stage){
+        return '<div class="overview-stage-row"><span title="'+safe(stage.name)+'">'+safe(stage.name)+'</span>'+
+          '<div class="overview-stage-track"><span style="width:'+(stage.count/max*100)+'%"></span></div>'+
+          '<b>'+stage.count+'</b></div>';
+      }).join('')+'</div></section>';
+  }
+  function overviewMilestonesPanel(){
+    const events=[];
+    data.employees.forEach(function(e){
+      const days=daysToBirthday(e.birthday);
+      if(days<91)events.push({e:e,kind:'Birthday',days:days});
+      const anniversary=anniversaryInfo(e);
+      if(anniversary.days<91)events.push({e:e,kind:'Service anniversary',days:anniversary.days});
+    });
+    events.sort(function(a,b){return a.days-b.days||a.e.name.localeCompare(b.e.name);});
+    return '<section class="panel overview-insight-panel"><div class="panel-head"><div><h2>Upcoming milestones</h2>'+
+      '<p>Next 90 days · sample birthdays and service anniversaries</p></div>'+
+      button('All milestones','nav','data-tab="milestones"','small')+'</div>'+
+      '<div class="overview-milestone-list">'+
+      (events.length?events.slice(0,5).map(function(item){
+        return '<button type="button" class="overview-milestone-row" data-action="open" data-id="'+safe(item.e.id)+'" data-detail="milestones">'+
+          avatar(item.e.name)+'<span class="overview-milestone-person"><strong>'+safe(item.e.name)+'</strong>'+
+          '<small>'+safe(div(item.e.division).short)+' · '+item.kind+'</small></span>'+
+          '<span class="overview-milestone-when">'+(item.days===0?'Today':'In '+item.days+' days')+'</span></button>';
+      }).join(''):'<p class="empty">No upcoming sample milestones in the next 90 days.</p>')+
+      '</div></section>';
+  }
   function roleHome(){
-    const team=data.employees,divs=data.divisions;
-    const pending=team.filter(function(e){return reviewStatus(e,'division')!=='Endorsed';}).length;
-    const concerns=team.reduce(function(n,e){return n+attend(e).concerns;},0);
-    const openKit=team.filter(function(e){return kitPct(e)<100;}).length;
-    const unvalidated=team.filter(function(e){return !e.kpiValidated;}).length;
+    const staff=data.employees;
+    const concerns=staff.reduce(function(total,e){return total+attend(e).concerns;},0);
+    const kitPending=staff.filter(function(e){return kitPct(e)<100;}).length;
+    const unvalidated=staff.filter(function(e){return !e.kpiValidated;}).length;
+    const journeyAverage=meanOf(staff,journeyPct);
     const cards=[
-      ['Employees',team.length,'Across 8 fictional divisions'],
-      ['Welcome Kits pending',openKit,'Employees with open checklist items'],
-      ['Attendance concerns',concerns,'Recorded unexcused incidents'],
-      ['KPI sources to verify',unvalidated,'Live sources not connected']
+      ['Employees',staff.length,'Across all eight divisions','pink'],
+      ['Journey progress',journeyAverage+'%','Average onboarding completion','blue'],
+      ['Kits pending',kitPending,'Employees with open requirements','yellow'],
+      ['KPI to verify',unvalidated,'Fictional records without source validation','violet']
     ];
-    return header('OVERVIEW','Organization overview','All eight divisions at a glance. Every value is fictional sample data.',
-      button('Explore divisions','nav','data-tab="divisions"','small'))+
-      '<section class="grid metrics summary-metrics">'+cards.map(function(c){return metricCard(c[0],c[1],c[2]);}).join('')+'</section>'+
-      dataProvenanceStrip()+
-      '<div class="workspace-action-center">'+attentionPanel(team)+'</div>'+
-      '<div class="dashboard-main dashboard-secondary"><div class="dashboard-side">'+
-      '<section class="panel next-step-panel"><h2>Quick access</h2><p>Jump directly to a monitoring view.</p>'+
-      '<div class="next-step-actions">'+button('Journey board','nav','data-tab="journey"','small')+
-      button('Employees','nav','data-tab="employees"','small')+
-      button('KPI scorecards','nav','data-tab="kpi"','small')+
-      button('Attendance','nav','data-tab="attendance"','small')+'</div></section>'+
-      '<section class="panel overview-brief"><h2>Progress snapshot</h2>'+
-      '<div class="division-stat-line"><span>Pending division reviews</span><b>'+pending+'</b></div>'+
-      '<div class="division-stat-line"><span>Average Welcome Kit completion</span><b>'+meanOf(team,kitPct)+'%</b></div>'+
-      '<div class="division-stat-line"><span>Average Journey completion</span><b>'+meanOf(team,journeyPct)+'%</b></div></section>'+
-      '</div></div>'+divisionPulseTable(divs);
+    return header('PEOPLE MONITORING','Organization overview',
+      'A simple overview of the 51 fictional employee records. All source integrations are still disconnected.',
+      button('Browse directory','nav','data-tab="employees"','small'))+
+      '<section class="overview-summary-grid" aria-label="Summary metrics">'+cards.map(function(card){
+        return '<div class="overview-summary-tile tone-'+card[3]+'"><span>'+safe(card[0])+'</span>'+
+          '<strong>'+safe(card[1])+'</strong><small>'+safe(card[2])+'</small></div>';
+      }).join('')+'</section>'+
+      overviewDivisionRail()+
+      '<div class="overview-insight-grid">'+overviewStagePanel()+overviewMilestonesPanel()+'</div>'+
+      '<div class="overview-followups">'+attentionPanel(staff)+'</div>'+
+      '<p class="overview-snapshot-note">Snapshot information is generated from fictional local records. Attendance concerns: '+
+       concerns+'. No employee record can be edited, submitted or approved in this interface.</p>';
   }
   function overview(){return roleHome();}
   function employeesTable(list,mode){if(!list.length)return '<div class="empty"><span class="big">⌕</span>No employees match these filters.</div>';
@@ -570,24 +621,24 @@
       '<details class="panel compact-details"><summary>See complete review queue</summary>'+approvalsTable()+'</details>';
   }
   function sourcesView(){
-    const sources=[
-      {name:'Airtable',purpose:'Employee roster, assignment and structured tracker records',data:'People and operations'},
-      {name:'Google Sheets',purpose:'KPI workbooks, calculated targets and division reporting',data:'KPI and evaluation'},
-      {name:'Google Drive',purpose:'Document files, supporting evidence and shared folders',data:'Documents and attachments'},
-      {name:'Google Docs',purpose:'Evaluation forms, onboarding documents and written reviews',data:'Documents and forms'},
-      {name:'Email',purpose:'Approval correspondence, notifications and follow-ups',data:'Communication'}
-    ];
-    return header('INTEGRATION READINESS','Data sources','A transparent view of where official data will come from. No live connections are configured in this browser.')+
-      '<div class="source-banner"><span class="source-banner-icon">i</span><div><strong>Preview mode — no external synchronization</strong>'+
-      '<p>The 51 employee records and all dashboard metrics are fictional. This frontend never submits source updates. GitHub Pages cannot use Claude account connectors directly as a browser API.</p></div></div>'+
-      '<section class="source-grid">'+sources.map(function(s){
-        return '<article class="panel source-card"><div class="source-card-top"><h2>'+safe(s.name)+'</h2><span class="source-unlinked">Not connected</span></div>'+
-          '<p>'+safe(s.purpose)+'</p><div class="source-card-bottom"><span>'+safe(s.data)+'</span><span>No last sync</span></div></article>';
+    const catalog=window.MJ_SOURCE_ADAPTER.getSources();
+    const provenance=window.MJ_SOURCE_ADAPTER.getProvenance();
+    return header('DATA CONNECTIONS','Data sources',
+      'A transparent handoff plan for integrating the future Claude-connected source systems.')+
+      '<div class="source-banner"><span class="source-banner-icon">i</span><div><strong>Sample mode · No connected accounts required</strong>'+
+      '<p>'+safe(provenance.note)+' This GitHub Pages prototype does not connect to Claude, Airtable, Google Workspace or email directly.</p></div></div>'+
+      '<section class="source-grid">'+catalog.map(function(source){
+        return '<article class="panel source-card"><div class="source-card-top"><h2>'+safe(source.name)+'</h2>'+
+        '<span class="source-unlinked">'+safe(source.label)+'</span></div>'+
+        '<p>'+safe(source.kind)+'</p><div class="source-card-bottom"><span>'+safe(source.scope)+'</span>'+
+        '<span>No last sync</span></div></article>';
       }).join('')+'</section>'+
-      '<section class="panel source-policy"><h2>How this dashboard should use connected records</h2>'+
-      '<p>Official records remain in Airtable and Google Workspace. A secure integration can supply validated, permission-filtered summaries to this interface. Until that exists, this interface only previews fictional data; no source records are submitted or edited.</p>'+
-      '<div class="source-policy-steps"><span>1. Read authorized sources</span><span>2. Match employee IDs</span><span>3. Validate records</span><span>4. Show source and sync time</span></div>'+
-      '<p class="muted micro">Do not put passwords, API tokens or confidential HR records in this public repository or GitHub Pages.</p></section>';
+      '<section class="panel source-policy"><h2>Planned integration architecture</h2>'+
+      '<p><strong>Phase 1 — GitHub:</strong> Finish HTML, CSS, JavaScript, responsive pages and navigation with a read-only fictional dataset. The source adapter provides a stable data shape.</p>'+
+      '<p><strong>Phase 2 — Claude workspace:</strong> Use authorized account-scoped connectors or a controlled service to retrieve provider records, normalize them by employee ID and return permission-filtered summaries. The original systems retain ownership.</p>'+
+      '<div class="source-policy-steps"><span>1. Read authorized sources</span><span>2. Normalize employee IDs</span>'+
+      '<span>3. Validate snapshot</span><span>4. Display source and sync time</span></div>'+
+      '<p class="muted micro">Do not place real employee data, private account documents, email content, tokens or credentials in public GitHub Pages assets. No user account system is needed for this prototype.</p></section>';
   }
   function activity(){
     return header('DATA & GOVERNANCE','About this prototype',
@@ -809,7 +860,7 @@
       '<footer class="landing-footer"><span>Madhouse Design Studio · Maddie Journey</span><span>Prototype · 51 fictional employees · 8 divisions · Not live-connected</span></footer>'+
       '</main></div>';
   }
-  function render(){if(ui.tab==='welcome'){$('app').innerHTML=landingView();document.title='Maddie Journey · Madhouse Design Studio';return;}const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,milestones:milestonesView,journey:journey,kit:kitView,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,sources:sourcesView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open':'')+'">'+sidebar()+'<button type="button" class="workspace-scrim" aria-label="Close navigation" data-action="mobile"></button><main id="main-content" class="main" tabindex="-1">'+topnav()+(views[ui.tab]||overview)()+'<footer class="footer"><span>Maddie Journey · Prototype v2.1</span><span>51 fictional employees · Read-only preview · No live integrations</span></footer></main></div>'+(ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.employeeModalOpen?employeeModal():'');document.title=title(ui.tab)+' · Maddie Journey';if(ui.employeeModalOpen||ui.divisionModal||ui.employeePicker){const modal=$('app').querySelector('[role="dialog"]');if(modal&&typeof modal.focus==='function')modal.focus({preventScroll:true});}}
+  function render(){if(ui.tab==='welcome'){$('app').innerHTML=landingView();document.title='Maddie Journey · Madhouse Design Studio';return;}const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,milestones:milestonesView,journey:journey,kit:kitView,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,sources:sourcesView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open':'')+'">'+sidebar()+'<button type="button" class="workspace-scrim" aria-label="Close navigation" data-action="mobile"></button><main id="main-content" class="main" tabindex="-1">'+topnav()+(views[ui.tab]||overview)()+'<footer class="footer"><span>Maddie Journey · Prototype v2.2</span><span>51 fictional employees · Read-only preview · No live integrations</span></footer></main></div>'+(ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.employeeModalOpen?employeeModal():'');document.title=title(ui.tab)+' · Maddie Journey';if(ui.employeeModalOpen||ui.divisionModal||ui.employeePicker){const modal=$('app').querySelector('[role="dialog"]');if(modal&&typeof modal.focus==='function')modal.focus({preventScroll:true});}}
   function openDivision(id){if(!data.divisions.some(function(d){return d.id===id;}))return;ui.scope=id;ui.activeDivision=id;ui.divisionTab='summary';ensureEmployeeScope();ui.tab='division';ui.employeeModalOpen=false;ui.divisionModal=false;ui.employeePicker=false;ui.mobile=false;ui.query='';ui.division='all';if(location.hash!=='#division/'+id)location.hash='#division/'+id;window.scrollTo({top:0,behavior:'instant'});render();}
   function navigate(tab){if(tab==='division'){openDivision(ui.activeDivision);return;}ui.scope='all';ensureEmployeeScope();ui.tab=tab;ui.employeeModalOpen=false;ui.divisionModal=false;ui.employeePicker=false;ui.mobile=false;ui.query='';ui.division='all';if(location.hash!=='#'+tab)location.hash='#'+tab;window.scrollTo({top:0,behavior:'instant'});render();}
   // All data-editing functions were removed: this frontend never mutates employee records.
