@@ -8,18 +8,12 @@
   const $=function(id){return document.getElementById(id);};
   const clone=function(x){return JSON.parse(JSON.stringify(x));};
   const data=clone(seed);
-  const VIEWER_KEY='maddie-journey-viewer-v2';
-  let ui={tab:'welcome',viewer:'ceo',division:'all',activeDivision:'rmd',scope:'all',divisionPickerMode:'view',query:'',employee:data.employees[0].id,detail:'preview',employeeModalOpen:false,roleModal:false,divisionModal:false,employeePicker:false,pickerDivision:'rmd',frequency:'monthly',mobile:false,milestoneCategory:'birthday',milestoneDivision:'all',milestoneShowAll:false,milestonePicking:false,divisionTab:'summary',attentionFilter:'all',attentionShowAll:false,workView:'list',journeyView:'board',journeyShowAll:false,workspaceChosen:false,chooserCategory:'all'};
-  try{
-    const savedId=localStorage.getItem(VIEWER_KEY);
-    if(data.viewers.some(function(v){return v.id===savedId;})){ui.viewer=savedId;ui.workspaceChosen=true;}
-  }catch(err){}
+  let ui={tab:'welcome',division:'all',activeDivision:'rmd',scope:'all',divisionPickerMode:'view',query:'',employee:data.employees[0].id,detail:'preview',employeeModalOpen:false,divisionModal:false,employeePicker:false,pickerDivision:'rmd',frequency:'monthly',mobile:false,milestoneCategory:'birthday',milestoneDivision:'all',milestoneShowAll:false,milestonePicking:false,divisionTab:'summary',attentionFilter:'all',attentionShowAll:false,workView:'list',journeyView:'board',journeyShowAll:false,};
   // Layout preferences are not employee records and may be stored locally.
   try{const remembered=sessionStorage.getItem('maddie-journey-workview');if(remembered==='board'||remembered==='list')ui.workView=remembered;}catch(err){}
   const now=function(){return new Date().toISOString().slice(0,10);};
   const safe=function(v){return String(v===undefined||v===null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
   const money=function(n){return '₱'+(Number(n)||0).toLocaleString('en-PH',{maximumFractionDigits:2,minimumFractionDigits:2});};
-  const viewer=function(){return data.viewers.find(function(v){return v.id===ui.viewer;})||data.viewers[0];};
   const emp=function(id){return data.employees.find(function(e){return e.id===(id||ui.employee);});};
   const div=function(id){return data.divisions.find(function(d){return d.id===id;})||{name:id,short:id,evaluators:[]};};
   const scopedEmployees=function(){return ui.scope==='all'?data.employees:data.employees.filter(function(e){return e.division===ui.scope;});};
@@ -29,16 +23,10 @@
     if(es.length&&!es.some(function(e){return e.id===ui.employee;}))ui.employee=es[0].id;
     return es;
   }
-  const roleCanHead=function(e){const v=viewer();return !!(e&&(v.role==='head'||v.role==='corp')&&(v.divisions||[]).includes(e.division));};
-  const isHR=function(){return viewer().role==='hr';};
   // No source editing, endorsements or employee data submission is permitted.
   const dateLabel=function(v){if(!v)return '—';const d=new Date(v+'T12:00:00');return isNaN(d.getTime())?safe(v):d.toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'});};
   const escVal=function(v){return safe(v);};
-  function persist(){
-    try{if(ui.workspaceChosen)localStorage.setItem(VIEWER_KEY,ui.viewer);}
-    catch(err){/* Browsing remains available without local storage. */}
-  }
-  // No audit writes: this static reader has no record mutations.
+  // Filters and view preferences never change employee fixtures.
   function toast(msg){let t=$('toast');if(!t){t=document.createElement('div');t.id='toast';t.className='toast';document.body.appendChild(t);}t.textContent=msg;setTimeout(function(){if(t.textContent===msg)t.remove();},3800);}
   function journeyPct(e){const bits=e.journey.flat();return Math.round(bits.filter(Boolean).length/Math.max(1,bits.length)*100);}
   function kitPct(e){return Math.round(e.kit.filter(Boolean).length/Math.max(1,e.kit.length)*100);}
@@ -157,7 +145,6 @@
     return cards.length?'<section class="screen-summary" aria-label="'+safe(title(ui.tab))+' summary"><div class="summary-heading"><span class="eyebrow">SCREEN SUMMARY</span><span class="muted micro">Calculated from sample data</span></div><div class="grid metrics">'+cards.map(function(c){return metricCard(c[0],c[1],c[2]);}).join('')+'</div></section>':'';
   }
   function divisionEvaluatorNames(d){return d.evaluators.map(function(id){const v=data.viewers.find(function(p){return p.id===id;});return v?v.name:id;}).join(' / ');}
-  function assignedDivisionIds(){const v=viewer();return data.divisions.filter(function(d){return d.evaluators.includes(v.id);}).map(function(d){return d.id;});}
   // Department hierarchy is fictional: the reporting lines demonstrate chart behavior.
   function orgChart(d){
     const team=data.employees.filter(function(e){return e.division===d.id;});
@@ -271,11 +258,7 @@
       '<nav class="division-tabs" aria-label="Division views">'+divisionTabButton('summary','Summary')+divisionTabButton('board','Board')+divisionTabButton('list','List')+divisionTabButton('chart','Org chart')+'</nav>'+
       (sub[ui.divisionTab]||sub.summary);
   }
-  function quickDivisionAccess(){
-    const ids=assignedDivisionIds();
-    if(!ids.length)return '';
-    return '<section class="panel assigned-panel"><div class="heading-line"><div><h2>My division evaluation desk'+(ids.length>1?'s':'')+'</h2><p class="muted micro">Open your assigned members and their KPI scorecards</p></div>'+button('All divisions','nav','data-tab="divisions"','small')+'</div><div class="assigned-links">'+ids.map(function(id){const d=div(id);const team=data.employees.filter(function(e){return e.division===id;});return button(safe(d.name)+' · '+team.length+' members','goto-division','data-division="'+safe(id)+'"','primary');}).join('')+'</div></section>';
-  }
+
   function metrics(){
     const staff=scopedEmployees(),n=staff.length,done=staff.filter(function(e){return reviewStatus(e,'coo')==='Approved';}).length;
     return '<div class="grid metrics">'+metricCard('Team members',n,scopeLabel()+' · demo')+
@@ -671,17 +654,16 @@
       if(kind==='hiring'&&e.startDate){const gap=Math.floor((todayStamp()-Date.parse(e.startDate+'T00:00:00Z'))/86400000);rows.push({e:e,when:e.startDate,sort:-Date.parse(e.startDate),status:gap<0?'Upcoming hire':gap<=90?'Recent hire':'Onboarded',detail:'Hired · '+dateLabel(e.startDate)});}
       if(kind==='promotion')(e.promotions||[]).forEach(function(p){rows.push({e:e,record:p,when:p.date,sort:-Date.parse(p.date||'1970-01-01'),status:p.status,detail:(p.from||'Previous role')+' → '+(p.to||'New role')});});
       if(kind==='perfect')(e.attendanceAwards||[]).forEach(function(p){rows.push({e:e,record:p,when:p.period||'',sort:-(Number((p.period||'1970-01').replace('-',''))||0),status:p.status,detail:'Recognized attendance · '+(p.period||'Period pending')});});
-      if(kind==='discipline'&&isHR())(e.disciplinaryActions||[]).forEach(function(p){rows.push({e:e,record:p,when:p.date,sort:-Date.parse(p.date||'1970-01-01'),status:p.status,detail:p.category+' · '+p.severity});});
+      if(kind==='discipline')(e.disciplinaryActions||[]).forEach(function(p){rows.push({e:e,record:p,when:p.date,sort:-Date.parse(p.date||'1970-01-01'),status:p.status,detail:p.category+' · '+p.severity});});
     });
     return rows.sort(function(a,b){return a.sort-b.sort;});
   }
   function filteredMilestoneTeam(){return ui.milestoneDivision==='all'?data.employees:data.employees.filter(function(e){return e.division===ui.milestoneDivision;});}
   function milestonesView(){
     const kind=milestoneKinds.find(function(k){return k.id===ui.milestoneCategory;})||milestoneKinds[0];
-    const staff=filteredMilestoneTeam(),rows=milestoneEvents(kind.id,staff),restricted=kind.id==='discipline'&&!isHR();
+    const staff=filteredMilestoneTeam(),rows=milestoneEvents(kind.id,staff);
     const visible=ui.milestoneShowAll?rows:rows.slice(0,12);
-    const roster=restricted?'<div class="milestone-private"><b>HR-managed information</b><p>Disciplinary case details are shown only in the HR demo workspace. All divisions and other milestones remain available.</p></div>':
-      (visible.length?visible.map(function(row){
+    const roster=(visible.length?visible.map(function(row){
         return '<div class="milestone-person">'+avatar(row.e.name)+'<div class="milestone-person-name"><b>'+safe(row.e.name)+'</b><small>'+safe(div(row.e.division).short)+' · '+safe(row.detail)+'</small></div>'+
         '<span class="milestone-status">'+safe(row.status||'Recorded')+'</span>'+
         button('View','open','data-id="'+safe(row.e.id)+'" data-detail="milestones"','small')+'</div>';
@@ -691,15 +673,14 @@
       '<div class="milestone-tabs" role="group" aria-label="Milestone categories">'+milestoneKinds.map(function(k){
         return '<button type="button" class="milestone-tab '+(k.id===kind.id?'active':'')+'" data-action="milestone-category" data-kind="'+k.id+'" aria-pressed="'+(k.id===kind.id)+'">'+safe(k.name)+'</button>';
       }).join('')+'</div>'+
-      '<section class="panel milestone-results"><div class="panel-head"><div><h2>'+safe(kind.name)+'</h2><p>'+safe(kind.description)+' · '+(restricted?'HR-only details':rows.length+' records')+'</p></div>'+
+      '<section class="panel milestone-results"><div class="panel-head"><div><h2>'+safe(kind.name)+'</h2><p>'+safe(kind.description)+' · '+rows.length+' records'+'</p></div>'+
       ''+'</div>'+
       '<div class="milestone-people">'+roster+'</div>'+
-      (!restricted&&rows.length>12?'<div class="milestone-list-footer">'+button(ui.milestoneShowAll?'Show fewer':'Show all '+rows.length,'milestone-more','','small')+'</div>':'')+
+      (rows.length>12?'<div class="milestone-list-footer">'+button(ui.milestoneShowAll?'Show fewer':'Show all '+rows.length,'milestone-more','','small')+'</div>':'')+
       '<div class="milestone-help">'+(kind.id==='perfect'?'Perfect attendance is recorded only when HR explicitly confirms the award; it is not inferred from incomplete time entries.':kind.id==='discipline'?'All cases are fictional. Real disciplinary records require secure, audited access.':'All names, dates and milestones are sample data, not real employee records.')+'</div></section>';
   }
   function recordListHTML(e,kind){
     const collection=kind==='promotion'?e.promotions:kind==='perfect'?e.attendanceAwards:e.disciplinaryActions;
-    if(kind==='discipline'&&!isHR())return '<p class="muted micro">Confidential HR records are not available in this preview.</p>';
     return collection.length?collection.map(function(r){
       const name=kind==='promotion'?(r.from+' → '+r.to):kind==='perfect'?('Attendance · '+r.period):(r.category+' · '+r.severity);
       const date=kind==='perfect'?(r.period||'—'):dateLabel(r.date);
@@ -778,7 +759,6 @@
     const v=score(e),overall=Number(v.toFixed(1)),a=attend(e);
     const dimensions=[['Division objectives',e.scores.division,15,'coral'],['Individual objectives',e.scores.individual,45,'lilac'],['Values alignment',e.scores.values,15,'mint'],['Job behavior',e.scores.behavior,25,'gold']];
     const stageSummary=data.stages.map(function(stage,i){return {label:'Stage '+(i+1),percent:Math.round(e.journey[i].filter(Boolean).length/e.journey[i].length*100),title:stage.name};});
-    const editable=roleCanHead(e),hr=isHR();
     return '<div class="profile-intro"><p>Performance, onboarding and attendance at a glance. Figures are fictional and not synced to external sources.</p></div>'+
     '<div class="employee-charts-grid">'+
       '<section class="chart-card performance-chart"><div class="chart-card-heading"><h3>2026 KPI performance</h3><span class="tag warn">Demo scores</span></div><div class="performance-chart-inner"><div class="score-donut" style="--score:'+overall+'%" role="img" aria-label="Overall KPI score '+overall+' percent"><div><strong>'+overall+'%</strong><small>'+safe(rating(v))+'</small></div></div><div class="score-breakdown">'+dimensions.map(function(x){return '<div class="score-breakdown-row"><div class="score-label"><span>'+safe(x[0])+' <small>· '+x[2]+'%</small></span><b>'+Number(x[1]).toFixed(1)+'%</b></div><div class="chart-track"><span class="'+x[3]+'" style="width:'+Math.min(100,Math.max(0,x[1]))+'%"></span></div></div>';}).join('')+'</div></div></section>'+
