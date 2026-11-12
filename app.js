@@ -679,6 +679,47 @@
     return header('EMPLOYEE SETUP','Welcome Maddie Kit','Select a department, then open an employee to review equipment, tools and access.',button('Browse divisions','nav','data-tab="divisions"','small'))+
       trackerRoster('kit')+'<p class="muted micro tracker-footnote">Do not put passwords or private credentials in sample access notes.</p>';
   }
+  function attendanceReport(staff){
+    const totals={all:0,verified:0,pending:0,late:0,absent:0,excused:0,approvedLeave:0,concerns:0,affected:0};
+    staff.forEach(function(e){
+      let affected=false;
+      e.attendance.forEach(function(r){
+        totals.all++;
+        if(!r.verified){totals.pending++;return;}
+        totals.verified++;
+        if(r.type==='Late'){
+          totals.late++;
+          if(r.approval==='Excused')totals.excused++;
+          else {totals.concerns++;affected=true;}
+        }
+        if(r.type==='Absent'){
+          totals.absent++;
+          if(r.approval==='Unapproved'){totals.concerns++;affected=true;}
+        }
+        if(r.type==='Leave'&&r.approval==='Approved')totals.approvedLeave++;
+      });
+      if(affected)totals.affected++;
+    });
+    return totals;
+  }
+  function attendanceAuditPanel(staff){
+    const a=attendanceReport(staff);
+    const metrics=[
+      ['Verified entries',a.verified+' / '+a.all,'All recorded attendance entries'],
+      ['Verified late arrivals',a.late,'Includes '+a.excused+' excused'],
+      ['Verified absences',a.absent,'Approval statuses shown separately'],
+      ['Concern entries',a.concerns,a.affected+' / '+staff.length+' people affected'],
+      ['Awaiting verification',a.pending,'Excluded from verified totals']
+    ];
+    return '<section class="panel attendance-audit-panel"><div class="panel-head"><div>'+
+      '<h2>Recorded attendance breakdown</h2>'+
+      '<p>Verified events and pending entries from '+staff.length+' selected fictional people</p></div></div>'+
+      '<div class="attendance-audit-grid">'+metrics.map(function(m){
+        return '<div class="attendance-audit-stat"><span>'+safe(m[0])+'</span>'+
+          '<strong>'+safe(m[1])+'</strong><small>'+safe(m[2])+'</small></div>';
+      }).join('')+'</div>'+
+      '<p class="report-source-note">Counts are attendance entries, not days worked or shifts. Concerns are verified unexcused late or unapproved absent entries; pending entries are excluded. No records does not mean perfect attendance.</p></section>';
+  }
   function attendanceSummary(e){const a=attend(e);return '<div class="grid metrics"><div class="metric"><div class="metric-label">Verified late arrivals</div><strong>'+a.lates+'</strong><div class="metric-sub">Last: '+dateLabel(a.lastLate)+'</div></div><div class="metric"><div class="metric-label">Verified absences</div><strong>'+a.absences+'</strong><div class="metric-sub">Last: '+dateLabel(a.lastAbs)+'</div></div><div class="metric"><div class="metric-label">Attendance concerns</div><strong>'+a.concerns+'</strong><div class="metric-sub">Excused late entries excluded</div></div><div class="metric"><div class="metric-label">Attendance status</div><strong style="font-size:21px">'+(a.records.length?'With records':'No record')+'</strong><div class="metric-sub">Only verified entries are counted</div></div></div>';}
   function attendanceRows(e){
     const rows=e.attendance.slice().sort(function(a,b){return b.date.localeCompare(a.date);});
@@ -691,17 +732,55 @@
   function series(){const months=[];const dt=new Date();dt.setDate(1);for(let i=5;i>=0;i--){const d=new Date(dt.getFullYear(),dt.getMonth()-i,1);const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');let late=0,abs=0;scopedEmployees().forEach(function(e){e.attendance.forEach(function(r){if(r.verified&&r.date.slice(0,7)===key){if(r.type==='Late')late++;if(r.type==='Absent')abs++;}});});months.push({label:d.toLocaleDateString('en-PH',{month:'short'}),late:late,abs:abs});}return months;}
   function chart(){
     const periods=series(),max=Math.max(1,...periods.map(function(p){return p.late+p.abs;}));
-    return '<div class="mini-bars" role="img" aria-label="Six-month verified attendance trend">'+periods.map(function(p){
+    return '<div class="mini-bars" role="img" aria-label="Last six calendar months of recorded verified lateness and absence, not a continuous attendance trend">'+periods.map(function(p){
       const n=p.late+p.abs,h=n?Math.max(5,Math.round(n/max*92)):0;
       return '<div title="'+safe(p.label)+': '+p.late+' late, '+p.abs+' absent"><span style="height:'+h+'px" class="'+(n?'':'no-incidents')+'"></span>'+safe(p.label)+'</div>';
-    }).join('')+'</div><p class="muted micro" style="margin-top:12px">Last 6 months · only verified late and absence entries; no entries does not prove perfect attendance.</p>';
+    }).join('')+'</div><p class="muted micro" style="margin-top:12px">Last six calendar months · recorded verified events only; a month without an entry does not prove perfect attendance.</p>';
   }
   function rankRows(type){const ranked=scopedEmployees().map(function(e){return {e:e,n:attend(e)[type]};}).filter(function(v){return v.n>0;}).sort(function(a,b){return b.n-a.n;}).slice(0,5);return ranked.length?ranked.map(function(v,i){return '<div class="rank"><span class="rank-index">'+(i+1)+'</span><div><b>'+linkedEmployee(v.e)+'</b><p class="muted micro">'+safe(div(v.e.division).short)+'</p></div><span class="count">'+v.n+'</span></div>';}).join(''):'<p class="muted">No verified entries</p>';}
-  function attendancePeriodTable(){const buckets={};scopedEmployees().forEach(function(e){e.attendance.forEach(function(r){if(!r.verified)return;let period=r.date.slice(0,7);if(ui.frequency==='weekly'){const d=new Date(r.date+'T00:00:00Z');d.setUTCDate(d.getUTCDate()-((d.getUTCDay()+6)%7));period=d.toISOString().slice(0,10);}if(!buckets[period])buckets[period]={late:0,absent:0,approved:0,excused:0};if(r.type==='Late'){buckets[period].late++;if(r.approval==='Excused')buckets[period].excused++;}if(r.type==='Absent')buckets[period].absent++;if(r.type==='Leave'&&r.approval==='Approved')buckets[period].approved++;});});const keys=Object.keys(buckets).sort().reverse().slice(0,12);return '<section class="panel" style="margin-top:17px"><div class="panel-head"><div><h2>Weekly and monthly summary</h2><p>Verified records only; approved leave and excused lateness are displayed separately</p></div><select class="field" style="max-width:150px" aria-label="Attendance summary frequency" data-ui="frequency">'+opts([{value:'weekly',label:'Weekly'},{value:'monthly',label:'Monthly'}],ui.frequency)+'</select></div><div class="table-wrap"><table class="table"><thead><tr><th>Period</th><th>Late arrivals</th><th>Absences</th><th>Excused lates</th><th>Approved leaves</th></tr></thead><tbody>'+(keys.length?keys.map(function(k){const b=buckets[k];return '<tr><td><strong>'+safe(k)+'</strong></td><td>'+b.late+'</td><td>'+b.absent+'</td><td>'+b.excused+'</td><td>'+b.approved+'</td></tr>';}).join(''):'<tr><td colspan="5">No verified records for this frequency.</td></tr>')+'</tbody></table></div></section>';}
+  function attendancePeriodTable(){
+    const buckets={};
+    scopedEmployees().forEach(function(e){
+      e.attendance.forEach(function(r){
+        if(!r.verified)return;
+        let period=r.date.slice(0,7);
+        if(ui.frequency==='weekly'){
+          const d=new Date(r.date+'T00:00:00Z');
+          d.setUTCDate(d.getUTCDate()-((d.getUTCDay()+6)%7));
+          period=d.toISOString().slice(0,10);
+        }
+        if(!buckets[period])buckets[period]={verified:0,late:0,absent:0,approved:0,excused:0,concerns:0};
+        const b=buckets[period];
+        b.verified++;
+        if(r.type==='Late'){b.late++;if(r.approval==='Excused')b.excused++;else b.concerns++;}
+        if(r.type==='Absent'){b.absent++;if(r.approval==='Unapproved')b.concerns++;}
+        if(r.type==='Leave'&&r.approval==='Approved')b.approved++;
+      });
+    });
+    const keys=Object.keys(buckets).sort().reverse().slice(0,12);
+    return '<section class="panel attendance-period-panel"><div class="panel-head"><div>'+
+      '<h2>Weekly and monthly summary</h2>'+
+      '<p>Verified records only · latest 12 periods with entries; missing periods are not evidence of zero incidents</p></div>'+
+      '<select class="field" aria-label="Attendance summary frequency" data-ui="frequency">'+
+      opts([{value:'weekly',label:'Weekly'},{value:'monthly',label:'Monthly'}],ui.frequency)+'</select></div>'+
+      '<div class="table-wrap"><table class="table attendance-period-table"><thead><tr>'+
+      '<th scope="col">Period</th><th scope="col">Verified entries</th>'+
+      '<th scope="col">Late</th><th scope="col">Absent</th><th scope="col">Excused lates</th>'+
+      '<th scope="col">Approved leaves</th><th scope="col">Concern entries</th></tr></thead><tbody>'+
+      (keys.length?keys.map(function(k){
+        const b=buckets[k];
+        return '<tr><th scope="row">'+safe(k)+'</th>'+
+          '<td>'+b.verified+'</td><td>'+b.late+'</td><td>'+b.absent+'</td>'+
+          '<td>'+b.excused+'</td><td>'+b.approved+'</td><td>'+b.concerns+'</td></tr>';
+      }).join(''):'<tr><td colspan="7">No verified records for this frequency.</td></tr>')+
+      '</tbody></table></div>'+
+      '<p class="report-source-note">Excused lateness is included in Late, but not in Concern entries. Approved leave is not an absence or concern. Pending records are excluded from this table.</p></section>';
+  }
   function attendanceView(){
     return header('ATTENDANCE','Attendance monitoring','Verified incidents, monthly trends and individual recorded entries. All information is view-only.',button('Export attendance','attendance-csv','','small'))+
-      '<section class="panel attendance-trend-panel"><div class="panel-head"><div><h2>Recent attendance</h2><p>Verified late arrivals and absences · last six months</p></div></div>'+chart()+'</section>'+
-      '<details class="panel compact-details attendance-breakdown"><summary>Weekly and monthly breakdown</summary>'+attendancePeriodTable()+'</details>'+
+      attendanceAuditPanel(scopedEmployees())+
+      '<section class="panel attendance-trend-panel"><div class="panel-head"><div><h2>Recent verified events</h2><p>Recorded late and absent entries · six calendar months · fictional fixture</p></div></div>'+chart()+'</section>'+
+      '<details class="panel compact-details attendance-breakdown" open><summary>Weekly and monthly breakdown</summary>'+attendancePeriodTable()+'</details>'+
       trackerRoster('attendance')+
       '<details class="panel compact-details"><summary>See late and absence rankings</summary><div class="grid subgrid" style="margin-top:18px"><div><h3>Late arrivals</h3>'+rankRows('lates')+'</div><div><h3>Absences</h3>'+rankRows('absences')+'</div></div></details>';
   }

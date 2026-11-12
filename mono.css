@@ -897,3 +897,44 @@ body:has(.employee-overlay){overflow:hidden}
   .journey-distribution .panel-head{align-items:flex-start;flex-direction:column}
   .journey-distribution-table{min-width:450px}
 }
+
+
+/* Phase 4 attendance: verifiable events, readable denominators, no implied perfect attendance. */
+.attendance-audit-panel{padding:var(--mj-space-5);margin:0 0 16px}
+.attendance-audit-grid{
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;
+  border:1px solid var(--mono-border);border-radius:10px;overflow:hidden
+}
+.attendance-audit-stat{
+  display:flex;flex-direction:column;gap:6px;min-height:117px;
+  padding:16px 13px;border-right:1px solid var(--mono-border);
+  background:var(--mono-surface);min-width:0
+}
+.attendance-audit-stat:last-child{border-right:0}
+.attendance-audit-stat span{font-size:10px;color:var(--mono-secondary);font-weight:690}
+.attendance-audit-stat strong{
+  font-size:clamp(20px,2vw,30px);line-height:1.2;font-weight:760;
+  letter-spacing:-.04em;color:var(--mono-text);font-variant-numeric:tabular-nums
+}
+.attendance-audit-stat small{font-size:10px;line-height:1.4;color:var(--mono-secondary)}
+.attendance-period-panel{margin:14px 0 0;padding:var(--mj-space-4)}
+.attendance-period-panel .panel-head{align-items:center;flex-wrap:wrap;gap:12px}
+.attendance-period-panel [data-ui="frequency"]{max-width:140px}
+.attendance-period-table{min-width:700px}
+.attendance-period-table th:not(:first-child),.attendance-period-table td:not(:first-child){
+  text-align:right;font-variant-numeric:tabular-nums
+}
+@media(max-width:1000px){
+  .attendance-audit-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .attendance-audit-stat:nth-child(n){border-right:1px solid var(--mono-border);border-bottom:1px solid var(--mono-border)}
+  .attendance-audit-stat:nth-child(3n){border-right:0}
+  .attendance-audit-stat:nth-child(n+4){border-bottom:0}
+}
+@media(max-width:620px){
+  .attendance-audit-panel{padding:var(--mj-space-4)}
+  .attendance-audit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .attendance-audit-stat:nth-child(n){border-bottom:1px solid var(--mono-border);border-right:1px solid var(--mono-border)}
+  .attendance-audit-stat:nth-child(2n){border-right:0}
+  .attendance-audit-stat:last-child{border-right:0;border-bottom:0}
+  .attendance-audit-stat:nth-last-child(2){border-bottom:0}
+}

@@ -689,4 +689,39 @@ check('Phase 4 KPI table contributions exactly reconcile to weighted score',()=>
   for(const point of contributions)assert(user.html().includes(point.toFixed(2)+' weighted points'));
   user.click('close');
 });
+check('Phase 4 attendance audit counts verified, pending and concern entries exactly',()=>{
+  const staff=user.win.MJ_SEED.employees,all=staff.flatMap(e=>e.attendance);
+  const verified=all.filter(r=>r.verified),pending=all.length-verified.length;
+  const affected=staff.filter(e=>e.attendance.some(r=>r.verified&&
+    ((r.type==='Late'&&r.approval!=='Excused')||(r.type==='Absent'&&r.approval==='Unapproved')))).length;
+  const concerns=verified.filter(r=>(r.type==='Late'&&r.approval!=='Excused')||
+    (r.type==='Absent'&&r.approval==='Unapproved')).length;
+  user.navigate('attendance');
+  const panel=user.html().split('class="panel attendance-audit-panel"')[1]?.split('</section>')[0];
+  assert(panel);
+  assert(panel.includes(verified.length+' / '+all.length));
+  assert(panel.includes(affected+' / '+staff.length+' people affected'));
+  assert(panel.includes('>'+concerns+'</strong>'));
+  assert(panel.includes('>'+pending+'</strong>'));
+  assert(panel.includes('No records does not mean perfect attendance'));
+  assert(user.html().includes('attendance-breakdown" open'));
+});
+check('Phase 4 attendance monthly buckets reconcile event classifications',()=>{
+  user.navigate('attendance');
+  const section=user.html().split('class="table attendance-period-table"')[1]?.split('</table>')[0];
+  const items=user.win.MJ_SEED.employees.flatMap(e=>e.attendance).filter(r=>r.verified);
+  const periods=[...new Set(items.map(r=>r.date.slice(0,7)))].sort().reverse().slice(0,12);
+  assert.equal((section.match(/<tr><th scope="row">20\d\d-/g)||[]).length,periods.length);
+  const key=periods[0],batch=items.filter(r=>r.date.startsWith(key));
+  const late=batch.filter(r=>r.type==='Late').length;
+  const absent=batch.filter(r=>r.type==='Absent').length;
+  const excused=batch.filter(r=>r.type==='Late'&&r.approval==='Excused').length;
+  const approved=batch.filter(r=>r.type==='Leave'&&r.approval==='Approved').length;
+  const concerns=batch.filter(r=>(r.type==='Late'&&r.approval!=='Excused')||
+    (r.type==='Absent'&&r.approval==='Unapproved')).length;
+  assert(section.includes('<th scope="row">'+key+'</th><td>'+batch.length+'</td><td>'+
+    late+'</td><td>'+absent+'</td><td>'+excused+'</td><td>'+approved+'</td><td>'+concerns+'</td>'));
+  user.setFilter('frequency','weekly');
+  assert(user.html().includes('value="weekly" selected'));
+});
 console.log('\n'+results.length+' smoke tests passed. Physical-device visual QA is separate.');
