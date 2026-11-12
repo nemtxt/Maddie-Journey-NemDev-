@@ -1,8 +1,8 @@
-# Maddie Journey — Read-only Prototype v2.2
+# Maddie Journey — Read-only Prototype v2.3
 
 **Madhouse Design Studio · People & Culture**
 
-[Open prototype](https://nemtxt.github.io/Maddie-Journey-NemDev-/) · [GitHub repository](https://github.com/nemtxt/Maddie-Journey-NemDev-) · [Claude connector handoff](docs/CLAUDE_CONNECTORS_HANDOFF.md)
+[Open prototype](https://nemtxt.github.io/Maddie-Journey-NemDev-/) · [GitHub repository](https://github.com/nemtxt/Maddie-Journey-NemDev-) · [Claude connector handoff](docs/CLAUDE_CONNECTORS_HANDOFF.md) · [Prototype acceptance checklist](docs/PROTOTYPE_ACCEPTANCE.md)
 
 ## Project goal
 
@@ -37,6 +37,18 @@ All 11 screens are available to anyone using the fictional sample prototype. A d
 - **Follow-ups:** existing List/Board tracker, populated from the same local fixture.
 - **Consistent mobile layouts:** single sidebar, useful top tabs, compact theme controls, responsive tables and centered preview dialogs.
 
+### v2.3 completion and reliability improvements
+
+- **Employee directory:** Search employee name, ID, email, job title or division; sort by name, department, Journey, Welcome Kit or KPI; clear the search and view matching counts.
+- **Accurate exports:** Employee CSV contains the currently visible, filtered/sorted records (not silently all 51). Text beginning with spreadsheet formula syntax is escaped defensively.
+- **Weekly/monthly attendance:** The existing reporting logic is now reachable through a compact expandable breakdown; recorded entries remain read-only.
+- **Navigation:** Fixed the division employee shortcut to select the visible List tab. Quick search supports Ctrl/Command+K and slash outside text fields; Escape closes mobile navigation.
+- **Fixture integrity:** Data Sources reports distinct sample IDs, division count, Journey/Kit structure and broken cross-references. These are structural fixture checks, not authentication or official record verification.
+- **Graceful errors:** An invalid demonstration fixture displays a recoverable error screen rather than rendering a broken dashboard.
+- **Automated verification:** 26 dependency-free smoke tests now cover data readiness, navigation, all division modes, active filters, safe CSV exports, keyboard shortcuts and read-only actions.
+
+[See the prototype acceptance matrix](docs/PROTOTYPE_ACCEPTANCE.md) for manual desktop/mobile validation tasks and documented limitations.
+
 ### Seven-stage Journey
 
 The Journey monitoring screen contains **seven stages plus Completed**, with one card per employee grouped by the first incomplete stage. The Board scrolls horizontally; Table view shows all matching members and aggregate progress. All status rows are non-editable.
@@ -49,7 +61,7 @@ The script loading order is:
 2. data-adapter.js — read-only snapshot and data-source contract
 3. app.js — rendering, navigation, metrics and employee previews
 
-data-adapter.js exposes getSnapshot(), getSources(), getProvenance() and validateSnapshot(snapshot). It currently returns a defensive copy of the fictional fixture and marks all five planned providers **Not connected**. There are **no network calls or provider tokens**.
+data-adapter.js exposes getSnapshot(), getSources(), getProvenance(), getQualityReport() and validateSnapshot(snapshot). It currently returns a defensive copy of the fictional fixture and marks all five planned providers **Not connected**. There are **no network calls or provider tokens**.
 
 The later connected-account phase can implement source normalization against the same frontend view model, but the private data delivery mechanism must be authenticated and controlled. Read the [Claude connector handoff](docs/CLAUDE_CONNECTORS_HANDOFF.md) for provider responsibilities, data contract and security boundaries.
 
@@ -60,7 +72,7 @@ The later connected-account phase can implement source normalization against the
 - Open index.html in a modern browser or use VS Code Live Server.
 - Run: node tests/smoke.js
 - On main, the custom GitHub Actions validation workflow runs the regression tests. GitHub Pages uses its separate publishing workflow.
-- Confirm both test and Pages workflow statuses under GitHub Actions. Physical Windows/macOS/Android/iOS layout review is separate from these Node smoke tests.
+- Confirm both test and Pages workflow statuses under GitHub Actions. The automated suite currently includes 26 cases; physical Windows/macOS/Android/iOS visual acceptance remains separate.
 
 ## Source files
 
@@ -74,9 +86,10 @@ The later connected-account phase can implement source normalization against the
 | operations.css / palette.css | Org chart, tracking and historical brand styles |
 | landing.css | Landing page and source photo |
 | workspace.css / reader.css | Global workspace, primary/secondary navigation and read-only views |
-| refined.css | v2.2 polished reference-inspired dashboard, cards and responsive summaries |
+| refined.css | v2.3 polished dashboard, searchable directory, source quality panel and responsive summaries |
 | tests/smoke.js | Regression tests for navigation, adapters, fixtures and read-only operation |
 | docs/CLAUDE_CONNECTORS_HANDOFF.md | Future connector development instructions |
+| docs/PROTOTYPE_ACCEPTANCE.md | Complete screen/navigation matrix and physical-device acceptance checklist |
 | assets/madhouse-logo.png | Original user-supplied PNG |
 | assets/madhalloween.jpg | Original user-supplied JPEG |
 
