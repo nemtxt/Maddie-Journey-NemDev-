@@ -68,7 +68,7 @@
     const v=viewer(),isObserver=['ceo','cso','coo'].includes(v.role);
     return '<div class="mobile-top"><div class="brand"><span class="logo">m.</span><b>Maddie Journey</b></div>'+button('☰','mobile','','small')+'</div>'+
     '<div class="topbar"><div class="breadcrumb">MADHOUSE / PEOPLE & CULTURE <strong>'+safe(title(ui.tab))+'</strong></div>'+
-    '<div class="top-actions"><span class="tag warn demo-marker">DEMO DATA</span>'+
+    '<div class="top-actions"><button type="button" class="scope-trigger" data-action="choose-scope" aria-haspopup="dialog" aria-label="Select division for all trackers"><span class="scope-dot">◈</span><span class="scope-label">'+safe(scopeLabel())+'</span><span class="scope-arrow">⌄</span></button><span class="tag warn demo-marker">DEMO DATA</span>'+
     '<button class="workspace-trigger" type="button" data-action="choose-workspace" aria-haspopup="dialog" aria-label="Switch workspace, currently '+safe(v.name)+'">'+
     avatar(v.name)+'<span class="workspace-trigger-copy"><b>'+safe(v.name)+'</b><small>'+(isObserver?'Observer · View only':isHR()?'HR · Editor':'Division · Editor')+'</small></span><span class="workspace-chevron" aria-hidden="true">⌄</span></button></div></div>';
   }
@@ -90,8 +90,8 @@
   function meanOf(list,calculate){return list.length?Math.round(list.reduce(function(n,e){return n+calculate(e);},0)/list.length):0;}
   function metricCard(label,value,note){return '<div class="metric"><div class="metric-label">'+safe(label)+'<span class="metric-icon">◇</span></div><strong>'+safe(value)+'</strong><div class="metric-sub">'+safe(note)+'</div></div>';}
   function screenSummary(){
-    const all=data.employees;
-    const team=ui.tab==='division'?all.filter(function(e){return e.division===ui.activeDivision;}):all;
+    const all=ui.tab==='divisions'?data.employees:scopedEmployees();
+    const team=ui.tab==='division'?data.employees.filter(function(e){return e.division===ui.activeDivision;}):all;
     let cards=[];
     if(ui.tab==='division'){
       cards=[['Division members',team.length,'Fictional employee records'],['Average KPI score',meanOf(team,score).toString()+'%','Demonstration figures only'],['Journey completion',meanOf(team,journeyPct)+'%','All 7 onboarding stages'],['Submitted evaluations',team.filter(function(e){return reviewStatus(e,'division')==='Endorsed';}).length,'Division Head endorsements']];
@@ -258,12 +258,15 @@
     '<p class="modal-footnote">All profiles are fictional. Open an employee preview to inspect their charts or evaluation.</p></div></section></div>';
   }
   function divisionPickerModal(){
+    const scoped=ui.divisionPickerMode==='scope';
+    const title=scoped?'Filter every tracker':'Open a division';
+    const desc=scoped?'Choose one division to update summaries, employees, onboarding, attendance and KPI views.':'Open a department workspace and its member evaluations.';
     return '<div class="overlay center-overlay" data-overlay="division"><section class="workspace-modal compact-modal" role="dialog" aria-modal="true" aria-labelledby="division-modal-title" tabindex="-1">'+
-     '<div class="modal-fixed-head"><div><span class="eyebrow">SEVEN DEPARTMENTS</span><h2 id="division-modal-title">Choose a division</h2><p>Open its team overview and employee evaluations.</p></div><button class="modal-close" type="button" data-action="close" aria-label="Close division chooser">×</button></div>'+
-     '<div class="workspace-modal-scroll"><div class="division-picker-grid">'+data.divisions.map(function(d){
-      const n=data.employees.filter(function(e){return e.division===d.id;}).length,active=ui.activeDivision===d.id;
-      return '<button type="button" class="division-picker-item '+(active?'selected':'')+'" data-action="goto-division" data-division="'+safe(d.id)+'"><span><b>'+safe(d.name)+'</b><small>'+safe(divisionEvaluatorNames(d))+'</small></span><span class="tag info">'+n+' people</span></button>';
-     }).join('')+'</div></div></section></div>';
+     '<div class="modal-fixed-head"><div><span class="eyebrow">8 DEPARTMENTS · 51 SAMPLE EMPLOYEES</span><h2 id="division-modal-title">'+title+'</h2><p>'+desc+'</p></div><button class="modal-close" type="button" data-action="close" aria-label="Close division chooser">×</button></div>'+
+     '<div class="workspace-modal-scroll"><div class="division-picker-grid">'+
+     (scoped?'<button type="button" class="division-picker-item '+(ui.scope==='all'?'selected':'')+'" data-action="set-scope" data-division="all"><span><b>All 8 divisions</b><small>Company-wide summary and all 51 employees</small></span><span class="tag info">51 people</span></button>':'')+
+     data.divisions.map(function(d){const n=data.employees.filter(function(e){return e.division===d.id;}).length,active=scoped?ui.scope===d.id:ui.activeDivision===d.id;
+      return '<button type="button" class="division-picker-item '+(active?'selected':'')+'" data-action="'+(scoped?'set-scope':'goto-division')+'" data-division="'+safe(d.id)+'"><span><b>'+safe(d.name)+'</b><small>'+safe(divisionEvaluatorNames(d))+'</small></span><span class="tag info">'+n+' people</span></button>';}).join('')+'</div></div></section></div>';
   }
   function attendanceMicrochart(e){
     const d=new Date(),months=[];
@@ -313,8 +316,8 @@
     detailContent(e,t)+'</div></section></div>';
   }
   function render(){const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,journey:journey,kit:kitView,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open':'')+'">'+sidebar()+'<main class="main">'+topnav()+(views[ui.tab]||overview)()+'<footer class="footer"><span>Maddie Journey · Prototype v1.2</span><span>51 fictional employees · Local browser storage · No live integrations</span></footer></main></div>'+(ui.roleModal?workspaceModal():ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.drawer?drawer():'');document.title=title(ui.tab)+' · Maddie Journey';if(ui.drawer||ui.roleModal||ui.divisionModal||ui.employeePicker){const modal=$('app').querySelector('[role="dialog"]');if(modal&&typeof modal.focus==='function')modal.focus({preventScroll:true});}}
-  function openDivision(id){if(!data.divisions.some(function(d){return d.id===id;}))return;ui.activeDivision=id;ui.tab='division';ui.drawer=false;ui.roleModal=false;ui.divisionModal=false;ui.employeePicker=false;ui.mobile=false;ui.query='';ui.division='all';if(location.hash!=='#division/'+id)location.hash='#division/'+id;window.scrollTo({top:0,behavior:'instant'});render();}
-  function navigate(tab){if(tab==='division'){openDivision(ui.activeDivision);return;}ui.tab=tab;ui.drawer=false;ui.roleModal=false;ui.divisionModal=false;ui.employeePicker=false;ui.mobile=false;ui.query='';ui.division='all';if(location.hash!=='#'+tab)location.hash='#'+tab;window.scrollTo({top:0,behavior:'instant'});render();}
+  function openDivision(id){if(!data.divisions.some(function(d){return d.id===id;}))return;ui.scope=id;ui.activeDivision=id;ensureEmployeeScope();ui.tab='division';ui.drawer=false;ui.roleModal=false;ui.divisionModal=false;ui.employeePicker=false;ui.mobile=false;ui.query='';ui.division='all';if(location.hash!=='#division/'+id)location.hash='#division/'+id;window.scrollTo({top:0,behavior:'instant'});render();}
+  function navigate(tab){if(tab==='division'){openDivision(ui.activeDivision);return;}ensureEmployeeScope();ui.tab=tab;ui.drawer=false;ui.roleModal=false;ui.divisionModal=false;ui.employeePicker=false;ui.mobile=false;ui.query='';ui.division='all';if(location.hash!=='#'+tab)location.hash='#'+tab;window.scrollTo({top:0,behavior:'instant'});render();}
   function invalidateEvaluation(e){
     const changed=['division','corp','cso','coo'].some(function(k){return e.review[k].status!=='Pending';})||e.approvedPct>0||!!e.effectiveDate;
     if(!changed)return;
@@ -357,10 +360,12 @@
   function action(name,button){const e=emp();if(name==='mobile'){ui.mobile=!ui.mobile;render();return;}
     if(name==='choose-workspace'){ui.roleModal=true;ui.divisionModal=false;ui.employeePicker=false;ui.drawer=false;render();return;}
     if(name==='select-viewer'){if(!data.viewers.some(function(v){return v.id===button.dataset.id;}))return;ui.viewer=button.dataset.id;ui.roleModal=false;ui.divisionModal=false;ui.drawer=false;persist();navigate('overview');toast('Workspace: '+viewer().name);return;}
-    if(name==='choose-division'){ui.divisionModal=true;ui.roleModal=false;ui.employeePicker=false;ui.drawer=false;render();return;}
-    if(name==='choose-employee'){ui.employeePicker=true;ui.pickerDivision=ui.tab==='division'?ui.activeDivision:emp().division;ui.drawer=false;ui.roleModal=false;ui.divisionModal=false;render();return;}
+    if(name==='choose-division'){ui.divisionPickerMode='view';ui.divisionModal=true;ui.roleModal=false;ui.employeePicker=false;ui.drawer=false;render();return;}
+    if(name==='choose-scope'){ui.divisionPickerMode='scope';ui.divisionModal=true;ui.roleModal=false;ui.employeePicker=false;ui.drawer=false;render();return;}
+    if(name==='set-scope'){const id=button.dataset.division;if(id!=='all'&&!data.divisions.some(function(d){return d.id===id;}))return;ui.scope=id;ui.divisionModal=false;ensureEmployeeScope();if(ui.tab==='division'){if(id==='all')navigate('divisions');else openDivision(id);}else render();return;}
+    if(name==='choose-employee'){ui.employeePicker=true;ui.pickerDivision=ui.scope!=='all'?ui.scope:ui.tab==='division'?ui.activeDivision:emp().division;ui.drawer=false;ui.roleModal=false;ui.divisionModal=false;render();return;}
     if(name==='picker-division'){if(!data.divisions.some(function(d){return d.id===button.dataset.division;}))return;ui.pickerDivision=button.dataset.division;render();return;}
-    if(name==='pick-member'){if(!emp(button.dataset.id))return;ui.employee=button.dataset.id;ui.employeePicker=false;render();return;}
+    if(name==='pick-member'){const selected=emp(button.dataset.id);if(!selected)return;ui.employee=selected.id;ui.scope=selected.division;ui.employeePicker=false;render();return;}
     if(name==='nav'){navigate(button.dataset.tab);return;}
     if(name==='goto-division'){ui.divisionModal=false;openDivision(button.dataset.division);return;}
     if(name==='open'){ui.employee=button.dataset.id||ui.employee;ui.detail=button.dataset.detail||'preview';ui.roleModal=false;ui.divisionModal=false;ui.drawer=true;render();return;}
