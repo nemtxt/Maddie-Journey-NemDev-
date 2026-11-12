@@ -1470,4 +1470,130 @@ check('Icons retain accessible sizes and keyboard, forced-color and motion style
   assert(src['app.js'].includes("const routeTargets=['overview'"));
   assert(src['app.js'].includes('routeTargets.includes(hash)'));
 });
+check('Phase 8 density toggle uses a stable accessible pressed state and never edits employee records',()=>{
+  const ctx=boot({},'#employees');
+  const before=JSON.stringify(ctx.win.MJ_SEED.employees);
+  let h=ctx.html();
+  assert(h.includes('layout density-comfortable'));
+  assert(h.includes('data-action="toggle-density" aria-pressed="false"'));
+  assert(h.includes('aria-label="Compact monitoring rows"'));
+  ctx.click('toggle-density');
+  h=ctx.html();
+  assert(h.includes('layout density-compact'));
+  assert(h.includes('data-action="toggle-density" aria-pressed="true"'));
+  assert(h.includes('Compact rows</span>'));
+  assert.equal(ctx.mem['maddie-journey-density'],'compact');
+  ctx.click('toggle-density');
+  h=ctx.html();
+  assert(h.includes('layout density-comfortable'));
+  assert(h.includes('aria-pressed="false" aria-label="Compact monitoring rows"'));
+  assert.equal(ctx.mem['maddie-journey-density'],'comfortable');
+  assert.equal(JSON.stringify(ctx.win.MJ_SEED.employees),before);
+});
+check('Phase 8 preferred density survives reloads without introducing a data editor',()=>{
+  const ctx=boot({'maddie-journey-density':'compact'},'#files201');
+  let h=ctx.html();
+  assert(h.includes('layout density-compact'));
+  assert(h.includes('201 Files Checklist'));
+  assert(h.includes('data-action="toggle-density" aria-pressed="true"'));
+  const old=JSON.stringify(ctx.win.MJ_SEED);
+  ctx.navigate('calendar');assert(ctx.html().includes('layout density-compact'));
+  ctx.navigate('overview');assert(ctx.html().includes('layout density-compact'));
+  assert.equal(JSON.stringify(ctx.win.MJ_SEED),old);
+  const fallback=boot({'maddie-journey-density':'unsupported'},'#employees');
+  assert(fallback.html().includes('layout density-comfortable'));
+});
+check('Phase 8 directory table exposes real denominators and accessible column labels',()=>{
+  const ctx=boot({},'#employees');
+  const markup=ctx.html();
+  const part=markup.split('<table class="table">')[1]?.split('</table>')[0];
+  assert(part);
+  assert(part.includes('<caption class="sr-only">Employee directory: 51 of 51'));
+  assert(part.includes('<th scope="col">Employee</th>'));
+  assert(part.includes('<th scope="col">Journey</th>'));
+  assert(part.includes('<th scope="col">Kit issued</th>'));
+  assert(part.includes('<th scope="col">KPI score</th>'));
+  assert.equal((part.match(/<tr><th scope="row">/g)||[]).length,51);
+  const first=ctx.win.MJ_SEED.employees[0];
+  const kitItems=first.kit.filter(Boolean).length;
+  assert(part.includes(kitItems+' / '+first.kit.length+' requirements'));
+  assert(part.includes(' / '+first.journey.flat().length+' tasks complete'));
+  assert(part.includes('class="report-num"'));
+  assert(part.includes('class="report-cell-sub"'));
+});
+check('Phase 8 empty employee search explains filters without inventing empty source data',()=>{
+  const ctx=boot({},'#employees');
+  ctx.typeSearch('no-matching-employee-record-999');
+  const h=ctx.html();
+  assert(h.includes('class="empty report-empty" role="status"'));
+  assert(h.includes('No employees match these filters.'));
+  assert(h.includes('Try another name, division or search term.'));
+  assert(h.includes('0 of 51 employees'));
+  assert(!h.includes('No source records found'));
+});
+check('Phase 8 an empty attendance record means unrecorded, never perfect attendance',()=>{
+  const ctx=boot({},'#employees',seed=>{seed.employees[0].attendance=[];});
+  const e=ctx.win.MJ_SEED.employees[0];
+  ctx.click('open',{id:e.id,detail:'attendance'});
+  const h=ctx.html();
+  assert(h.includes('No attendance entries are recorded for this fictional employee'));
+  assert(h.includes('This is not evidence of perfect attendance.'));
+  assert(h.includes('colspan="5"'));
+  assert(h.includes('<th scope="col">Verification</th>'));
+  assert(!h.includes('All shifts attended'));
+});
+check('Phase 8 KPI, attendance and review tables preserve their exact denominators',()=>{
+  const ctx=boot({},'#employees');
+  const employee=ctx.win.MJ_SEED.employees[2];
+  ctx.click('open',{id:employee.id,detail:'kpi'});
+  let h=ctx.html();
+  assert(h.includes('class="table kpi-composition-table"'));
+  assert(h.includes('<td class="report-num">100%</td>'));
+  assert(h.includes('class="report-num"><strong>'));
+  ctx.click('detail',{tab:'approvals'});
+  h=ctx.html();
+  assert(h.includes('<td class="report-num">01</td>'));
+  assert(h.includes('No recorded comment')||h.includes('Recorded date'));
+  ctx.click('close');
+  ctx.navigate('attendance');
+  h=ctx.html();
+  assert(h.includes('class="table attendance-period-table"'));
+  assert(h.includes('<td class="report-num">'));
+  assert(h.includes('Pending records are excluded from this table.'));
+});
+check('Phase 8 201 Files exposes selected and visible people separately',()=>{
+  const ctx=boot({},'#files201');
+  let h=ctx.html();
+  const summary=ctx.win.MJ_MONITORING.fileSummary(ctx.win.MJ_SOURCE_ADAPTER.getSnapshot());
+  const expected=summary.groups.missing.length;
+  assert(h.includes(expected+' employees in this view · '+Math.min(12,expected)+' shown'));
+  assert(h.includes('201 Files checklist: '+Math.min(12,expected)+' shown of '+expected+' employees'));
+  assert(h.includes('Not applicable is excluded from missing counts.'));
+  ctx.click('files-more');
+  h=ctx.html();assert(h.includes(expected+' employees in this view · '+expected+' shown'));
+  ctx.click('files-filter',{kind:'not-checked'});
+  h=ctx.html();
+  assert(h.includes(summary.groups['not-checked'].length+' employees in this view'));
+});
+check('Phase 8 compact tables preserve mobile touch targets and keyboard overflow',()=>{
+  const css=src['mono.css'];
+  for(const required of [
+    'body .layout.density-compact .table :is(th,td)',
+    'body .layout.density-compact .table .button',
+    'body .layout.density-comfortable .table .button',
+    'body .table .report-cell-sub',
+    'body .report-empty',
+    'body .page-header .density-toggle:focus-visible',
+    'body .table td.report-empty-cell',
+    '@media(max-width:760px)',
+    'min-height:44px',
+    '@media(forced-colors:active)'
+  ])assert(css.includes(required),required);
+  const ctx=boot({},'#employees');
+  assert(ctx.html().includes('data-action="toggle-density"'));
+  ctx.click('toggle-density');
+  assert(ctx.html().includes('layout density-compact'));
+  assert(ctx.html().includes('class="table-wrap"'));
+  assert(src['app.js'].includes('enhanceScrollableTables();'));
+});
 console.log('\n'+results.length+' smoke tests passed. Physical-device visual QA is separate.');
