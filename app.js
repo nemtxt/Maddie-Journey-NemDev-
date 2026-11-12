@@ -1355,6 +1355,33 @@
     return '<div class="employee-evidence-note" role="note">'+landingIcon('info')+
       '<span>'+safe(notes[section]||notes.preview)+'</span></div>';
   }
+  function readerRecordCue(e){
+    const origin=modalOrigin||{};
+    if(ui.tab==='files201'){
+      const record=window.MJ_MONITORING.fileSummary(data).rows.find(function(r){
+        return r.employee.id===e.id;
+      });
+      if(!record)return '';
+      if(record.missing.length)return 'Missing: '+record.missing.map(function(d){return d.label;}).join(' · ');
+      if(record.unchecked.length)return 'Not checked: '+record.unchecked.map(function(d){return d.label;}).join(' · ');
+      return 'All applicable documents recorded complete';
+    }
+    if(ui.tab==='calendar'){
+      const start=ui.calendarStart||window.MJ_MONITORING.todayManila().slice(0,7);
+      const found=window.MJ_MONITORING.events(data,start).filter(function(x){
+        return x.employee.id===e.id&&(!origin.date||x.date===origin.date)&&
+          (ui.calendarType==='all'||x.type===ui.calendarType);
+      });
+      return found.length?'Example date: '+found.map(function(x){
+        return dateLabel(x.date)+' · '+x.title+' ('+x.provenance+')';
+      }).join('; '):'';
+    }
+    if(ui.tab==='overview'&&origin.originKind){
+      const items=attentionItems([e]).filter(function(x){return x.group===origin.originKind;});
+      return items.length?items.map(function(x){return x.label;}).join(' · '):'';
+    }
+    return '';
+  }
   function employeeModal(){
     const e=emp(),t=ui.detail;
     if(!e)return '';
@@ -1373,6 +1400,8 @@
       '<strong>'+(position>=0?position+1:1)+' of '+count+'</strong></p>'+
       '<p class="employee-context-filter" id="employee-context-filter">'+
       '<span class="employee-context-filter-label">Opened from</span> '+safe(ui.viewerContext||'selected sample records')+'</p>'+
+      (readerRecordCue(e)?'<p class="employee-context-match" aria-live="polite">'+
+        safe(readerRecordCue(e))+'</p>':'')+
       '</div><div class="employee-context-actions">'+
         '<button type="button" class="employee-context-return" data-action="viewer-return" aria-label="Return to '+safe(ui.viewerOrigin||'monitoring')+'">'+
           landingIcon('arrow-left')+'<span>Back to '+safe(ui.viewerOrigin||'workspace')+'</span></button>'+
