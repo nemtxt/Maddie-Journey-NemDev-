@@ -694,36 +694,6 @@
       '<section class="panel"><h3>Disciplinary actions</h3>'+recordListHTML(e,'discipline')+'</section></div>';
   }
 
-  function roleChoiceGroup(title,description,roles){
-    return '<section class="role-choice-section"><div class="role-choice-heading"><h3>'+safe(title)+'</h3><p>'+safe(description)+'</p></div><div class="role-choice-grid">'+roles.map(function(v){
-      const departments=(v.divisions||[]).map(function(id){return div(id).short;}).join(' + ');
-      const sub=departments?departments+' · '+v.title.split(' · ')[0]:v.title;
-      const active=v.id===ui.viewer;
-      return '<button type="button" class="role-choice '+(active?'selected':'')+'" data-action="select-viewer" data-id="'+safe(v.id)+'" aria-pressed="'+active+'">'+avatar(v.name)+'<span class="role-choice-text"><b>'+safe(v.name)+'</b><small>'+safe(sub)+'</small></span><span class="choice-indicator">'+(active?'✓':'→')+'</span></button>';
-    }).join('')+'</div></section>';
-  }
-  function workspaceModal(){
-    const choices=[
-      {id:'hr',label:'HR',sub:'People and Culture · Organization-wide monitoring',icon:'people',color:'pink'},
-      {id:'head',label:'Division Heads',sub:'Assigned-team insights and journey overview',icon:'hierarchy',color:'yellow'},
-      {id:'executive',label:'Executive',sub:'CEO / COO / CSO · Company-wide summaries',icon:'crown',color:'blue'}
-    ];
-    const selected=choices.find(function(c){return c.id===ui.chooserCategory;});
-    const hr=data.viewers.filter(function(v){return v.role==='hr';});
-    const heads=data.viewers.filter(function(v){return v.role==='head'||v.role==='corp';});
-    const exec=data.viewers.filter(function(v){return ['ceo','cso','coo'].includes(v.role);});
-    const assigned=selected?(selected.id==='hr'?hr:selected.id==='head'?heads:exec):[];
-    return '<div class="overlay center-overlay workspace-choice-overlay" data-overlay="role"><section class="workspace-modal workspace-reader-chooser" role="dialog" aria-modal="true" aria-labelledby="workspace-modal-title" tabindex="-1">'+
-      '<div class="modal-fixed-head workspace-choice-heading"><div><span class="eyebrow">MADHOUSE · DEMONSTRATION</span><h2 id="workspace-modal-title">'+(selected?'Choose your preview identity':'Who is using the dashboard?')+'</h2>'+
-      '<p>'+(selected?'Select your sample viewer to open the matching monitoring overview.':'Select a workspace to personalize the dashboard from the beginning.')+'</p></div>'+
-      (ui.workspaceChosen?'<button class="modal-close" type="button" data-action="close" aria-label="Close workspace selector">×</button>':'')+'</div>'+
-      '<div class="workspace-modal-scroll"><div class="workspace-readonly-note"><span aria-hidden="true">●</span> Read-only prototype · No employee edits, approvals or source submissions</div>'+
-      (!selected?'<div class="workspace-category-grid">'+choices.map(function(c){return '<button type="button" class="workspace-category" data-action="workspace-category" data-category="'+c.id+'"><span class="landing-audience-icon tone-'+c.color+'">'+landingIcon(c.icon)+'</span>'+
-      '<strong>'+safe(c.label)+'</strong><small>'+safe(c.sub)+'</small><span class="workspace-choice-arrow">Continue →</span></button>';}).join('')+'</div>':
-      '<div class="workspace-selected-category">'+button('← Change workspace type','workspace-category','data-category="all"','small')+'<strong>'+safe(selected.label)+'</strong></div>'+
-      roleChoiceGroup('Select a person','Only the dashboard perspective changes. All data remains fictional and read-only.',assigned))+
-      '<p class="modal-footnote">This selection is stored on your device for convenience. It is not authentication or permission enforcement.</p></div></section></div>';
-  }
   function divisionPickerModal(){
     const scoped=ui.divisionPickerMode==='scope',milestone=ui.divisionPickerMode==='milestone';
     const local=scoped||milestone,selected=milestone?ui.milestoneDivision:ui.scope;
@@ -824,13 +794,13 @@
       '<p class="landing-hero-copy">See what matters, explore your teams, and preview the information behind every summary.</p>'+
       '<div class="landing-hero-actions"><a href="#overview" data-nav="overview" class="landing-primary-cta">Open dashboard <span aria-hidden="true">↗</span></a>'+
       '<a href="#divisions" data-nav="divisions" class="landing-secondary-cta">View divisions <span aria-hidden="true">→</span></a></div></div></section>'+
-      '<section class="landing-audiences" aria-labelledby="landing-audiences-title"><div class="landing-section-heading"><h2 id="landing-audiences-title">Choose your workspace preview</h2>'+
-      '<p>Three ways to explore the same organized sample information.</p></div>'+
+      '<section class="landing-audiences" aria-labelledby="landing-audiences-title"><div class="landing-section-heading"><h2 id="landing-audiences-title">Explore the dashboard</h2>'+
+      '<p>Open the screens you need, without selecting a role or signing in.</p></div>'+
       '<div class="landing-audience-grid">'+audience.map(function(a){
-        return '<button type="button" class="landing-audience-card" data-action="landing-role" data-role="'+a.role+'">'+
+        return '<a href="#'+({hr:'employees',head:'divisions',executive:'overview'}[a.role])+'" class="landing-audience-card" data-nav="'+({hr:'employees',head:'divisions',executive:'overview'}[a.role])+'">'+
         '<span class="landing-audience-icon tone-'+a.theme+'" aria-hidden="true">'+landingIcon(a.icon)+'</span>'+
         '<span class="landing-audience-copy"><strong>'+safe(a.label)+'</strong><small>'+safe(a.detail)+'</small></span>'+
-        '<span class="landing-card-chevron" aria-hidden="true">›</span></button>';
+        '<span class="landing-card-chevron" aria-hidden="true">›</span></a>';
       }).join('')+'</div></section>'+
       '<section class="landing-shortcuts" aria-label="Explore features">'+feature.map(function(f){
         return '<a href="#'+f.target+'" data-nav="'+f.target+'" class="landing-shortcut">'+
@@ -840,9 +810,9 @@
       '<footer class="landing-footer"><span>Madhouse Design Studio · Maddie Journey</span><span>Prototype · 51 fictional employees · 8 divisions · Not live-connected</span></footer>'+
       '</main></div>';
   }
-  function render(){if(ui.tab==='welcome'){$('app').innerHTML=landingView();document.title='Maddie Journey · Madhouse Design Studio';return;}if(!ui.workspaceChosen){$('app').innerHTML='<div class="workspace-gate"><img src="./assets/madhouse-logo.png" alt="Madhouse Design Studio" class="workspace-gate-logo"><h1>Maddie Journey</h1><p>A simple place to monitor people, journeys and division progress.</p></div>'+workspaceModal();document.title='Choose your workspace · Maddie Journey';const gateModal=$('app').querySelector('[role="dialog"]');if(gateModal&&typeof gateModal.focus==='function')gateModal.focus({preventScroll:true});return;}const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,milestones:milestonesView,journey:journey,kit:kitView,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,sources:sourcesView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open':'')+'">'+sidebar()+'<button type="button" class="workspace-scrim" aria-label="Close navigation" data-action="mobile"></button><main id="main-content" class="main" tabindex="-1">'+topnav()+(views[ui.tab]||overview)()+'<footer class="footer"><span>Maddie Journey · Prototype v2.0</span><span>51 fictional employees · Read-only preview · No live integrations</span></footer></main></div>'+(ui.roleModal?workspaceModal():ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.employeeModalOpen?employeeModal():'');document.title=title(ui.tab)+' · Maddie Journey';if(ui.employeeModalOpen||ui.roleModal||ui.divisionModal||ui.employeePicker){const modal=$('app').querySelector('[role="dialog"]');if(modal&&typeof modal.focus==='function')modal.focus({preventScroll:true});}}
-  function openDivision(id){if(!data.divisions.some(function(d){return d.id===id;}))return;ui.scope=id;ui.activeDivision=id;ui.divisionTab='summary';ensureEmployeeScope();persist();ui.tab='division';ui.employeeModalOpen=false;ui.roleModal=false;ui.divisionModal=false;ui.employeePicker=false;ui.mobile=false;ui.query='';ui.division='all';if(location.hash!=='#division/'+id)location.hash='#division/'+id;window.scrollTo({top:0,behavior:'instant'});render();}
-  function navigate(tab){if(tab==='division'){openDivision(ui.activeDivision);return;}ui.scope='all';ensureEmployeeScope();ui.tab=tab;ui.employeeModalOpen=false;ui.roleModal=false;ui.divisionModal=false;ui.employeePicker=false;ui.mobile=false;ui.query='';ui.division='all';if(location.hash!=='#'+tab)location.hash='#'+tab;window.scrollTo({top:0,behavior:'instant'});render();}
+  function render(){if(ui.tab==='welcome'){$('app').innerHTML=landingView();document.title='Maddie Journey · Madhouse Design Studio';return;}const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,milestones:milestonesView,journey:journey,kit:kitView,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,sources:sourcesView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open':'')+'">'+sidebar()+'<button type="button" class="workspace-scrim" aria-label="Close navigation" data-action="mobile"></button><main id="main-content" class="main" tabindex="-1">'+topnav()+(views[ui.tab]||overview)()+'<footer class="footer"><span>Maddie Journey · Prototype v2.1</span><span>51 fictional employees · Read-only preview · No live integrations</span></footer></main></div>'+(ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.employeeModalOpen?employeeModal():'');document.title=title(ui.tab)+' · Maddie Journey';if(ui.employeeModalOpen||ui.divisionModal||ui.employeePicker){const modal=$('app').querySelector('[role="dialog"]');if(modal&&typeof modal.focus==='function')modal.focus({preventScroll:true});}}
+  function openDivision(id){if(!data.divisions.some(function(d){return d.id===id;}))return;ui.scope=id;ui.activeDivision=id;ui.divisionTab='summary';ensureEmployeeScope();ui.tab='division';ui.employeeModalOpen=false;ui.divisionModal=false;ui.employeePicker=false;ui.mobile=false;ui.query='';ui.division='all';if(location.hash!=='#division/'+id)location.hash='#division/'+id;window.scrollTo({top:0,behavior:'instant'});render();}
+  function navigate(tab){if(tab==='division'){openDivision(ui.activeDivision);return;}ui.scope='all';ensureEmployeeScope();ui.tab=tab;ui.employeeModalOpen=false;ui.divisionModal=false;ui.employeePicker=false;ui.mobile=false;ui.query='';ui.division='all';if(location.hash!=='#'+tab)location.hash='#'+tab;window.scrollTo({top:0,behavior:'instant'});render();}
   function invalidateEvaluation(e){
     const changed=['division','corp','cso','coo'].some(function(k){return e.review[k].status!=='Pending';})||e.approvedPct>0||!!e.effectiveDate;
     if(!changed)return;
@@ -854,7 +824,7 @@
   function toCSV(rows){return rows.map(function(row){return row.map(function(x){return '"'+String(x===null||x===undefined?'':x).replace(/"/g,'""')+'"';}).join(',');}).join('\r\n');}
   function download(filename,mime,text){const blob=new Blob([text],{type:mime});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},2500);}
   function action(name,button){const e=emp();if(name==='landing-role'){ui.chooserCategory=['hr','head','executive'].includes(button.dataset.role)?button.dataset.role:'all';navigate('overview');ui.roleModal=true;render();return;}if(name==='workspace-category'){ui.chooserCategory=['hr','head','executive'].includes(button.dataset.category)?button.dataset.category:'all';ui.roleModal=true;render();return;}if(name==='mobile'){ui.mobile=!ui.mobile;render();return;}
-    if(name==='select-viewer'){if(!data.viewers.some(function(v){return v.id===button.dataset.id;}))return;ui.viewer=button.dataset.id;ui.workspaceChosen=true;ui.milestoneDivision='all';ui.scope='all';ensureEmployeeScope();ui.roleModal=false;ui.chooserCategory='all';ui.divisionModal=false;ui.employeeModalOpen=false;persist();navigate('overview');return;}
+    if(name==='select-viewer'){if(!data.viewers.some(function(v){return v.id===button.dataset.id;}))return;ui.viewer=button.dataset.id;ui.workspaceChosen=true;ui.milestoneDivision='all';ui.scope='all';ensureEmployeeScope();ui.chooserCategory='all';ui.divisionModal=false;ui.employeeModalOpen=false;persist();navigate('overview');return;}
     if(name==='nav'){navigate(button.dataset.tab);return;}
     if(name==='set-theme'){setTheme(button.dataset.themeValue);return;}if(!ui.workspaceChosen)return;
     if(name==='quick-search'){navigate('employees');const search=$('app')&&$('app').querySelector('[data-ui="query"]');if(search&&typeof search.focus==='function')search.focus();return;}
@@ -869,20 +839,20 @@
     if(name==='milestone-more'){ui.milestoneShowAll=!ui.milestoneShowAll;render();return;}
     if(name==='milestone-division'){ui.divisionPickerMode='milestone';ui.divisionModal=true;ui.employeePicker=false;render();return;}
     if(name==='set-milestone-division'){const id=button.dataset.division;if(id!=='all'&&!data.divisions.some(function(d){return d.id===id;}))return;ui.milestoneDivision=id;ui.milestoneShowAll=false;ui.divisionModal=false;render();return;}
-    if(name==='choose-division'){ui.divisionPickerMode='view';ui.divisionModal=true;ui.roleModal=false;ui.employeePicker=false;ui.employeeModalOpen=false;render();return;}
-    if(name==='choose-scope'){ui.divisionPickerMode='scope';ui.divisionModal=true;ui.roleModal=false;ui.employeePicker=false;ui.employeeModalOpen=false;render();return;}
-    if(name==='set-scope'){const id=button.dataset.division;if(id!=='all'&&!data.divisions.some(function(d){return d.id===id;}))return;ui.scope=id;ui.divisionModal=false;ensureEmployeeScope();persist();if(ui.tab==='division'){if(id==='all')navigate('divisions');else openDivision(id);}else render();return;}
-    if(name==='choose-employee'){ui.employeePicker=true;ui.pickerDivision=ui.scope!=='all'?ui.scope:ui.tab==='division'?ui.activeDivision:emp().division;ui.employeeModalOpen=false;ui.roleModal=false;ui.divisionModal=false;render();return;}
+    if(name==='choose-division'){ui.divisionPickerMode='view';ui.divisionModal=true;ui.employeePicker=false;ui.employeeModalOpen=false;render();return;}
+    if(name==='choose-scope'){ui.divisionPickerMode='scope';ui.divisionModal=true;ui.employeePicker=false;ui.employeeModalOpen=false;render();return;}
+    if(name==='set-scope'){const id=button.dataset.division;if(id!=='all'&&!data.divisions.some(function(d){return d.id===id;}))return;ui.scope=id;ui.divisionModal=false;ensureEmployeeScope();if(ui.tab==='division'){if(id==='all')navigate('divisions');else openDivision(id);}else render();return;}
+    if(name==='choose-employee'){ui.employeePicker=true;ui.pickerDivision=ui.scope!=='all'?ui.scope:ui.tab==='division'?ui.activeDivision:emp().division;ui.employeeModalOpen=false;ui.divisionModal=false;render();return;}
     if(name==='picker-division'){if(!data.divisions.some(function(d){return d.id===button.dataset.division;}))return;ui.pickerDivision=button.dataset.division;render();return;}
     if(name==='pick-member'){const selected=emp(button.dataset.id);if(!selected)return;ui.employee=selected.id;ui.scope=selected.division;ui.employeePicker=false;if(ui.milestonePicking){ui.milestonePicking=false;ui.detail='milestones';ui.employeeModalOpen=true;}render();return;}
     if(name==='goto-division'){ui.divisionModal=false;openDivision(button.dataset.division);return;}
-    if(name==='open'){ui.employee=button.dataset.id||ui.employee;ui.detail=button.dataset.detail||'preview';ui.roleModal=false;ui.divisionModal=false;ui.employeeModalOpen=true;render();return;}
-    if(name==='close'){if(!ui.workspaceChosen)return;ui.employeeModalOpen=false;ui.roleModal=false;ui.divisionModal=false;ui.employeePicker=false;ui.milestonePicking=false;render();return;}
+    if(name==='open'){ui.employee=button.dataset.id||ui.employee;ui.detail=button.dataset.detail||'preview';ui.divisionModal=false;ui.employeeModalOpen=true;render();return;}
+    if(name==='close'){if(!ui.workspaceChosen)return;ui.employeeModalOpen=false;ui.divisionModal=false;ui.employeePicker=false;ui.milestonePicking=false;render();return;}
     if(name==='detail'){ui.detail=button.dataset.tab;render();return;}
     if(name==='export-csv'){const rows=[['Employee ID','Name','Division','Role','Start date','Journey %','Welcome kit %','KPI score %','Performance rating','Final approval']].concat(scopedEmployees().map(function(x){return [x.id,x.name,div(x.division).name,x.jobTitle,x.startDate,journeyPct(x),kitPct(x),score(x),rating(score(x)),x.review.coo.status];}));download('maddie-journey-51-employees.csv','text/csv;charset=utf-8',toCSV(rows));return;}
     if(name==='attendance-csv'){const rows=[['Employee ID','Employee','Division','Date','Type','Approval','Verified','Reason','Supervisor remarks']];scopedEmployees().forEach(function(x){x.attendance.forEach(function(r){rows.push([x.id,x.name,div(x.division).name,r.date,r.type,r.approval,r.verified?'Yes':'No',r.reason,r.remarks]);});});download('maddie-journey-attendance.csv','text/csv;charset=utf-8',toCSV(rows));return;}
   }
-  document.addEventListener('click',function(ev){const dept=ev.target.closest('[data-nav-division]');if(dept){ev.preventDefault();openDivision(dept.dataset.navDivision);return;}const nav=ev.target.closest('[data-nav]');if(nav){ev.preventDefault();navigate(nav.dataset.nav);return;}const act=ev.target.closest('[data-action]');if(act){ev.preventDefault();action(act.dataset.action,act);return;}if(['employee','role','division','picker'].includes(ev.target.dataset.overlay)){if(!ui.workspaceChosen)return;ui.employeeModalOpen=false;ui.roleModal=false;ui.divisionModal=false;ui.employeePicker=false;render();}});
+  document.addEventListener('click',function(ev){const dept=ev.target.closest('[data-nav-division]');if(dept){ev.preventDefault();openDivision(dept.dataset.navDivision);return;}const nav=ev.target.closest('[data-nav]');if(nav){ev.preventDefault();navigate(nav.dataset.nav);return;}const act=ev.target.closest('[data-action]');if(act){ev.preventDefault();action(act.dataset.action,act);return;}if(['employee','role','division','picker'].includes(ev.target.dataset.overlay)){if(!ui.workspaceChosen)return;ui.employeeModalOpen=false;ui.divisionModal=false;ui.employeePicker=false;render();}});
   document.addEventListener('change',function(ev){
     const el=ev.target;
     if(!el.dataset.ui)return;
@@ -895,11 +865,11 @@
   });
   document.addEventListener('input',function(ev){const el=ev.target;if(el.dataset.ui==='query'){const p=el.selectionStart;ui.query=el.value;const focus=document.activeElement;const list=filtered();const table=$('app').querySelector('.panel.no-pad');if(table){const existing=table.querySelector('.table-wrap, .empty');if(existing)existing.outerHTML=employeesTable(list);const count=table.querySelector('.filters .muted.micro');if(count)count.textContent=list.length+' employees';}if(focus!==el){el.focus();try{el.setSelectionRange(p,p);}catch(err){}}}});
   document.addEventListener('keydown',function(ev){
-    const anyOpen=!ui.workspaceChosen||ui.employeeModalOpen||ui.roleModal||ui.divisionModal||ui.employeePicker;
+    const anyOpen=!ui.workspaceChosen||ui.employeeModalOpen||ui.divisionModal||ui.employeePicker;
     if(!anyOpen)return;
     if(ev.key==='Escape'){
       if(!ui.workspaceChosen)return;
-      ui.employeeModalOpen=false;ui.roleModal=false;ui.divisionModal=false;ui.employeePicker=false;render();return;
+      ui.employeeModalOpen=false;ui.divisionModal=false;ui.employeePicker=false;render();return;
     }
     if(ev.key!=='Tab')return;
     // Keep keyboard navigation within whichever centered dialog is on top.
