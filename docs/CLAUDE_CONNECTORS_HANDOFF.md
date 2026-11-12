@@ -78,12 +78,14 @@ For current v2.3 navigation, safe filtered exports, and physical-device QA steps
 ## UI acceptance requirements
 
 - Primary sidebar: Dashboard, People, Journey, Performance, Data & Sources.
+- The desktop sidebar collapses to accessible icons, while mobile retains a fully labeled Menu drawer. All 11 destinations remain publicly available only for sample data.
 - Top navigation shows contextual subpages and works on desktop and mobile.
 - The Journey Kanban/Table, all eight divisions and employee modal previews use the same snapshot.
 - The dashboard computes actual sample summaries and never fabricates trend histories.
-- Original Madhouse PNG and event JPEG are preserved. Pink, pastel yellow, blue and restrained lavender accents remain consistent.
+- Original Madhouse PNG and event JPEG are preserved. White/black surfaces, Inter as the single typeface, one pink accent, and neutral backgrounds remain consistent. Anime.js v4 adds optional reduced-motion-aware transitions, not any business behavior.
 - No forms, accounts, login, sign-up or employee-record editing.
 - Keep 51 fictional employees and perform a full browser/physical-device QA before delivery.
+- Final style authority: `mono.css`; animate only navigation/dialog entry through `motion.js` and never block content when CDN dependencies fail.
 - Run node tests/smoke.js after every integration change.
 
 **Handoff sequence:** finish UI with fictional data -> access connected sources in Claude -> verify schemas -> implement private read-only normalization -> review security and accuracy -> deploy through an appropriate protected channel.
