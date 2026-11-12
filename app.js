@@ -1307,8 +1307,7 @@
   }
   function readerOriginDetail(){
     const origin=modalOrigin||{};
-    if(origin.originLabel)return origin.originLabel;
-    if(origin.date)return 'Dated example · '+dateLabel(origin.date);
+    if(origin.date)return 'Calendar date · '+dateLabel(origin.date)+(origin.originLabel?' · '+origin.originLabel:'');
     if(ui.tab==='files201'){
       const labels={missing:'Missing documents','not-checked':'Not checked',
         complete:'Complete',all:'All employees'};
@@ -1366,17 +1365,31 @@
     '<section class="employee-modal" role="dialog" aria-modal="true" aria-labelledby="employee-modal-title" aria-describedby="employee-context-description" tabindex="-1">'+
     '<div class="employee-modal-top"><div class="profile">'+avatar(e.name)+'<div><span class="eyebrow">EMPLOYEE · '+safe(e.id)+'</span><h2 id="employee-modal-title">'+safe(e.name)+'</h2><p class="muted micro">'+safe(e.jobTitle)+' · '+safe(div(e.division).name)+'</p></div></div>'+
     '<button class="modal-close" data-action="close" aria-label="Close employee preview" type="button">'+landingIcon('x')+'</button></div>'+
-    '<div class="employee-context-bar"><p id="employee-context-description" class="employee-context-origin">'+safe(ui.viewerOrigin||'Monitoring')+
+    '<div class="employee-context-bar"><div class="employee-context-stack">'+
+      '<p id="employee-context-description" class="employee-context-origin">'+safe(ui.viewerOrigin||'Monitoring')+
       '<span aria-hidden="true"> / </span>'+safe(div(e.division).short)+
       '<strong>'+(position>=0?position+1:1)+' of '+count+'</strong></p>'+
-      '<div class="employee-context-actions">'+
+      '<p class="employee-context-filter" id="employee-context-filter">'+
+      '<span class="employee-context-filter-label">Opened from</span> '+safe(ui.viewerContext||'selected sample records')+'</p>'+
+      '</div><div class="employee-context-actions">'+
+        '<button type="button" class="employee-context-return" data-action="viewer-return" aria-label="Return to '+safe(ui.viewerOrigin||'monitoring')+'">'+
+          landingIcon('arrow-left')+'<span>Back to '+safe(ui.viewerOrigin||'workspace')+'</span></button>'+
         '<button type="button" class="employee-context-division" data-action="viewer-division" data-division="'+safe(e.division)+'" aria-label="Open '+safe(div(e.division).name)+' employee list">View division <span aria-hidden="true">'+landingIcon('arrow-up-right')+'</span></button>'+
         '<div class="employee-context-pager" role="group" aria-label="Browse employees in this view">'+
         '<button type="button" data-action="viewer-prev" aria-label="'+(prev?'Previous employee: '+safe(prev.name):'No previous employee')+'"'+(prev?'':' disabled')+'>'+landingIcon('arrow-left')+' <span>Previous</span></button>'+
         '<button type="button" data-action="viewer-next" aria-label="'+(next?'Next employee: '+safe(next.name):'No next employee')+'"'+(next?'':' disabled')+'><span>Next</span> '+landingIcon('arrow-right')+'</button>'+
         '</div></div></div>'+
-    '<nav class="employee-modal-tabs" aria-label="Employee sections">'+tabs.map(function(a){return '<button type="button" class="employee-tab '+(t===a[0]?'active':'')+'" data-action="detail" data-tab="'+a[0]+'" aria-current="'+(t===a[0]?'page':'false')+'">'+a[1]+'</button>';}).join('')+'</nav>'+
-    '<div class="employee-modal-body">'+(t==='preview'?'':employeeMini(e))+
+    '<nav class="employee-modal-tabs" role="tablist" aria-label="Employee sections">'+
+      tabs.map(function(a){
+        const selected=t===a[0];
+        return '<button type="button" role="tab" id="employee-tab-'+a[0]+
+          '" aria-controls="employee-panel" aria-selected="'+selected+
+          '" tabindex="'+(selected?'0':'-1')+'" class="employee-tab '+(selected?'active':'')+
+          '" data-action="detail" data-tab="'+a[0]+'" aria-current="'+(selected?'page':'false')+
+          '">'+a[1]+'</button>';
+      }).join('')+'</nav>'+
+    '<div class="employee-modal-body" id="employee-panel" role="tabpanel" aria-labelledby="employee-tab-'+t+'" tabindex="0">'+
+    employeeContextNote(t)+(t==='preview'?'':employeeMini(e))+
     (t==='info'?'<div class="panel" style="margin-bottom:15px"><div class="form-grid"><div><span class="field-label">Start date</span><strong>'+dateLabel(e.startDate)+'</strong></div><div><span class="field-label">Employee ID</span><strong>'+safe(e.id)+'</strong></div><div><span class="field-label">Org level (sample)</span><strong>Level '+safe(e.orgLevel||'—')+'</strong></div><div><span class="field-label">Reports to (sample)</span><strong>'+safe((data.employees.find(function(p){return p.id===e.reportsTo;})||{}).name||'Department lead')+'</strong></div></div></div>':'')+
     detailContent(e,t)+'</div></section></div>';
   }
@@ -1588,7 +1601,7 @@
       openDivision(selected.division,'list',selected.id);return;
     }
     if(name==='close'||name==='viewer-return'){closeReader();return;}
-    if(name==='detail'){ui.detail=button.dataset.tab;render();const selected=$('app').querySelector('.employee-modal-tabs .employee-tab.active');if(selected&&typeof selected.focus==='function')selected.focus({preventScroll:true});return;}
+    if(name==='detail'){if(!['preview','milestones','kpi','journey','kit','files201','attendance','approvals','info'].includes(button.dataset.tab))return;ui.detail=button.dataset.tab;render();const selected=$('app').querySelector('.employee-modal-tabs .employee-tab.active');if(selected&&typeof selected.focus==='function')selected.focus({preventScroll:true});return;}
     if(name==='export-csv'){const rows=[['Employee ID','Name','Division','Role','Start date','Journey %','Welcome kit %','KPI score %','Performance rating','Final approval']].concat(filtered().map(function(x){return [x.id,x.name,div(x.division).name,x.jobTitle,x.startDate,journeyPct(x),kitPct(x),score(x),rating(score(x)),x.review.coo.status];}));download('maddie-journey-directory-visible.csv','text/csv;charset=utf-8',toCSV(rows));return;}
     if(name==='attendance-csv'){const rows=[['Employee ID','Employee','Division','Date','Type','Approval','Verified','Reason','Supervisor remarks']];scopedEmployees().forEach(function(x){x.attendance.forEach(function(r){rows.push([x.id,x.name,div(x.division).name,r.date,r.type,r.approval,r.verified?'Yes':'No',r.reason,r.remarks]);});});download('maddie-journey-attendance.csv','text/csv;charset=utf-8',toCSV(rows));return;}
   }
