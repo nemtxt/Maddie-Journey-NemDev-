@@ -102,7 +102,10 @@ function boot(hash,opts={}){
    },
    contains(name){return classes.has(name)}
   },querySelector(){return null;},
-  addEventListener(type,fn){handlers[type]=fn}
+  addEventListener(type,fn){
+    const previous=handlers[type];
+    handlers[type]=previous?(event=>{previous(event);fn(event);}):fn;
+  }
  };
  const document={
   documentElement:{dataset:{}},title:'',
