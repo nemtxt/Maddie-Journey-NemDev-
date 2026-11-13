@@ -127,3 +127,35 @@ This trial-only refinement adapts the user-supplied layouts into an executive mo
 **Automated test result:** 119 unchanged legacy v3.7 tests + 27 fictional trial tests = **146 passing tests**. Real-device browser and screen-reader checks remain necessary; an automated smoke suite cannot certify pixel-perfect rendering on every device.
 
 **Deployment caution:** GitHub automatically initiates Pages build/deployment jobs after trial-branch pushes, despite no changes to the \`main\` branch. Check the repository's GitHub Pages source/environment before assuming the live website is unaffected. This refinement makes no changes to \`main\`, Claude branches, repository permissions or production integrations.
+
+
+## Executive motion, navigation stabilization & progressive disclosure (trial update)
+
+This interaction phase adapts the supplied visual reference to an **executive monitoring application** without reproducing external branding, likenesses, real employee photography, or copyrighted graphical assets.
+
+### What changed
+
+- **Navigation overflow repaired.** The original site-wide 320px minimum width caused sideways scrolling at ultra-narrow widths. The trial interaction stylesheet now allows sub-320px viewports, constrains navigation item sizing, truncates long labels, and contains overflow in the sidebar.
+- **Desktop sidebar slide.** Full navigation collapses to a 78px labeled-icon rail with a smooth grid-column transition. The collapsed preference persists locally. The toggle changes classes and ARIA attributes **without reconstructing the app DOM**, so focus and scroll state remain stable.
+- **Mobile drawer slide.** Off-canvas navigation uses an eased lateral entrance/exit and fading backdrop. It preserves its closed position with reduced-motion enabled; mobile focus is trapped when open and returned on Escape.
+- **Contextual drill-down.** The active workspace exposes a native expandable mini-list of the first four subcategory links and a route-safe "All views" affordance; the rail still shows only icons when collapsed.
+- **Executive overview selector.** Every one of the nine category dashboards now offers four keyboard-accessible focus modes: **Overview, Priorities, Updates, Explore all views**. The default Overview shows metrics and status priorities without exposing every detail at once; the other modes progressively reveal their own views. All 86 subcategory routes and original accordions remain intact.
+- **Slide-ready route transitions.** Supported browsers use the document View Transitions API; other browsers progressively enhance route entrances with the Web Animations API. Both gracefully fall back to instantaneous navigation without losing content.
+- **Micro-interactions.** Responsive editorial cards lift subtly on hover, arrows signal drill-down, accordion content eases into view, status bars grow on arrival, and limited on-screen cards enter in a short stagger. Effects are modest and cap stagger times to avoid slowing executive review.
+- **Accessibility and performance.** Keyboard arrow/Home/End navigation works across the four focus modes. Tabs expose selected state, keyboard roving focus and labelled content regions. Reduced-motion users get equivalent functionality with motion disabled. Motion does not download any third-party animation library or query live services.
+
+### Files
+
+- \`central/kinetic.css\` — overflow stabilization, navigation slide, executive cards, focus tabs, stagger and reduced-motion design.
+- \`central/motion.js\` — optional, bounded WAAPI and IntersectionObserver enhancement; no network or external animation dependency.
+- \`central/app.js\` — persistent collapse without DOM replacement, contextual links, progressive-focus categories and motion-aware routing.
+- \`index.html\` — trial-only stylesheet and script registration.
+- \`tests/central-smoke.js\` — additional behavioral and regression coverage for focus modes, keyboard controls, ultra-narrow layouts, motion fallback, sidebar persistence and context navigation.
+
+### Verification and limitations
+
+CI runs both \`node tests/smoke.js\` (preserved v3.7 monitor) and \`node tests/central-smoke.js\` (isolated fictional 2027 trial). The role preview remains **not authentication** and this is not a secure production HR data system.
+
+Still requires real browser QA at **280, 320, 375, 430, 768, 1024, 1440 and 1920px**, iPhone Safari, Android Chrome, Windows keyboard-only and screen readers. CSS and mocked event tests are not substitutes for actual screenshot-based visual inspection.
+
+**Operational deployment warning:** GitHub's repository-level Pages configuration is currently producing "pages build and deployment" jobs on pushes to this trial branch. These deployments can target the same URL as the live \`main\` site even though no commit, merge or push touches \`main\`. To maintain separate public preview and live environments, production Pages settings must be corrected independently before treating the published URL as an isolated trial preview.
