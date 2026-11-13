@@ -17,7 +17,8 @@
       if (meta) meta.setAttribute('content', theme === 'dark' ? '#090909' : '#ffffff');
     })();
   </script>
-  <meta name="description" content="Maddie Journey by Madhouse Design Studio — sample employee, division, journey and performance monitoring in one read-only workspace.">
+  <meta name="description" content="Maddie Journey by Madhouse Design Studio — passphrase-protected, read-only People &amp; Culture monitoring.">
+  <meta name="robots" content="noindex,nofollow">
   <title>Maddie Journey · Madhouse Design Studio</title>
   <meta name="color-scheme" content="light dark">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -40,17 +41,14 @@
     <div class="boot" role="status" aria-live="polite">
       <span class="boot-eyebrow">MADHOUSE DESIGN STUDIO / MONITORING</span>
       <strong class="boot-title">Maddie Journey</strong>
-      <p>Preparing the fictional monitoring snapshot…</p>
+      <p>Preparing the secure monitoring view…</p>
     </div>
   </div>
-  <noscript><p style="padding:30px">JavaScript must be enabled for this prototype.</p></noscript>
-  <script src="./data.js" defer></script>
-  <script src="./data-adapter.js" defer></script>
-  <script src="./icons.js" defer></script>
-  <script src="./monitoring.js" defer></script>
-  <script src="./app.js" defer></script>
-  <!-- Anime.js is a visual enhancement only. Never required for data or navigation. -->
-  <script src="https://cdn.jsdelivr.net/npm/animejs@4.5.0/dist/bundles/anime.umd.min.js" defer></script>
-  <script src="./motion.js" defer></script>
+  <noscript><p style="padding:30px">JavaScript must be enabled to unlock the monitoring view.</p></noscript>
+  <!-- Real records are published only as ciphertext (data/monitoring.enc.json).
+       unlock.js asks for the passphrase, decrypts in the browser, then loads, in order:
+       data-adapter.js, icons.js, monitoring.js, app.js, Anime.js (optional, visual only), motion.js.
+       The fictional data.js fixture is not loaded by this page. -->
+  <script src="./unlock.js" defer></script>
 </body>
 </html>

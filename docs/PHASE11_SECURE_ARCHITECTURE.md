@@ -125,10 +125,33 @@ For presenting on a single computer without Google Sign-In: `node --env-file=ser
 - Google sign-in and all POST routes are disabled. Same read-only provider client, same payload, same UI guards.
 - Guide: [PRESENTING_THE_MONITORING_VIEW.md](PRESENTING_THE_MONITORING_VIEW.md).
 
+## 7b. Encrypted static deployment on GitHub Pages
+
+The public site serves the real snapshot **only as ciphertext**, chosen so leaders can open one link with no download, account or billing.
+
+| Item | Design |
+| --- | --- |
+| Entry | `index.html` loads only `unlock.js`. The fictional `data.js` is not loaded |
+| Data file | `data/monitoring.enc.json`: AES-256-GCM, key from PBKDF2-SHA256 (600,000 iterations, random 16-byte salt), random 12-byte IV, authenticated |
+| Unlock | Passphrase entered in the browser; Web Crypto decrypts; the app scripts load only after success. Nothing is stored (no localStorage, sessionStorage or cookies); reloading locks |
+| Contents | Same minimized payload as the private server (names, IDs, department, position, status, dates, 201 statuses, attendance date/type, minimized Calendar events, reconciliation). No compensation, government IDs, contact data, birthdays or disciplinary content |
+| Build | `MJ_SNAPSHOT_PASSPHRASE=… node tools/build-encrypted-snapshot.js <raw-dir>`. The raw exports (from read-only Claude connector calls) must be outside the repository; the builder refuses otherwise |
+| Passphrase | Generated, at least 20 characters (current: 5 groups, about 100 bits). `P&C123`-style passwords are refused by the builder |
+
+**Limits, accepted with the owner (2026-11-13):**
+- Anyone with the passphrase can open and pass on the data. There are no per-person accounts or revocation.
+- Ciphertext stays in git history. If a passphrase leaks, every snapshot encrypted with it remains readable from history, and **rotating the passphrase does not protect old snapshots**. Treat a leak as an incident: rotate, and consider rewriting history or making the repository private.
+- It is a snapshot, not live sync, and is marked stale after 7 days.
+
+**Refresh / rotation procedure (in a Claude session):**
+1. Re-read the sources read-only via the connectors into a scratchpad folder (same files as listed in the builder header).
+2. Build with the current or a new passphrase, then commit only `data/monitoring.enc.json`.
+3. On rotation, share the new passphrase privately and stop using the old one.
+
 ## 8. Testing
 
 - `node tests/smoke.js`: 119 existing regression checks (sample mode unchanged).
-- `node tests/connectors.js`: 39 connector-contract, security and connected-UI checks on anonymized fixtures, including presenter mode. No network access.
+- `node tests/connectors.js`: 45 connector-contract, security and connected-UI checks on anonymized fixtures, including presenter mode, snapshot encryption, Web Crypto compatibility, Calendar minimization and the static lock. No network access.
 - CI runs both on every pull request.
 
 ## 9. Not done / blocked
@@ -138,7 +161,7 @@ For presenting on a single computer without Google Sign-In: `node --env-file=ser
 | Live run of the private service | Airtable token, Google OAuth credentials, sign-in client ID, private host (§7) |
 | Journey, Welcome Kit, KPI, Reviews, Follow-ups | No authoritative per-employee source exists (inventory §4) |
 | Attendance screen | Tracker lacks approval/verification. Needs an HR decision on what counts as verified |
-| Calendar screen | Events retrieved but not yet merged into the snapshot. Computed milestones need approval to deliver birthdays |
+| Birthdays on the calendar | Not delivered (minimization); add only if HR approves |
 | Drive / Docs evidence | No per-employee 201 folder convention |
 | Gmail | No authorized follow-up tracker. Indiscriminate mailbox ingestion is not acceptable |
 | Persistent last-known snapshot | Needs an encrypted private store; memory only for now |

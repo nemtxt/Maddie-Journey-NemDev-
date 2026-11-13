@@ -53,6 +53,52 @@ function files201For(person) {
   return { statuses, evidence };
 }
 
+/* Calendar rules (data minimization):
+ *  - holidays calendar: every confirmed event is kept (public data);
+ *  - primary calendar: only People & Culture-relevant events are kept;
+ *  - restricted meetings (PIP, NTE, discipline, counseling, exits...) are WITHHELD:
+ *    counted, never delivered;
+ *  - one-on-one titles ("P&C x <name>") are generalized so no person is named. */
+const PC_RELEVANT = /p&c|people\s*&\s*culture|\bhr\b|onboard|orientation|evaluat|regulari|probation|revalida|culture code|maddie hour/i;
+const RESTRICTED = /\bpip\b|\bnte\b|notice to explain|disciplin|counsel|warning|incident|terminat|resign|exit interview|investigat|\blip\b/i;
+const ONE_ON_ONE = /^\s*p&c\s*x\s+/i;
+function manilaDateTime(start) {
+  if (!start) return null;
+  if (start.date) return { date: start.date, time: '' };
+  if (!start.dateTime) return null;
+  const d = new Date(start.dateTime);
+  if (isNaN(d.getTime())) return null;
+  const date = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+  const time = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Manila', hour: '2-digit', minute: '2-digit', hour12: false }).format(d);
+  return { date: date, time: time };
+}
+function normalizeCalendarEvents(events, source) {
+  const counts = { retrieved: 0, cancelled: 0, outOfScope: 0, withheld: 0, included: 0 };
+  const out = [];
+  (events || []).forEach(function (e) {
+    counts.retrieved += 1;
+    if (e.status === 'cancelled') { counts.cancelled += 1; return; }
+    const when = manilaDateTime(e.start);
+    if (!when) { counts.outOfScope += 1; return; }
+    const title = String(e.summary || '').trim();
+    if (source === 'holidays') {
+      out.push({ id: String(e.id || ''), date: when.date, time: '', title: title || 'Holiday', category: 'holiday',
+        detail: e.description && /observance/i.test(e.description) ? 'Observance' : 'Public holiday',
+        source: 'Google Calendar · Holidays in Philippines', titleWithheld: false });
+      counts.included += 1; return;
+    }
+    if (RESTRICTED.test(title)) { counts.withheld += 1; return; }   // checked first: never delivered
+    if (!PC_RELEVANT.test(title)) { counts.outOfScope += 1; return; }
+    const generalized = ONE_ON_ONE.test(title);
+    out.push({ id: String(e.id || ''), date: when.date, time: when.time,
+      title: generalized ? 'P&C one-on-one (title withheld)' : title, category: 'pc-meeting', detail: 'Confirmed meeting',
+      source: 'Google Calendar · primary', titleWithheld: generalized });
+    counts.included += 1;
+  });
+  out.sort(function (a, b) { return a.date.localeCompare(b.date) || a.time.localeCompare(b.time) || a.title.localeCompare(b.title); });
+  return { events: out, counts: counts };
+}
+
 function buildSnapshot(input, now) {
   const retrievedAt = new Date(now).toISOString();
   const defs = input.definitions || loadDefinitions();
@@ -137,13 +183,19 @@ function buildSnapshot(input, now) {
   const developmentLinks = input.development ? rec.reconcileLinks(roster.rows, input.development) : null;
 
   const ok = function (id) { return sources.some(function (s) { return s.id === id && s.state === 'connected'; }); };
+  const primaryCal = input.calendarEvents ? normalizeCalendarEvents(input.calendarEvents, 'primary') : null;
+  const holidayCal = input.holidayEvents ? normalizeCalendarEvents(input.holidayEvents, 'holidays') : null;
+  const calendarEvents = (primaryCal ? primaryCal.events : []).concat(holidayCal ? holidayCal.events : [])
+    .sort(function (a, b) { return a.date.localeCompare(b.date) || a.time.localeCompare(b.time); });
   const coverage = {
     roster: ok('airtable') && input.people ? 'connected' : 'error',
     divisions: ok('airtable') && input.departments ? 'connected' : 'error',
     files201: input.people ? 'partial' : 'error',          // tracker attachments only; Drive evidence not linked
     attendance: input.attendance ? 'partial' : 'error',    // entries retrieved; approval/verification not in source
     journey: 'not-sourced', kit: 'not-sourced', kpi: 'not-sourced', reviews: 'not-sourced',
-    milestones: 'not-sourced', calendar: ok('calendar') ? 'partial' : 'not-configured', followups: 'not-sourced'
+    milestones: 'not-sourced', calendar: ok('calendar') ? 'partial' : 'not-configured', followups: 'not-sourced',
+    // Calendar screen: confirmed events plus milestones computed from roster dates.
+    'calendar-events': (primaryCal || holidayCal) && ok('calendar') ? 'partial' : 'not-sourced'
   };
 
   const statusIssues = roster.issues.filter(function (i) { return i.kind !== 'employee-id-format'; });
@@ -153,6 +205,7 @@ function buildSnapshot(input, now) {
       divisions: Array.from(divisions.values()).sort(function (a, b) { return a.name.localeCompare(b.name); }),
       viewers: [], stages: defs.stages, kit: defs.kit, documents201: defs.documents201,
       employees: employees,
+      calendarEvents: calendarEvents,
       coverage: coverage, coverageLabels: COVERAGE_LABELS
     },
     sources: sources,
@@ -164,6 +217,7 @@ function buildSnapshot(input, now) {
       masterlist: masterlist,
       attendanceLinks: attendanceLinks,
       developmentLinks: developmentLinks,
+      calendar: (primaryCal || holidayCal) ? { primary: primaryCal && primaryCal.counts, holidays: holidayCal && holidayCal.counts } : null,
       notes: [
         'Active cohort = Regular, Probationary, Part-Time, Contract or On Leave in the Airtable roster.',
         'Inactive records (Resigned, Terminated, AWOL) are counted here and excluded from monitoring denominators; they are not deleted.',
@@ -178,4 +232,4 @@ function buildSnapshot(input, now) {
   };
 }
 
-module.exports = { buildSnapshot, loadDefinitions, files201For, COVERAGE_LABELS };
+module.exports = { buildSnapshot, loadDefinitions, files201For, normalizeCalendarEvents, COVERAGE_LABELS };

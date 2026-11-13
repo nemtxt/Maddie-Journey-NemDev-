@@ -274,7 +274,7 @@ check('Snapshot service reports real provider states including not-implemented c
   assert.equal(by.sheets.sourceModified, '2026-05-05T08:22:42.438Z');
   assert.equal(by.sheets.conflicts, 1);
   assert.equal(by.calendar.state, 'connected');
-  assert.equal(by.calendar.recordCount, 1); // cancelled events are not counted
+  assert.equal(by.calendar.recordCount, 4); // cancelled events are not counted
   ['drive', 'docs', 'gmail'].forEach((id) => { assert.equal(by[id].state, 'not-implemented'); assert.equal(by[id].lastSuccessfulRetrieval, null); });
   const methods = new Set(fetch.calls.map((c) => c.method + ' ' + new URL(c.url).hostname));
   assert.deepEqual([...methods].filter((m) => !m.startsWith('GET ')), ['POST oauth2.googleapis.com']);
@@ -496,7 +496,7 @@ check('Connected UI never loads fictional employees and states unsourced screens
   const ui = await connectedBoot();
   assert.equal(ui.win.MJ_SOURCE_ADAPTER.mode, 'connected');
   assert.equal(ui.win.MJ_SEED, undefined);
-  for (const tab of ['overview', 'journey', 'kit', 'kpi', 'approvals', 'milestones', 'attendance', 'calendar', 'divisions']) {
+  for (const tab of ['overview', 'journey', 'kit', 'kpi', 'approvals', 'milestones', 'attendance', 'divisions']) {
     ui.nav(tab);
     const html = ui.html();
     assert(html.includes('NO VERIFIED SOURCE'), tab + ' should be guarded');
@@ -552,7 +552,7 @@ check('Rendered connected screens never describe real records as fictional or sa
     assert(!/fictional|sample data|demo values|Sample workspace|Sample · Not connected|\b51 \b/i.test(text), where + ' contains sample wording: ' +
       (text.match(/.{0,60}(fictional|sample data|demo values|Sample workspace|\b51 \b).{0,60}/i) || [''])[0]);
   };
-  for (const tab of ['employees', 'files201', 'sources', 'audit']) { ui.nav(tab); clean(ui.html(), tab); }
+  for (const tab of ['employees', 'files201', 'sources', 'audit', 'calendar']) { ui.nav(tab); clean(ui.html(), tab); }
   for (const filter of ['missing', 'not-checked', 'complete', 'source-unavailable', 'all']) { ui.nav('files201'); ui.click('files-filter', { kind: filter }); clean(ui.html(), 'files201/' + filter); }
   for (const tab of ['info', 'files201', 'kpi', 'journey', 'attendance', 'preview']) { ui.click('open', { id: '0101', detail: tab }); clean(ui.html(), 'modal/' + tab); ui.click('close'); }
 });
@@ -566,7 +566,7 @@ check('Unavailable connected snapshot shows an error instead of fictional data',
 /* ---------- Public repository safety ---------- */
 check('Tracked public files contain no credentials, private source IDs or real contact data', () => {
   const files = execSync('git ls-files -co --exclude-standard', { cwd: root }).toString().split('\n').filter(Boolean)
-    .filter((f) => !/\.(png|jpe?g|webp|ico)$/i.test(f));
+    .filter((f) => !/\.(png|jpe?g|webp|ico)$/i.test(f) && f !== 'data/monitoring.enc.json');
   const patterns = [
     [/pat[A-Za-z0-9]{14}\.[a-f0-9]{64}/, 'Airtable personal access token'],
     [/GOCSPX-[A-Za-z0-9_-]{10,}/, 'Google OAuth client secret'],
@@ -584,13 +584,119 @@ check('Tracked public files contain no credentials, private source IDs or real c
   });
   assert.deepEqual(hits, []);
 });
-check('GitHub Pages entry point remains the fictional sample with no connected payload', () => {
+check('GitHub Pages entry loads only the passphrase lock and publishes ciphertext only', () => {
   const index = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
-  assert(index.includes('<script src="./data.js" defer></script>'));
-  assert(!index.includes('payload.js') && !index.includes('MJ_CONNECTED_PAYLOAD'));
+  assert(index.includes('<script src="./unlock.js" defer></script>'));
+  assert(!index.includes('src="./data.js"') && !index.includes('payload.js') && !index.includes('MJ_CONNECTED_PAYLOAD'));
+  const unlock = fs.readFileSync(path.join(root, 'unlock.js'), 'utf8');
+  assert(!/localStorage|sessionStorage|indexedDB|document\.cookie|sendBeacon|XMLHttpRequest/.test(unlock));
+  assert.equal((unlock.match(/fetch\(/g) || []).length, 1); // the encrypted snapshot only
+  const enc = path.join(root, 'data', 'monitoring.enc.json');
+  if (fs.existsSync(enc)) {
+    const env = JSON.parse(fs.readFileSync(enc, 'utf8'));
+    assert.deepEqual(Object.keys(env).sort(), ['cipher', 'data', 'format', 'kdf', 'version']);
+    assert.equal(env.format, 'mj-encrypted-snapshot');
+    assert(env.kdf.iterations >= 600000);
+    assert(!/employee|Airtable|recP|"name"/i.test(Buffer.from(env.data, 'base64').toString('latin1').slice(0, 4096)));
+  }
+  // No other JSON data files may be published.
+  const dataFiles = fs.existsSync(path.join(root, 'data')) ? fs.readdirSync(path.join(root, 'data')) : [];
+  assert(dataFiles.every((f) => f === 'monitoring.enc.json'), 'unexpected data file: ' + dataFiles.join(','));
   const appSrc = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
   assert(!/fetch\(|XMLHttpRequest|WebSocket|sendBeacon/.test(appSrc));
   assert(!/fetch\(|XMLHttpRequest/.test(fs.readFileSync(path.join(root, 'data-adapter.js'), 'utf8')));
+});
+
+/* ---------- Encrypted snapshot, calendar minimization, static deployment ---------- */
+const snapCrypto = require('../tools/snapshot-crypto');
+const { normalizeCalendarEvents } = require('../server/normalize');
+check('Snapshot encryption round-trips, rejects wrong passphrases and weak ones', () => {
+  const payload = { hello: 'Sample Person 01', n: [1, 2, 3] };
+  const env = snapCrypto.encrypt(payload, 'correct-horse-battery-staple-9', { iterations: 1000 });
+  assert(!JSON.stringify(env).includes('Sample Person'));
+  assert.deepEqual(snapCrypto.decrypt(env, 'correct-horse-battery-staple-9'), payload);
+  assert.throws(() => snapCrypto.decrypt(env, 'correct-horse-battery-staple-0'));
+  const tampered = Object.assign({}, env, { data: Buffer.from(Buffer.from(env.data, 'base64').map((b, i) => (i === 3 ? b ^ 1 : b))).toString('base64') });
+  assert.throws(() => snapCrypto.decrypt(tampered, 'correct-horse-battery-staple-9'));
+  assert.throws(() => snapCrypto.encrypt(payload, 'P&C123'), /at least 20/);
+  assert.notEqual(snapCrypto.encrypt(payload, 'x'.repeat(24), { iterations: 1000 }).cipher.iv, snapCrypto.encrypt(payload, 'x'.repeat(24), { iterations: 1000 }).cipher.iv);
+});
+check('Encrypted snapshot is decryptable by browser Web Crypto', async () => {
+  const env = snapCrypto.encrypt({ ok: true }, 'browser-compatible-passphrase', { iterations: 1000 });
+  const subtle = crypto.webcrypto.subtle, b = (s) => Uint8Array.from(Buffer.from(s, 'base64'));
+  const material = await subtle.importKey('raw', new TextEncoder().encode('browser-compatible-passphrase'), 'PBKDF2', false, ['deriveKey']);
+  const key = await subtle.deriveKey({ name: 'PBKDF2', hash: 'SHA-256', salt: b(env.kdf.salt), iterations: env.kdf.iterations }, material, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+  const plain = await subtle.decrypt({ name: 'AES-GCM', iv: b(env.cipher.iv) }, key, b(env.data));
+  assert.deepEqual(JSON.parse(new TextDecoder().decode(plain)), { ok: true });
+});
+check('Calendar minimization withholds restricted meetings and generalizes one-on-ones', () => {
+  const r = normalizeCalendarEvents([
+    { id: 'a', status: 'confirmed', summary: 'CSO x P&C Generalist', start: { dateTime: '2026-11-20T10:00:00+08:00' } },
+    { id: 'b', status: 'confirmed', summary: 'P&C x Sample Person 02', start: { dateTime: '2026-11-20T17:30:00Z' } },
+    { id: 'c', status: 'confirmed', summary: 'PIP midpoint review', start: { date: '2026-11-21' } },
+    { id: 'd', status: 'confirmed', summary: 'NTE meeting with P&C', start: { date: '2026-11-21' } },
+    { id: 'e', status: 'confirmed', summary: 'Client site visit', start: { date: '2026-11-21' } },
+    { id: 'f', status: 'cancelled', summary: 'P&C orientation', start: { date: '2026-11-22' } }
+  ], 'primary');
+  assert.deepEqual(r.counts, { retrieved: 6, cancelled: 1, outOfScope: 1, withheld: 2, included: 2 });
+  assert.equal(r.events[0].title, 'CSO x P&C Generalist');
+  assert.equal(r.events[0].time, '10:00');
+  const oneOnOne = r.events.find((e) => e.id === 'b');
+  assert.equal(oneOnOne.title, 'P&C one-on-one (title withheld)');
+  assert.equal(oneOnOne.date, '2026-11-21'); // 17:30Z is the next day in Manila
+  assert.equal(oneOnOne.time, '01:30');
+  assert(!JSON.stringify(r).includes('Sample Person') && !JSON.stringify(r).includes('PIP') && !JSON.stringify(r).includes('NTE'));
+  const h = normalizeCalendarEvents([{ id: 'h', status: 'confirmed', summary: 'Rizal Day', description: 'Public holiday', start: { date: '2026-12-30' } }], 'holidays');
+  assert.equal(h.events[0].category, 'holiday');
+});
+check('Snapshot builder turns connector exports into an encrypted-static payload', () => {
+  const os = require('node:os');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mj-raw-'));
+  try {
+    const w = (n, v) => fs.writeFileSync(path.join(dir, n), JSON.stringify(v));
+    w('people.json', { records: fx.people });
+    w('attendance.json', { records: fx.attendance });
+    w('departments.json', fx.departments.map((d) => [d.id, d.fields.fldkrnTAtVUs49xHN, d.fields.fldHgY85j6l5j6p5D]));
+    w('development.json', fx.development.map((d) => [d.id, d.fields[map.AIRTABLE.development.fields.employee][0], 'Probationary', 'Ongoing', '', '', d.createdTime]));
+    w('masterlist.json', { modifiedTime: '2026-05-05T08:22:42.438Z', rows: fx.masterlistRows });
+    w('calendar-primary.json', { events: [{ id: 'a', status: 'confirmed', summary: 'CSO x P&C Generalist', start: { dateTime: '2026-11-20T10:00:00+08:00' } },
+      { id: 'c', status: 'confirmed', summary: 'PIP midpoint review', start: { date: '2026-11-21' } }] });
+    w('holidays.json', [['2026-11-30', 'Bonifacio Day', 'Public holiday']]);
+    w('meta.json', { retrieved: { airtable: '2026-11-13T00:29:06Z', sheets: null, calendar: '2026-11-12T23:23:18Z' }, notes: {} });
+    const { build } = require('../tools/build-encrypted-snapshot');
+    const p = build(dir, NOW);
+    assert.equal(p.deployment, 'encrypted-static');
+    assert.equal(p.available, true);
+    assert.equal(p.snapshot.employees.length, 9);
+    assert.equal(p.reconciliation.roster.totalRecords, 12);
+    assert.equal(p.snapshot.calendarEvents.length, 2);
+    assert.equal(p.reconciliation.calendar.primary.withheld, 1);
+    assert.equal(p.snapshot.coverage['calendar-events'], 'partial');
+    const by = Object.fromEntries(p.sources.map((s) => [s.id, s]));
+    assert.equal(by.drive.state, 'reviewed');
+    assert.equal(by.sheets.lastSuccessfulRetrieval, null); // unknown times are never invented
+    const text = JSON.stringify(p);
+    assert(!text.includes('99999') && !text.includes('synthetic.pdf') && !text.includes('PIP'));
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+  assert.throws(() => require('node:child_process').execFileSync(process.execPath, [path.join(root, 'tools/build-encrypted-snapshot.js'), path.join(root, 'tests')],
+    { env: { MJ_SNAPSHOT_PASSPHRASE: 'x'.repeat(24) }, stdio: 'pipe' }), /outside the repository/);
+});
+check('Connected calendar shows confirmed events and computed dates without birthdays', async () => {
+  const ui = await connectedBoot();
+  ui.win.MJ_SOURCE_ADAPTER; // calendar is available when Calendar events are in the snapshot
+  assert.equal(ui.win.MJ_SOURCE_ADAPTER.screenAvailability('calendar').available, true);
+  const rows = ui.win.MJ_MONITORING.events(ui.win.MJ_SOURCE_ADAPTER.getSnapshot(), '2026-11');
+  assert(rows.some((r) => r.type === 'confirmed' && r.title === 'CSO x P&C Generalist' && r.employee === null));
+  assert(rows.some((r) => r.title === 'P&C one-on-one (title withheld)'));
+  assert(!rows.some((r) => /Birthday|PIP|Sample Person 02/.test(r.title)));
+  assert(rows.filter((r) => r.type === 'checkin').every((r) => r.provenance === 'Calculated from Airtable hiring date'));
+});
+check('Encrypted-static deployment shows Lock and passphrase wording instead of sign-in', async () => {
+  const ui = await connectedBoot({ deployment: 'encrypted-static', viewer: null });
+  ui.nav('sources');
+  const html = ui.html();
+  assert(html.includes('Unlocked with the shared passphrase') && !html.includes('Signed in as'));
+  assert(html.includes('<a href="./">Lock</a>') && !html.includes('/logout'));
 });
 
 (async function run() {

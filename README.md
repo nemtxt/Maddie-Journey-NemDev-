@@ -4,7 +4,9 @@
 
 [Open prototype](https://nemtxt.github.io/Maddie-Journey-NemDev-/) · [GitHub repository](https://github.com/nemtxt/Maddie-Journey-NemDev-) · [Claude connector handoff](docs/CLAUDE_CONNECTORS_HANDOFF.md) · [Prototype acceptance checklist](docs/PROTOTYPE_ACCEPTANCE.md) · [Phase 11 source inventory](docs/PHASE11_SOURCE_INVENTORY.md) · [Phase 11 secure architecture](docs/PHASE11_SECURE_ARCHITECTURE.md)
 
-> **v3.8 (Phase 11):** the public site is unchanged and still fictional. A separate, authenticated private service (`server/`) can read the real People & Culture roster from Airtable (plus Sheets and Calendar) **read-only**, once credentials are issued. Screens without a verified source show what is missing instead of figures. See the architecture document for what is connected, what is blocked and why.
+> **v3.8 (Phase 11), current:** the GitHub Pages site opens a **passphrase lock**. The real People & Culture snapshot is published only as AES-256 ciphertext and decrypts in the browser; no fictional data is loaded. See [Presenting the monitoring view](docs/PRESENTING_THE_MONITORING_VIEW.md) and §7b of the architecture document.
+>
+> Earlier v3.8 work, still included: A separate, authenticated private service (`server/`) can read the real People & Culture roster from Airtable (plus Sheets and Calendar) **read-only**, once credentials are issued. Screens without a verified source show what is missing instead of figures. See the architecture document for what is connected, what is blocked and why.
 
 ## Project goal
 
@@ -226,7 +228,7 @@ The later connected-account phase can implement source normalization against the
 
 - Open index.html in a modern browser or use VS Code Live Server.
 - Run: node tests/smoke.js (119 sample-mode regression checks)
-- Run: node tests/connectors.js (39 connector-contract, security and connected-UI checks; synthetic fixtures, no network)
+- Run: node tests/connectors.js (45 connector-contract, security and connected-UI checks; synthetic fixtures, no network)
 - Private service (authorized hosts only): node server/index.js --check, then node server/index.js. See docs/PHASE11_SECURE_ARCHITECTURE.md §7.
 - Presenting real data on one computer: node --env-file=server/.env server/index.js --local. See docs/PRESENTING_THE_MONITORING_VIEW.md.
 - On main, the custom GitHub Actions validation workflow runs the regression tests. Anime.js and the Inter web font are optional third-party CDN resources; UI navigation and sample data do not depend on their availability. GitHub Pages uses its separate publishing workflow.

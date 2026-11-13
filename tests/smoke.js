@@ -8,7 +8,7 @@ const path=require('node:path');
 const root=path.resolve(__dirname,'..');
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 
-const files=['index.html','data.js','data-adapter.js','icons.js','monitoring.js','app.js','operations.css','palette.css','landing.css','workspace.css','reader.css','refined.css','mono.css','motion.js'];
+const files=['index.html','unlock.js','data.js','data-adapter.js','icons.js','monitoring.js','app.js','operations.css','palette.css','landing.css','workspace.css','reader.css','refined.css','mono.css','motion.js'];
 const src=Object.fromEntries(files.map(name=>[name,read(name)]));
 const results=[];
 function check(name,fn){fn();results.push(name);console.log('PASS '+name);}
@@ -90,8 +90,10 @@ check('Source adapter returns safe copies and reports all five integrations as d
   copy.employees[0].name='Accidental change';
   assert(user.win.MJ_SEED.employees[0].name!=='Accidental change');
   assert(!a.validateSnapshot({divisions:[],employees:[{id:'fake',division:'missing'}],stages:[],kit:[]}));
-  assert(src['index.html'].indexOf('data-adapter.js')>src['index.html'].indexOf('data.js'));
-  assert(src['index.html'].indexOf('data-adapter.js')<src['index.html'].indexOf('app.js'));
+  // v3.8: index.html loads only the passphrase lock; unlock.js loads the app in order and never loads data.js.
+  assert(src['index.html'].includes('<script src="./unlock.js" defer></script>'));
+  assert(!src['index.html'].includes('src="./data.js"')&&!src['unlock.js'].includes("'./data.js'"));
+  assert(src['unlock.js'].indexOf('data-adapter.js')<src['unlock.js'].indexOf("'./app.js'"));
 });
 
 check('Monitoring overview presents eight comparable divisions and milestones',()=>{
@@ -413,9 +415,9 @@ check('One Inter font and neutral backgrounds are the final theme',()=>{
 });
 
 check('Anime.js v4 is optional, reduced-motion aware and limits its motion',()=>{
-  const html=src['index.html'],code=src['motion.js'];
+  const html=src['unlock.js'],code=src['motion.js'];
   assert(html.includes('animejs@4.5.0/dist/bundles/anime.umd.min.js'));
-  assert(html.indexOf('motion.js')>html.indexOf('app.js'));
+  assert(html.indexOf('motion.js')>html.indexOf("'./app.js'"));
   assert(code.includes('prefers-reduced-motion: reduce'));
   assert(code.includes("doc.visibilityState==='hidden'"));
   assert(!code.includes('loop:true'));
@@ -970,7 +972,7 @@ check('Phase 6 directory search updates its table in place',()=>{
 });
 check('Phase 6 loading and error states give accessible recovery',()=>{
   assert(src['index.html'].includes('class="boot" role="status" aria-live="polite"'));
-  assert(src['index.html'].includes('Preparing the fictional monitoring snapshot'));
+  assert(src['index.html'].includes('Preparing the secure monitoring view'));
   const app={innerHTML:''},doc={getElementById:()=>app,title:''};
   new Function('window','document',src['app.js'])({},doc);
   assert(app.innerHTML.includes('Sample data unavailable'));
@@ -1174,9 +1176,9 @@ check('New monitoring styles keep single font, three-to-one calendar layout and 
   assert(css.includes('@media(max-width:760px)'));
   assert(css.includes('@media(max-width:350px)'));
   assert(css.includes('body button.monitor-calendar-date{min-height:44px}'));
-  const html=src['index.html'];
+  const html=src['unlock.js'];
   assert(html.indexOf('data-adapter.js')<html.indexOf('monitoring.js'));
-  assert(html.indexOf('monitoring.js')<html.indexOf('app.js'));
+  assert(html.indexOf('monitoring.js')<html.indexOf("'./app.js'"));
   for(const tab of ['calendar','files201']){
     const fresh=boot({},'#'+tab);
     assert(!fresh.html().includes('type="file"'));
@@ -1454,10 +1456,10 @@ check('Icon dependency failure cannot block navigation or file and calendar moni
   instance.click('close');
 });
 check('Icons retain accessible sizes and keyboard, forced-color and motion styles',()=>{
-  const css=src['mono.css'],html=src['index.html'];
+  const css=src['mono.css'],html=src['unlock.js'];
   assert(html.indexOf('icons.js')>html.indexOf('data-adapter.js'));
   assert(html.indexOf('icons.js')<html.indexOf('monitoring.js'));
-  assert(html.indexOf('monitoring.js')<html.indexOf('app.js'));
+  assert(html.indexOf('monitoring.js')<html.indexOf("'./app.js'"));
   for(const phrase of [
     'body .ui-icon','width:1.15rem;height:1.15rem',
     'body .overview-summary-grid button.overview-signal .overview-signal-icon',

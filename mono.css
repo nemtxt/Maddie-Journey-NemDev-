@@ -2259,3 +2259,15 @@ body .source-state-permission-limited,body .source-state-error{background:var(--
 body .source-state-not-configured,body .source-state-not-implemented{background:var(--mono-soft)}
 body .reconcile-table td,body .reconcile-table th{vertical-align:top}
 @media(forced-colors:active){body .source-state{border:1px solid CanvasText}}
+body .monitor-calendar-dot.type-confirmed,body .monitor-calendar-month-summary .type-confirmed{background:var(--mj-pastel-blush);border:1px solid var(--mj-pastel-stroke)}
+body .monitor-calendar-event-source{cursor:default}
+body .monitor-calendar-event-source:hover{transform:none}
+body .source-state-reviewed{background:var(--mono-soft)}
+/* v3.8 passphrase lock (GitHub Pages encrypted snapshot) */
+body .lock-card{max-width:440px;text-align:left}
+body .lock-card h1{margin:8px 0 10px}
+body .lock-form{display:grid;gap:8px;margin:18px 0 6px}
+body .lock-input{width:100%;min-height:var(--mj-control-min);font:inherit;padding:8px 12px;border:1px solid var(--line);border-radius:var(--mj-radius-control);background:transparent;color:inherit}
+body .lock-input:focus-visible{outline:2px solid var(--mono-accent);outline-offset:2px}
+body .lock-form .button{justify-self:start;min-height:var(--mj-control-min)}
+body .lock-status{min-height:1.5em;font-weight:500;margin:6px 0}

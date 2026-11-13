@@ -18,7 +18,7 @@
   const seed = connectedPayload ? null : window.MJ_SEED;
   if (connectedPayload && !connectedPayload.available) {
     // Never fall back to fictional records when a connected snapshot is unavailable.
-    showBootError('Connected snapshot unavailable','No authorized roster snapshot has been retrieved yet. Check provider states with the service administrator; sample records are not substituted.');
+    showBootError('Connected snapshot unavailable','No authorized roster snapshot is available. Check provider states with the service administrator; sample records are not substituted.');
     return;
   }
   if (!connectedPayload && !seed) {
@@ -41,6 +41,8 @@
   }
   // Connected mode = authenticated private deployment with real, read-only source data.
   const CONNECTED=window.MJ_SOURCE_ADAPTER.mode==='connected';
+  // Encrypted snapshot opened on GitHub Pages (no server session).
+  const STATIC_SNAPSHOT=CONNECTED&&!!(window.MJ_CONNECTED_PAYLOAD&&window.MJ_CONNECTED_PAYLOAD.deployment==='encrypted-static');
   const firstDivision=data.divisions.some(function(d){return d.id==='rmd';})?'rmd':(data.divisions[0]||{id:''}).id;
   if(!data.employees.length){showBootError(CONNECTED?'No active employees in snapshot':'Sample data unavailable',
     CONNECTED?'The connected roster returned no active records. Review Data & Sources with the service administrator.':'The fictional records did not load.');return;}
@@ -279,7 +281,11 @@
     }else if(ui.tab==='calendar'){
       const start=ui.calendarStart||window.MJ_MONITORING.todayManila().slice(0,7);
       const rows=window.MJ_MONITORING.events(data,start);
-      cards=[['People tracked',data.employees.length,'Eight fictional divisions'],
+      cards=CONNECTED?[['Confirmed events',rows.filter(function(x){return x.type==='confirmed';}).length,'Google Calendar · P&C meetings and holidays'],
+        ['Calculated check-ins',rows.filter(function(x){return x.type==='checkin';}).length,'From Airtable hiring dates'],
+        ['Employment dates',rows.filter(function(x){return x.type==='employment';}).length,'Probation checkpoints and recorded regularizations'],
+        ['Work anniversaries',rows.filter(function(x){return x.type==='milestone';}).length,'Calculated from hiring dates']]:
+        [['People tracked',data.employees.length,'Eight fictional divisions'],
         ['Calendar items',rows.length,'Dates in the selected three-month window'],
         ['Check-ins',rows.filter(function(x){return x.type==='checkin';}).length,'Calculated demo check-ins'],
         ['Recorded changes',rows.filter(function(x){return x.type==='change';}).length,'Fictional promotion events']];
@@ -863,7 +869,8 @@
       window.MJ_MONITORING.fileView(data,ui);
   }
   function calendarView(){
-    return header('PEOPLE MONITORING / FICTIONAL DATES','Calendar',
+    return header(CONNECTED?'PEOPLE MONITORING / CONNECTED DATES':'PEOPLE MONITORING / FICTIONAL DATES','Calendar',
+      CONNECTED?'Three-month calendar of confirmed Google Calendar events and dates calculated or recorded from the Airtable roster.':
       'Three-month calendar of computed example check-ins, employment dates, and recorded milestones.','')+
       window.MJ_MONITORING.calendarView(data,ui);
   }
@@ -1154,6 +1161,7 @@
           (x.conflicts?' · conflicts <strong>'+safe(x.conflicts)+'</strong>':'')+'</div>':'')+
         ((x.datasets||[]).length?'<div>Datasets: '+x.datasets.map(function(d){return safe(d.name)+' '+(d.ok?'('+safe(d.records)+')':'— failed');}).join(' · ')+'</div>':'')+
         (x.lastError?'<div>'+(x.state==='not-implemented'?'Status':'Last error')+': <strong>'+safe(x.lastError)+'</strong></div>':'')+
+        (x.note?'<div>Note: <strong>'+safe(x.note)+'</strong></div>':'')+
         '</dl></article>';
     }).join('');
     const covRows=Object.keys(COVERAGE_SOURCES).map(function(k){
@@ -1173,7 +1181,7 @@
     const links=function(label,l){return l?'<div><strong>'+l.total+'</strong><small>'+label+' · '+l.linkedActive+' active, '+l.linkedInactive+' inactive, '+l.orphans+' unlinked</small></div>':'';};
     return header('DATA CONNECTIONS / CONNECTED','Data sources','Actual provider states, freshness and reconciliation for the connected snapshot. Retrieval success is not HR verification.')+
       '<div class="source-banner"><span class="source-banner-icon">i</span><div><strong>Connected mode · read-only'+(fresh.stale?' · stale snapshot':'')+'</strong>'+
-      '<p>'+safe(prov.note)+' '+safe(fresh.note||'')+' Signed in as '+safe(prov.viewer&&prov.viewer.email||'—')+'.</p></div></div>'+
+      '<p>'+safe(prov.note)+' '+safe(fresh.note||'')+' '+(STATIC_SNAPSHOT?'Unlocked with the shared passphrase on this device.':'Signed in as '+safe(prov.viewer&&prov.viewer.email||'—')+'.')+'</p></div></div>'+
       '<section class="source-grid">'+cards+'</section>'+
       '<section class="panel"><div class="panel-head"><div><h2>Module coverage</h2><p>Screens render figures only for connected or partially sourced modules</p></div></div>'+
       '<div class="table-wrap"><table class="table reconcile-table"><caption class="sr-only">Source coverage by monitoring module</caption><thead><tr><th scope="col">Module</th><th scope="col">State</th><th scope="col">Source</th></tr></thead><tbody>'+covRows+'</tbody></table></div></section>'+
@@ -1687,7 +1695,7 @@
     catch(err){return String(iso||'—');}
   }
   function signed(n){return n>0?'+'+n:String(n);}
-  function render(){if(ui.tab==='welcome'){$('app').innerHTML=landingView();document.title='Maddie Journey · Madhouse Design Studio';optionalMotion('refresh','welcome');return;}const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,milestones:milestonesView,calendar:calendarView,journey:journey,kit:kitView,files201:files201View,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,sources:sourcesView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open ':'')+(ui.sidebarCollapsed?'sidebar-collapsed ':'')+(ui.density==='compact'?'density-compact':'density-comfortable')+'"'+(ui.employeeModalOpen||ui.divisionModal||ui.employeePicker?' inert aria-hidden="true"':'')+'>'+sidebar()+'<button type="button" class="workspace-scrim" aria-label="Close navigation" tabindex="-1" aria-hidden="true" data-action="mobile"></button><main id="main-content" class="main" tabindex="-1"'+(ui.mobile?' inert':'')+'>'+topnav()+guardedView(ui.tab,views)+(CONNECTED?'<footer class="footer"><span>Maddie Journey · v3.8 private monitoring · read-only</span><span>'+safe(freshnessText())+' · <a href="/logout">Sign out</a></span></footer>':'<footer class="footer"><span>Maddie Journey · Prototype v3.8</span><span>Fictional snapshot · No connected sources</span></footer>')+'</main></div>'+(ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.employeeModalOpen?employeeModal():'');document.title=title(ui.tab)+' · Maddie Journey';enhanceScrollableTables();optionalMotion('refresh',ui.tab);if(ui.employeeModalOpen||ui.divisionModal||ui.employeePicker){const modal=$('app').querySelector('[role="dialog"]');if(modal&&typeof modal.focus==='function')modal.focus({preventScroll:true});}}
+  function render(){if(ui.tab==='welcome'){$('app').innerHTML=landingView();document.title='Maddie Journey · Madhouse Design Studio';optionalMotion('refresh','welcome');return;}const views={overview:overview,divisions:divisionsView,division:divisionView,employees:employees,milestones:milestonesView,calendar:calendarView,journey:journey,kit:kitView,files201:files201View,attendance:attendanceView,kpi:kpiView,approvals:approvalsView,sources:sourcesView,audit:activity};$('app').innerHTML='<div class="layout '+(ui.mobile?'menu-open ':'')+(ui.sidebarCollapsed?'sidebar-collapsed ':'')+(ui.density==='compact'?'density-compact':'density-comfortable')+'"'+(ui.employeeModalOpen||ui.divisionModal||ui.employeePicker?' inert aria-hidden="true"':'')+'>'+sidebar()+'<button type="button" class="workspace-scrim" aria-label="Close navigation" tabindex="-1" aria-hidden="true" data-action="mobile"></button><main id="main-content" class="main" tabindex="-1"'+(ui.mobile?' inert':'')+'>'+topnav()+guardedView(ui.tab,views)+(CONNECTED?'<footer class="footer"><span>Maddie Journey · v3.8 private monitoring · read-only</span><span>'+safe(freshnessText())+' · '+(STATIC_SNAPSHOT?'<a href="./">Lock</a>':'<a href="/logout">Sign out</a>')+'</span></footer>':'<footer class="footer"><span>Maddie Journey · Prototype v3.8</span><span>Fictional snapshot · No connected sources</span></footer>')+'</main></div>'+(ui.divisionModal?divisionPickerModal():ui.employeePicker?memberPickerModal():ui.employeeModalOpen?employeeModal():'');document.title=title(ui.tab)+' · Maddie Journey';enhanceScrollableTables();optionalMotion('refresh',ui.tab);if(ui.employeeModalOpen||ui.divisionModal||ui.employeePicker){const modal=$('app').querySelector('[role="dialog"]');if(modal&&typeof modal.focus==='function')modal.focus({preventScroll:true});}}
   function openDivision(id,view,focusId){
     if(!data.divisions.some(function(d){return d.id===id;}))return;
     ui.scope=id;ui.activeDivision=id;

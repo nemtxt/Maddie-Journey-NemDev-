@@ -14,7 +14,7 @@
   const documentIcons={Employment:'briefcase',Contracts:'file',Personal:'id-card',Government:'shield'};
   const statusIcons={'complete':'check','missing':'alert-circle','not-checked':'clock','not-applicable':'minus',
     'source-unavailable':'database','conflict':'activity'};
-  const eventIcons={checkin:'clock',employment:'briefcase',milestone:'award',change:'activity'};
+  const eventIcons={checkin:'clock',employment:'briefcase',milestone:'award',change:'activity',confirmed:'calendar'};
   function fileStatus(employee,docs){
     const missing=[],unchecked=[],applicable=[],complete=[],unavailable=[],conflicting=[];
     docs.forEach(function(doc){
@@ -158,10 +158,35 @@
   }
   function events(snapshot,start){
     const first=start+'-01',end=monthShift(start,3)+'-01',rows=[];
-    const add=function(e,date,type,title,provenance){
-      if(date>=first&&date<end)rows.push({employee:e,date:date,type:type,title:title,provenance:provenance});
+    const add=function(e,date,type,title,provenance,extra){
+      if(/^\d{4}-\d{2}-\d{2}$/.test(date||'')&&date>=first&&date<end)
+        rows.push(Object.assign({employee:e,date:date,type:type,title:title,provenance:provenance},extra||{}));
     };
     const y0=Number(start.slice(0,4)),y1=Number(monthShift(start,2).slice(0,4));
+    if(snapshot.mode==='connected'){
+      // Connected: computed dates are labelled as computed; recorded dates and confirmed
+      // Calendar events name their source. Birthdays are not delivered and never shown.
+      snapshot.employees.forEach(function(e){
+        if(/^\d{4}-\d{2}-\d{2}$/.test(e.startDate||'')){
+          add(e,addMonths(e.startDate,3),'checkin','Third-month check-in','Calculated from Airtable hiring date');
+          add(e,addMonths(e.startDate,5),'checkin','Fifth-month check-in','Calculated from Airtable hiring date');
+          add(e,addMonths(e.startDate,6),'employment','Six-month probation checkpoint','Calculated from Airtable hiring date');
+          for(let y=y0;y<=y1;y++){
+            const yearStart=y+'-'+e.startDate.slice(5);
+            if(yearStart>e.startDate)add(e,yearStart,'milestone','Work anniversary','Calculated from Airtable hiring date');
+          }
+        }
+        add(e,e.regularizationDate,'employment','Regularization date','Recorded in Airtable');
+      });
+      (snapshot.calendarEvents||[]).forEach(function(c){
+        add(null,c.date,'confirmed',c.title,c.source+(c.time?' · '+c.time:''),{category:c.category,detail:c.detail});
+      });
+      const corder={confirmed:0,employment:1,checkin:2,change:3,milestone:4};
+      return rows.sort(function(a,b){
+        return a.date.localeCompare(b.date)||corder[a.type]-corder[b.type]||
+          (a.employee?a.employee.name:a.title).localeCompare(b.employee?b.employee.name:b.title)||a.title.localeCompare(b.title);
+      });
+    }
     snapshot.employees.forEach(function(e){
       add(e,addMonths(e.startDate,3),'checkin','Third-month check-in','Calculated demo date');
       add(e,addMonths(e.startDate,5),'checkin','Fifth-month check-in','Calculated demo date');
@@ -185,7 +210,7 @@
     return new Date(date+'T00:00:00Z').toLocaleDateString('en-PH',
       {month:'short',day:'numeric',year:'numeric',timeZone:'UTC'});
   }
-  function monthPanel(month,rows,ui){
+  function monthPanel(month,rows,ui,connected){
     const first=new Date(month+'-01T00:00:00Z'),offset=first.getUTCDay(),
       number=new Date(Date.UTC(first.getUTCFullYear(),first.getUTCMonth()+1,0)).getUTCDate();
     const monthName=first.toLocaleDateString('en-PH',{month:'long',year:'numeric',timeZone:'UTC'});
@@ -204,13 +229,13 @@
       return matching.length?'<button type="button" class="monitor-calendar-date has-events'+
         (date===today?' today':'')+(date===selected?' selected':'')+'" data-action="calendar-day" data-date="'+
         date+'" aria-pressed="'+(date===selected)+'" aria-label="'+esc(readableDate(date))+', '+
-        matching.length+' fictional events">'+inner+'</button>':
+        matching.length+(connected?' dated items':' fictional events')+'">'+inner+'</button>':
         '<span class="monitor-calendar-date'+(date===today?' today':'')+'" aria-label="'+
         esc(readableDate(date))+'">'+inner+'</span>';
     }).join('');
     const detail=selected?all.filter(function(e){return e.date===selected;}):all;
     const expanded=ui.calendarExpanded===month,shown=expanded?detail:detail.slice(0,4);
-    const kinds={checkin:0,employment:0,milestone:0,change:0};
+    const kinds={confirmed:0,checkin:0,employment:0,milestone:0,change:0};
     all.forEach(function(e){kinds[e.type]++;});
     return '<section class="panel monitor-calendar-month" aria-label="'+esc(monthName)+' calendar">'+
       '<div class="monitor-calendar-month-heading"><h2>'+esc(monthName)+'</h2>'+
@@ -221,21 +246,26 @@
       '<div class="monitor-calendar-month-summary">'+
       Object.keys(kinds).filter(function(k){return kinds[k];}).map(function(k){
         return '<span class="monitor-calendar-count type-'+esc(k)+'">'+kinds[k]+' '+esc(k==='checkin'?'check-ins':k==='employment'?'employment':
-          k==='change'?'changes':'milestones')+'</span>';
+          k==='change'?'changes':k==='confirmed'?'confirmed':'milestones')+'</span>';
       }).join('')+'</div>'+
       '<div class="monitor-calendar-events"><div class="monitor-calendar-events-heading"><strong>'+
-      (selected?'Events · '+esc(readableDate(selected)):'Dated sample events')+'</strong>'+
+      (selected?'Events · '+esc(readableDate(selected)):connected?'Dated items':'Dated sample events')+'</strong>'+
       (selected?'<button class="button small" type="button" data-action="calendar-all-days" data-month="'+month+
         '">All dates</button>':'')+'</div>'+
       (shown.length?shown.map(function(e){
+        const when='<time datetime="'+e.date+'">'+esc(e.date.slice(8))+' '+
+          esc(new Date(e.date+'T00:00:00Z').toLocaleDateString('en-PH',{month:'short',timeZone:'UTC'}))+'</time>';
+        // Confirmed Calendar events belong to no single employee: shown, not clickable.
+        if(!e.employee)return '<div class="monitor-calendar-event monitor-calendar-event-source">'+when+
+          '<span><b>'+esc(e.title)+'</b><small>'+esc(e.detail||'Confirmed')+' · '+esc(e.provenance)+'</small></span></div>';
         return '<button type="button" class="monitor-calendar-event" data-action="open" data-id="'+
-          esc(e.employee.id)+'" data-detail="'+(e.type==='checkin'||e.type==='employment'?'journey':'milestones')+
+          esc(e.employee.id)+'" data-detail="'+(connected?'info':e.type==='checkin'||e.type==='employment'?'journey':'milestones')+
           '" data-date="'+esc(e.date)+'" data-origin-label="'+esc(e.title)+'">'+
           '<time datetime="'+e.date+'">'+esc(e.date.slice(8))+' '+
           esc(new Date(e.date+'T00:00:00Z').toLocaleDateString('en-PH',{month:'short',timeZone:'UTC'}))+'</time>'+
           '<span><b>'+esc(e.employee.name)+'</b><small>'+esc(e.title)+' · '+esc(e.provenance)+'</small></span>'+
           '<span class="monitor-calendar-event-arrow" aria-hidden="true">'+icon('arrow-up-right')+'</span></button>';
-      }).join(''):'<p class="monitor-calendar-empty-message">No example events for this view.</p>')+
+      }).join(''):'<p class="monitor-calendar-empty-message">'+(connected?'No dated items for this view.':'No example events for this view.')+'</p>')+
       (!selected&&detail.length>4?'<button class="button small monitor-calendar-more" type="button" '+
         'data-action="calendar-more" data-month="'+month+'">'+
         (expanded?'Show fewer':'+'+(detail.length-4)+' more dates')+'</button>':'')+
@@ -244,7 +274,9 @@
   function calendarView(snapshot,ui){
     const month=ui.calendarStart||todayManila().slice(0,7),
       months=[month,monthShift(month,1),monthShift(month,2)],all=events(snapshot,month);
-    const types=[['all','All dates'],['checkin','Check-ins'],['employment','Employment'],
+    const connected=snapshot.mode==='connected';
+    const types=connected?[['all','All dates'],['confirmed','Confirmed events'],['checkin','Check-ins'],['employment','Employment'],
+      ['milestone','Anniversaries']]:[['all','All dates'],['checkin','Check-ins'],['employment','Employment'],
       ['milestone','Milestones'],['change','Changes']];
     const filtered=ui.calendarType==='all'?all:all.filter(function(e){return e.type===ui.calendarType;});
     const monthText=function(m){return new Date(m+'-01T00:00:00Z').toLocaleDateString('en-PH',
@@ -252,7 +284,7 @@
     return '<div class="monitor-calendar-workspace">'+
       '<div class="monitor-calendar-toolbar"><div><h2>Three-month outlook</h2><p>'+
       esc(monthText(month))+' – '+esc(monthText(months[2]))+' · '+
-      filtered.length+' of '+all.length+' fictional dates displayed</p></div>'+
+      filtered.length+' of '+all.length+(connected?' dates displayed':' fictional dates displayed')+'</p></div>'+
       '<div class="monitor-calendar-controls" role="group" aria-label="Calendar range">'+
       '<button class="button small" type="button" data-action="calendar-shift" data-shift="-3">'+icon('arrow-left')+' Previous</button>'+
       '<button class="button small" type="button" data-action="calendar-today">Today</button>'+
@@ -262,8 +294,10 @@
       types.map(function(type){return '<button type="button" class="monitor-filter'+
         (ui.calendarType===type[0]?' active':'')+'" data-action="calendar-type" data-kind="'+type[0]+
         '" aria-pressed="'+(ui.calendarType===type[0])+'">'+'<span class="monitor-filter-symbol" aria-hidden="true">'+icon(eventIcons[type[0]]||'calendar')+'</span>'+esc(type[1])+'</button>';}).join('')+'</div>'+
-      '<div class="monitor-calendar-three">'+months.map(function(m){return monthPanel(m,filtered,ui);}).join('')+'</div>'+
-      '<p class="report-source-note">This calendar contains only fictional profile dates, recorded sample promotions and computed check-in/probation milestones. Calculated dates are not confirmed appointments, statutory deadlines or booked meetings. No PIP/LIP tracker or live calendar provider is connected.</p></div>';
+      '<div class="monitor-calendar-three">'+months.map(function(m){return monthPanel(m,filtered,ui,connected);}).join('')+'</div>'+
+      (connected?'<p class="report-source-note">Confirmed events come from Google Calendar (P&amp;C meetings and Philippine holidays; restricted meetings are withheld and one-on-one titles generalized). '+
+        'Check-ins, probation checkpoints and anniversaries are calculated from Airtable hiring dates and are not booked meetings. Regularization dates are as recorded in Airtable. Birthdays are not included. Times are Asia/Manila.</p></div>':
+      '<p class="report-source-note">This calendar contains only fictional profile dates, recorded sample promotions and computed check-in/probation milestones. Calculated dates are not confirmed appointments, statutory deadlines or booked meetings. No PIP/LIP tracker or live calendar provider is connected.</p></div>');
   }
   root.MJ_MONITORING=Object.freeze({fileSummary:fileSummary,fileView:fileView,
     employeeFiles:employeeFiles,todayManila:todayManila,monthShift:monthShift,

@@ -115,7 +115,10 @@ function fakeFetch(options) {
     if (u.hostname === 'sheets.googleapis.com') return opts.fail.sheets ? respond(opts.fail.sheets, {}) : respond(200, { values: masterlistRows });
     if (u.hostname === 'www.googleapis.com' && u.pathname.indexOf('/drive/') === 0) return respond(200, { modifiedTime: '2026-05-05T08:22:42.438Z' });
     if (u.hostname === 'www.googleapis.com' && u.pathname.indexOf('/calendar/') === 0) {
-      return respond(200, { items: [{ id: 'evt1', status: 'confirmed', summary: 'Synthetic review', start: { dateTime: '2026-11-20T10:00:00+08:00' }, end: { dateTime: '2026-11-20T11:00:00+08:00' } },
+      return respond(200, { items: [{ id: 'evt1', status: 'confirmed', summary: 'CSO x P&C Generalist', start: { dateTime: '2026-11-20T10:00:00+08:00' }, end: { dateTime: '2026-11-20T11:00:00+08:00' } },
+        { id: 'evt3', status: 'confirmed', summary: 'P&C x Sample Person 02', start: { dateTime: '2026-11-21T01:30:00Z' }, end: { dateTime: '2026-11-21T02:00:00Z' } },
+        { id: 'evt4', status: 'confirmed', summary: 'PIP midpoint review', start: { dateTime: '2026-11-22T10:00:00+08:00' }, end: { dateTime: '2026-11-22T11:00:00+08:00' } },
+        { id: 'evt5', status: 'confirmed', summary: 'Client site visit', start: { dateTime: '2026-11-23T10:00:00+08:00' }, end: { dateTime: '2026-11-23T11:00:00+08:00' } },
         { id: 'evt2', status: 'cancelled', summary: 'Synthetic cancelled', start: { date: '2026-12-01' }, end: { date: '2026-12-02' } }] });
     }
     return respond(404, {});

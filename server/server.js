@@ -19,7 +19,7 @@ const crypto = require('node:crypto');
 
 const ROOT = path.resolve(__dirname, '..');
 const PUBLIC_FILES = new Set([
-  'app.js', 'data-adapter.js', 'icons.js', 'monitoring.js', 'motion.js',
+  'app.js', 'data-adapter.js', 'icons.js', 'monitoring.js', 'motion.js', 'unlock.js',
   'styles.css', 'theme.css', 'operations.css', 'palette.css', 'landing.css', 'workspace.css', 'reader.css', 'refined.css', 'mono.css'
 ]);
 const LOGIN_FILES = { '/login.js': ['server/public/login.js', 'text/javascript'], '/login.css': ['server/public/login.css', 'text/css'] };
@@ -33,10 +33,9 @@ function privateIndex() {
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   const inline = /<script>([\s\S]*?)<\/script>/.exec(html);
   const out = html
-    .replace('<script src="./data.js" defer></script>', '<script src="/private/payload.js" defer></script>')
-    .replace('Preparing the fictional monitoring snapshot…', 'Preparing the connected monitoring snapshot…')
-    .replace('JavaScript must be enabled for this prototype.', 'JavaScript must be enabled for the private monitoring view.');
-  if (out.indexOf('/private/payload.js') < 0) throw new Error('index.html no longer contains the data.js script tag expected by the private server.');
+    .replace('<script src="./unlock.js" defer></script>', '<script src="/private/payload.js" defer></script>\n  <script src="./unlock.js" defer></script>')
+    .replace('Preparing the secure monitoring view…', 'Preparing the connected monitoring snapshot…');
+  if (out.indexOf('/private/payload.js') < 0) throw new Error('index.html no longer contains the unlock.js script tag expected by the private server.');
   return { html: out, inlineHash: inline ? crypto.createHash('sha256').update(inline[1]).digest('base64') : '' };
 }
 
