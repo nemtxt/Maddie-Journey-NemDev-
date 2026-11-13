@@ -8,7 +8,8 @@
   --mc-motion-smooth: cubic-bezier(.2,.75,.15,1);
   --mc-nav-outline: rgba(255,255,255,.16);
 }
-html, body { max-width:100%; overflow-x:clip; }
+html, body { min-width:0!important; max-width:100%; overflow-x:clip; }
+/* Override the original 320px minimum: the supplied narrow screenshot is below it. */
 #app { max-width:100%; min-width:0; overflow-x:clip; }
 .shell {
   max-width:100%; min-width:0;
