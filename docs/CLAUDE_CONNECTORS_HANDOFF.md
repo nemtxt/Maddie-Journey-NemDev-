@@ -1,6 +1,6 @@
 # Maddie Journey — Claude Connector Handoff
 
-**Current phase:** GitHub Pages HTML/CSS/JavaScript prototype with 51 fictional employees and eight divisions. No live integrations are configured.
+**Current phase (v3.8 / Phase 11):** Source discovery is complete ([inventory](PHASE11_SOURCE_INVENTORY.md)) and the private read-only service is implemented ([architecture](PHASE11_SECURE_ARCHITECTURE.md)). The public GitHub Pages prototype still uses 51 fictional employees and eight divisions. The private service is **not yet live** pending read-only credentials. Sections below describe the original handoff; where they differ, the Phase 11 documents take precedence (for example, the real source has nine departments).
 
 **Future phase:** Transfer source development to the Claude workspace that has authorized access to Airtable, Google Sheets, Google Drive, Google Docs and email connectors. The current public interface will remain **read-only**, with no account creation, sign-up, edit forms or approvals.
 

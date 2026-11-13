@@ -2191,3 +2191,83 @@ body .employee-context-match{
     border-color:CanvasText!important
   }
 }
+
+/* Phase 10 v3.7 — narrow/zoomed viewport navigation affordances. */
+body .employee-modal-tabs[role="tablist"] .employee-tab{scroll-margin-inline:16px}
+@media(max-width:380px){
+  body .employee-context-return span{
+    max-width:130px;white-space:normal;text-overflow:clip;
+    line-height:1.35;overflow-wrap:anywhere
+  }
+  body .employee-context-pager{
+    flex:1 1 100%;justify-content:flex-end;margin-left:0;min-width:0
+  }
+}
+@media(max-height:600px){
+  body .employee-overlay{padding:6px}
+  body .employee-modal{max-height:calc(100dvh - 12px)}
+}
+@media(forced-colors:active){
+  body .employee-modal-tabs[role="tablist"] .employee-tab[aria-selected="true"]{
+    outline-offset:-3px;box-shadow:none
+  }
+}
+
+/* Restored source-neutral read-only person picker uses the canonical theme. */
+body .member-picker-modal .picker-department,
+body .member-picker-modal .picker-person{
+  color:var(--mono-text);background:var(--mono-surface);
+  border-color:var(--mono-border);min-width:0
+}
+body .member-picker-modal .picker-person-info{min-width:0;text-align:left}
+body .member-picker-modal .picker-person-info small{color:var(--mono-secondary)}
+body .member-picker-modal .picker-department.active{
+  color:var(--mono-text);background:var(--mono-soft);
+  border-color:var(--mj-focus-accent)
+}
+body .member-picker-modal .picker-department:hover,
+body .member-picker-modal .picker-person:hover{
+  color:var(--mono-text);background:var(--mono-hover);
+  border-color:var(--mj-focus-accent)
+}
+body .member-picker-modal .picker-person-score .ui-icon{width:16px;height:16px}
+@media(max-width:380px){
+  body .member-picker-modal .picker-person{gap:8px;padding:10px}
+  body .member-picker-modal .picker-person-info small{white-space:normal;overflow-wrap:anywhere}
+}
+@media(forced-colors:active){
+  body .member-picker-modal .picker-department.active{outline:2px solid Highlight;outline-offset:-2px}
+}
+
+/* v3.8 connected mode (private deployment only). Reuses existing tokens; the
+   textual label remains authoritative and color only supports it. */
+body .monitor-file-source-unavailable{background:var(--mj-pastel-sky)}
+body .monitor-file-conflict{background:var(--mj-pastel-lilac);border-color:var(--mj-pastel-stroke)}
+body .monitor-file-detail-table th small{display:block;font-weight:400;color:var(--muted);margin-top:2px}
+body .connected-unsourced{max-width:720px}
+body .connected-unsourced h2{margin:6px 0 8px;font-size:var(--mj-type-section)}
+body .connected-unsourced p{margin:0 0 12px}
+body .connected-issues{margin:8px 0 0;padding-left:18px}
+body .connected-issues li{margin:0 0 6px}
+body .source-card-meta{display:grid;gap:4px;margin:10px 0 0;font-size:var(--mj-type-caption);color:var(--muted)}
+body .source-card-meta strong{color:var(--ink);font-weight:600}
+body .source-state{display:inline-flex;align-items:center;gap:6px;font-size:var(--mj-type-caption);font-weight:600;
+  padding:3px 9px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
+body .source-state-connected{background:var(--mj-pastel-sage)}
+body .source-state-partial{background:var(--mj-pastel-peach)}
+body .source-state-permission-limited,body .source-state-error{background:var(--mj-pastel-blush);border-color:var(--mj-pastel-stroke)}
+body .source-state-not-configured,body .source-state-not-implemented{background:var(--mono-soft)}
+body .reconcile-table td,body .reconcile-table th{vertical-align:top}
+@media(forced-colors:active){body .source-state{border:1px solid CanvasText}}
+body .monitor-calendar-dot.type-confirmed,body .monitor-calendar-month-summary .type-confirmed{background:var(--mj-pastel-blush);border:1px solid var(--mj-pastel-stroke)}
+body .monitor-calendar-event-source{cursor:default}
+body .monitor-calendar-event-source:hover{transform:none}
+body .source-state-reviewed{background:var(--mono-soft)}
+/* v3.8 passphrase lock (GitHub Pages encrypted snapshot) */
+body .lock-card{max-width:440px;text-align:left}
+body .lock-card h1{margin:8px 0 10px}
+body .lock-form{display:grid;gap:8px;margin:18px 0 6px}
+body .lock-input{width:100%;min-height:var(--mj-control-min);font:inherit;padding:8px 12px;border:1px solid var(--line);border-radius:var(--mj-radius-control);background:transparent;color:inherit}
+body .lock-input:focus-visible{outline:2px solid var(--mono-accent);outline-offset:2px}
+body .lock-form .button{justify-self:start;min-height:var(--mj-control-min)}
+body .lock-status{min-height:1.5em;font-weight:500;margin:6px 0}

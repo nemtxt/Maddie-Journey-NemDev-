@@ -1,36 +1,48 @@
 /* Maddie Journey · read-only 201 files and calendar presentation.
- * Fictional fixture only; no Drive API, document mutations or calendar writes.
+ * Sample mode: fictional fixture. Connected mode: Airtable tracker attachment
+ * presence delivered by the private server. No Drive API, document mutations
+ * or calendar writes in either mode.
  */
 (function(root){
   'use strict';
   const esc=function(v){return String(v===null||v===undefined?'':v).replace(/[&<>"']/g,function(c){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
   });};
-  const docLabels={'complete':'Complete','missing':'Missing','not-checked':'Not checked','not-applicable':'Not applicable'};
+  const docLabels={'complete':'Complete','missing':'Missing','not-checked':'Not checked','not-applicable':'Not applicable',
+    'source-unavailable':'Source unavailable','conflict':'Conflicting evidence'};
   const icon=function(name){return root.MJ_ICONS&&typeof root.MJ_ICONS.svg==='function'?root.MJ_ICONS.svg(name):'';};
   const documentIcons={Employment:'briefcase',Contracts:'file',Personal:'id-card',Government:'shield'};
-  const statusIcons={'complete':'check','missing':'alert-circle','not-checked':'clock','not-applicable':'minus'};
-  const eventIcons={checkin:'clock',employment:'briefcase',milestone:'award',change:'activity'};
+  const statusIcons={'complete':'check','missing':'alert-circle','not-checked':'clock','not-applicable':'minus',
+    'source-unavailable':'database','conflict':'activity'};
+  const eventIcons={checkin:'clock',employment:'briefcase',milestone:'award',change:'activity',confirmed:'calendar'};
   function fileStatus(employee,docs){
-    const missing=[],unchecked=[],applicable=[],complete=[];
+    const missing=[],unchecked=[],applicable=[],complete=[],unavailable=[],conflicting=[];
     docs.forEach(function(doc){
       const state=employee.files201&&employee.files201[doc.id];
       if(state==='missing')missing.push(doc);
       if(state==='not-checked')unchecked.push(doc);
+      if(state==='source-unavailable')unavailable.push(doc);
+      if(state==='conflict')conflicting.push(doc);
       if(state!=='not-applicable'){
         applicable.push(doc);
         if(state==='complete')complete.push(doc);
       }
     });
+    // Precedence: conflict > missing > not checked > source unavailable > complete.
+    // A requirement with no source is never counted as complete.
     return {employee:employee,missing:missing,unchecked:unchecked,applicable:applicable,complete:complete,
-      status:missing.length?'missing':unchecked.length?'not-checked':'complete'};
+      unavailable:unavailable,conflicting:conflicting,
+      status:conflicting.length?'conflict':missing.length?'missing':unchecked.length?'not-checked':
+        unavailable.length?'source-unavailable':'complete'};
   }
   function fileSummary(snapshot){
     const docs=snapshot.documents201||[],rows=snapshot.employees.map(function(e){return fileStatus(e,docs);});
     const groups={
       missing:rows.filter(function(r){return r.status==='missing';}),
       'not-checked':rows.filter(function(r){return r.status==='not-checked';}),
-      complete:rows.filter(function(r){return r.status==='complete';}),all:rows
+      complete:rows.filter(function(r){return r.status==='complete';}),
+      'source-unavailable':rows.filter(function(r){return r.status==='source-unavailable';}),
+      conflict:rows.filter(function(r){return r.status==='conflict';}),all:rows
     };
     return {docs:docs,rows:rows,groups:groups,total:rows.length};
   }
@@ -44,14 +56,18 @@
       const count=function(state){return summary.rows.filter(function(row){
         return row.employee.files201[doc.id]===state;
       }).length;};
-      const complete=count('complete'),missing=count('missing'),unchecked=count('not-checked'),na=count('not-applicable');
+      const complete=count('complete'),missing=count('missing'),unchecked=count('not-checked'),na=count('not-applicable'),
+        unavailable=count('source-unavailable'),conflicts=count('conflict');
       return '<article class="monitor-file-card" data-group="'+esc(doc.group)+'"><span class="monitor-file-heading"><span class="monitor-file-symbol" aria-hidden="true">'+icon(documentIcons[doc.group]||'file')+'</span><span class="monitor-file-type">'+esc(doc.group)+'</span></span>'+
         '<h3>'+esc(doc.label)+'</h3><strong>'+complete+' <small>/ '+(total-na)+' applicable complete</small></strong>'+
         '<div class="monitor-file-counts"><span>'+missing+' missing</span><span>'+unchecked+' not checked</span>'+
-        (na?'<span>'+na+' N/A</span>':'')+'</div></article>';
+        (na?'<span>'+na+' N/A</span>':'')+(unavailable?'<span>'+unavailable+' source unavailable</span>':'')+
+        (conflicts?'<span>'+conflicts+' conflicting</span>':'')+'</div></article>';
     }).join('');
     const choices=[['missing','Missing documents'],['not-checked','Not checked'],
-      ['complete','Complete'],['all','All employees']];
+      ['complete','Complete'],['all','All employees']].concat(
+      ['conflict','source-unavailable'].filter(function(k){return summary.groups[k].length;})
+        .map(function(k){return [k,docLabels[k]];}));
     const tabs=choices.map(function(c){
       return '<button type="button" class="monitor-filter'+(active===c[0]?' active':'')+
         '" data-action="files-filter" data-kind="'+c[0]+'" aria-pressed="'+(active===c[0])+'">'+
@@ -59,7 +75,8 @@
     }).join('');
     const people=visible.map(function(row){
       const e=row.employee,relevant=row.status==='missing'?row.missing:
-        row.status==='not-checked'?row.unchecked:row.applicable;
+        row.status==='not-checked'?row.unchecked:row.status==='conflict'?row.conflicting:
+        row.status==='source-unavailable'?row.unavailable:row.applicable;
       const description=row.status==='complete'?'All applicable requirements complete':
         relevant.map(function(doc){return doc.label;}).join(' · ');
       return '<tr><th scope="row"><strong>'+esc(e.name)+'</strong><small>'+esc(e.id)+
@@ -69,11 +86,17 @@
         '<td><button class="button small" type="button" data-action="open" data-id="'+esc(e.id)+
         '" data-detail="files201" data-origin-label="'+esc(docLabels[row.status])+': '+esc(description)+'">Inspect</button></td></tr>';
     }).join('');
-    return '<p class="monitor-provenance" role="note"><strong>Fictional tracker snapshot.</strong> '+
+    const connected=snapshot.mode==='connected';
+    const unsourcedDocs=summary.docs.filter(function(doc){return summary.rows.every(function(r){return r.employee.files201[doc.id]==='source-unavailable';});});
+    return (connected?'<p class="monitor-provenance" role="note"><strong>Connected tracker snapshot.</strong> '+
+      total+' active roster records, '+summary.docs.length+' document requirements mapped to Airtable attachment columns. '+
+      'An attachment on file is evidence, not HR approval. Google Drive folders are not linked.'+
+      (unsourcedDocs.length?' No source column exists for: '+esc(unsourcedDocs.map(function(d){return d.label;}).join(', '))+'.':'')+'</p>':
+      '<p class="monitor-provenance" role="note"><strong>Fictional tracker snapshot.</strong> '+
       total+' example employee records, '+summary.docs.length+
-      ' sample document types. The official 201 tracker and Google Drive folders are not connected.</p>'+
+      ' sample document types. The official 201 tracker and Google Drive folders are not connected.</p>')+
       '<section class="panel monitor-documents"><div class="panel-head"><div><h2>By document</h2>'+
-      '<p>Document coverage across all '+total+' fictional employees</p></div>'+
+      '<p>Document coverage across all '+total+(snapshot.mode==='connected'?' active roster records':' fictional employees')+'</p></div>'+
       '<span class="monitor-section-note">Complete · Missing · Not checked · N/A</span></div>'+
       '<div class="monitor-files-grid">'+docCards+'</div></section>'+
       '<section class="panel monitor-missing"><div class="panel-head"><div>'+
@@ -87,7 +110,8 @@
       '<th scope="col">Employee</th><th scope="col">Status</th><th scope="col">Specific documents</th>'+
       '<th scope="col">Details</th></tr></thead><tbody>'+
       (people||'<tr><td class="report-empty-cell" colspan="4">'+
-        'No employees are recorded in this status for the fictional sample. Other categories remain available.'+
+        (snapshot.mode==='connected'?'No active roster records are in this status. Other categories remain available.':
+        'No employees are recorded in this status for the fictional sample. Other categories remain available.')+
         '</td></tr>')+
       '</tbody></table></div>'+
       (display.length>12?'<div class="monitor-list-footer"><button type="button" class="button small" '+
@@ -97,18 +121,21 @@
   function employeeFiles(snapshot,e){
     const docs=snapshot.documents201||[],status=fileStatus(e,docs);
     return '<section class="panel monitor-person-documents"><div class="panel-head"><div>'+
-      '<h2>201 Files Checklist</h2><p>Fictional per-document statuses · not verified against an official file folder</p></div>'+
+      '<h2>201 Files Checklist</h2><p>'+(snapshot.mode==='connected'?'Airtable tracker attachment presence · not HR-verified':
+        'Fictional per-document statuses · not verified against an official file folder')+'</p></div>'+
       '<span class="monitor-file-status monitor-file-'+status.status+'">'+icon(statusIcons[status.status]||'info')+esc(docLabels[status.status])+'</span></div>'+
       '<div class="table-wrap"><table class="table monitor-file-detail-table">'+
-      '<caption class="sr-only">All '+docs.length+' fictional document requirements for '+
+      '<caption class="sr-only">All '+docs.length+(snapshot.mode==='connected'?' document requirements for ':' fictional document requirements for ')+
       esc(e.name)+'</caption><thead><tr>'+
       '<th scope="col">Requirement</th><th scope="col">Recorded status</th></tr></thead><tbody>'+
       docs.map(function(d){
-        const state=e.files201[d.id];
-        return '<tr><th scope="row">'+esc(d.label)+'</th><td><span class="monitor-file-status monitor-file-'+
+        const state=e.files201[d.id],ev=e.files201Evidence&&e.files201Evidence[d.id];
+        return '<tr><th scope="row">'+esc(d.label)+(ev&&ev.note?'<small>'+esc(ev.note)+'</small>':'')+
+          '</th><td><span class="monitor-file-status monitor-file-'+
           esc(state)+'">'+icon(statusIcons[state]||'info')+esc(docLabels[state])+'</span></td></tr>';
       }).join('')+'</tbody></table></div>'+
-      '<p class="report-source-note">This document checklist is synthetic demonstration data. No source file or real verification is implied.</p></section>';
+      '<p class="report-source-note">'+(snapshot.mode==='connected'?'Source: Airtable P&amp;C Operations · People attachment columns. Presence of a file does not establish HR approval or document validity.':
+        'This document checklist is synthetic demonstration data. No source file or real verification is implied.')+'</p></section>';
   }
   function todayManila(){
     try{
@@ -131,10 +158,35 @@
   }
   function events(snapshot,start){
     const first=start+'-01',end=monthShift(start,3)+'-01',rows=[];
-    const add=function(e,date,type,title,provenance){
-      if(date>=first&&date<end)rows.push({employee:e,date:date,type:type,title:title,provenance:provenance});
+    const add=function(e,date,type,title,provenance,extra){
+      if(/^\d{4}-\d{2}-\d{2}$/.test(date||'')&&date>=first&&date<end)
+        rows.push(Object.assign({employee:e,date:date,type:type,title:title,provenance:provenance},extra||{}));
     };
     const y0=Number(start.slice(0,4)),y1=Number(monthShift(start,2).slice(0,4));
+    if(snapshot.mode==='connected'){
+      // Connected: computed dates are labelled as computed; recorded dates and confirmed
+      // Calendar events name their source. Birthdays are not delivered and never shown.
+      snapshot.employees.forEach(function(e){
+        if(/^\d{4}-\d{2}-\d{2}$/.test(e.startDate||'')){
+          add(e,addMonths(e.startDate,3),'checkin','Third-month check-in','Calculated from Airtable hiring date');
+          add(e,addMonths(e.startDate,5),'checkin','Fifth-month check-in','Calculated from Airtable hiring date');
+          add(e,addMonths(e.startDate,6),'employment','Six-month probation checkpoint','Calculated from Airtable hiring date');
+          for(let y=y0;y<=y1;y++){
+            const yearStart=y+'-'+e.startDate.slice(5);
+            if(yearStart>e.startDate)add(e,yearStart,'milestone','Work anniversary','Calculated from Airtable hiring date');
+          }
+        }
+        add(e,e.regularizationDate,'employment','Regularization date','Recorded in Airtable');
+      });
+      (snapshot.calendarEvents||[]).forEach(function(c){
+        add(null,c.date,'confirmed',c.title,c.source+(c.time?' · '+c.time:''),{category:c.category,detail:c.detail});
+      });
+      const corder={confirmed:0,employment:1,checkin:2,change:3,milestone:4};
+      return rows.sort(function(a,b){
+        return a.date.localeCompare(b.date)||corder[a.type]-corder[b.type]||
+          (a.employee?a.employee.name:a.title).localeCompare(b.employee?b.employee.name:b.title)||a.title.localeCompare(b.title);
+      });
+    }
     snapshot.employees.forEach(function(e){
       add(e,addMonths(e.startDate,3),'checkin','Third-month check-in','Calculated demo date');
       add(e,addMonths(e.startDate,5),'checkin','Fifth-month check-in','Calculated demo date');
@@ -158,7 +210,7 @@
     return new Date(date+'T00:00:00Z').toLocaleDateString('en-PH',
       {month:'short',day:'numeric',year:'numeric',timeZone:'UTC'});
   }
-  function monthPanel(month,rows,ui){
+  function monthPanel(month,rows,ui,connected){
     const first=new Date(month+'-01T00:00:00Z'),offset=first.getUTCDay(),
       number=new Date(Date.UTC(first.getUTCFullYear(),first.getUTCMonth()+1,0)).getUTCDate();
     const monthName=first.toLocaleDateString('en-PH',{month:'long',year:'numeric',timeZone:'UTC'});
@@ -177,13 +229,13 @@
       return matching.length?'<button type="button" class="monitor-calendar-date has-events'+
         (date===today?' today':'')+(date===selected?' selected':'')+'" data-action="calendar-day" data-date="'+
         date+'" aria-pressed="'+(date===selected)+'" aria-label="'+esc(readableDate(date))+', '+
-        matching.length+' fictional events">'+inner+'</button>':
+        matching.length+(connected?' dated items':' fictional events')+'">'+inner+'</button>':
         '<span class="monitor-calendar-date'+(date===today?' today':'')+'" aria-label="'+
         esc(readableDate(date))+'">'+inner+'</span>';
     }).join('');
     const detail=selected?all.filter(function(e){return e.date===selected;}):all;
     const expanded=ui.calendarExpanded===month,shown=expanded?detail:detail.slice(0,4);
-    const kinds={checkin:0,employment:0,milestone:0,change:0};
+    const kinds={confirmed:0,checkin:0,employment:0,milestone:0,change:0};
     all.forEach(function(e){kinds[e.type]++;});
     return '<section class="panel monitor-calendar-month" aria-label="'+esc(monthName)+' calendar">'+
       '<div class="monitor-calendar-month-heading"><h2>'+esc(monthName)+'</h2>'+
@@ -194,21 +246,26 @@
       '<div class="monitor-calendar-month-summary">'+
       Object.keys(kinds).filter(function(k){return kinds[k];}).map(function(k){
         return '<span class="monitor-calendar-count type-'+esc(k)+'">'+kinds[k]+' '+esc(k==='checkin'?'check-ins':k==='employment'?'employment':
-          k==='change'?'changes':'milestones')+'</span>';
+          k==='change'?'changes':k==='confirmed'?'confirmed':'milestones')+'</span>';
       }).join('')+'</div>'+
       '<div class="monitor-calendar-events"><div class="monitor-calendar-events-heading"><strong>'+
-      (selected?'Events · '+esc(readableDate(selected)):'Dated sample events')+'</strong>'+
+      (selected?'Events · '+esc(readableDate(selected)):connected?'Dated items':'Dated sample events')+'</strong>'+
       (selected?'<button class="button small" type="button" data-action="calendar-all-days" data-month="'+month+
         '">All dates</button>':'')+'</div>'+
       (shown.length?shown.map(function(e){
+        const when='<time datetime="'+e.date+'">'+esc(e.date.slice(8))+' '+
+          esc(new Date(e.date+'T00:00:00Z').toLocaleDateString('en-PH',{month:'short',timeZone:'UTC'}))+'</time>';
+        // Confirmed Calendar events belong to no single employee: shown, not clickable.
+        if(!e.employee)return '<div class="monitor-calendar-event monitor-calendar-event-source">'+when+
+          '<span><b>'+esc(e.title)+'</b><small>'+esc(e.detail||'Confirmed')+' · '+esc(e.provenance)+'</small></span></div>';
         return '<button type="button" class="monitor-calendar-event" data-action="open" data-id="'+
-          esc(e.employee.id)+'" data-detail="'+(e.type==='checkin'||e.type==='employment'?'journey':'milestones')+
+          esc(e.employee.id)+'" data-detail="'+(connected?'info':e.type==='checkin'||e.type==='employment'?'journey':'milestones')+
           '" data-date="'+esc(e.date)+'" data-origin-label="'+esc(e.title)+'">'+
           '<time datetime="'+e.date+'">'+esc(e.date.slice(8))+' '+
           esc(new Date(e.date+'T00:00:00Z').toLocaleDateString('en-PH',{month:'short',timeZone:'UTC'}))+'</time>'+
           '<span><b>'+esc(e.employee.name)+'</b><small>'+esc(e.title)+' · '+esc(e.provenance)+'</small></span>'+
           '<span class="monitor-calendar-event-arrow" aria-hidden="true">'+icon('arrow-up-right')+'</span></button>';
-      }).join(''):'<p class="monitor-calendar-empty-message">No example events for this view.</p>')+
+      }).join(''):'<p class="monitor-calendar-empty-message">'+(connected?'No dated items for this view.':'No example events for this view.')+'</p>')+
       (!selected&&detail.length>4?'<button class="button small monitor-calendar-more" type="button" '+
         'data-action="calendar-more" data-month="'+month+'">'+
         (expanded?'Show fewer':'+'+(detail.length-4)+' more dates')+'</button>':'')+
@@ -217,7 +274,9 @@
   function calendarView(snapshot,ui){
     const month=ui.calendarStart||todayManila().slice(0,7),
       months=[month,monthShift(month,1),monthShift(month,2)],all=events(snapshot,month);
-    const types=[['all','All dates'],['checkin','Check-ins'],['employment','Employment'],
+    const connected=snapshot.mode==='connected';
+    const types=connected?[['all','All dates'],['confirmed','Confirmed events'],['checkin','Check-ins'],['employment','Employment'],
+      ['milestone','Anniversaries']]:[['all','All dates'],['checkin','Check-ins'],['employment','Employment'],
       ['milestone','Milestones'],['change','Changes']];
     const filtered=ui.calendarType==='all'?all:all.filter(function(e){return e.type===ui.calendarType;});
     const monthText=function(m){return new Date(m+'-01T00:00:00Z').toLocaleDateString('en-PH',
@@ -225,7 +284,7 @@
     return '<div class="monitor-calendar-workspace">'+
       '<div class="monitor-calendar-toolbar"><div><h2>Three-month outlook</h2><p>'+
       esc(monthText(month))+' – '+esc(monthText(months[2]))+' · '+
-      filtered.length+' of '+all.length+' fictional dates displayed</p></div>'+
+      filtered.length+' of '+all.length+(connected?' dates displayed':' fictional dates displayed')+'</p></div>'+
       '<div class="monitor-calendar-controls" role="group" aria-label="Calendar range">'+
       '<button class="button small" type="button" data-action="calendar-shift" data-shift="-3">'+icon('arrow-left')+' Previous</button>'+
       '<button class="button small" type="button" data-action="calendar-today">Today</button>'+
@@ -235,8 +294,10 @@
       types.map(function(type){return '<button type="button" class="monitor-filter'+
         (ui.calendarType===type[0]?' active':'')+'" data-action="calendar-type" data-kind="'+type[0]+
         '" aria-pressed="'+(ui.calendarType===type[0])+'">'+'<span class="monitor-filter-symbol" aria-hidden="true">'+icon(eventIcons[type[0]]||'calendar')+'</span>'+esc(type[1])+'</button>';}).join('')+'</div>'+
-      '<div class="monitor-calendar-three">'+months.map(function(m){return monthPanel(m,filtered,ui);}).join('')+'</div>'+
-      '<p class="report-source-note">This calendar contains only fictional profile dates, recorded sample promotions and computed check-in/probation milestones. Calculated dates are not confirmed appointments, statutory deadlines or booked meetings. No PIP/LIP tracker or live calendar provider is connected.</p></div>';
+      '<div class="monitor-calendar-three">'+months.map(function(m){return monthPanel(m,filtered,ui,connected);}).join('')+'</div>'+
+      (connected?'<p class="report-source-note">Confirmed events come from Google Calendar (P&amp;C meetings and Philippine holidays; restricted meetings are withheld and one-on-one titles generalized). '+
+        'Check-ins, probation checkpoints and anniversaries are calculated from Airtable hiring dates and are not booked meetings. Regularization dates are as recorded in Airtable. Birthdays are not included. Times are Asia/Manila.</p></div>':
+      '<p class="report-source-note">This calendar contains only fictional profile dates, recorded sample promotions and computed check-in/probation milestones. Calculated dates are not confirmed appointments, statutory deadlines or booked meetings. No PIP/LIP tracker or live calendar provider is connected.</p></div>');
   }
   root.MJ_MONITORING=Object.freeze({fileSummary:fileSummary,fileView:fileView,
     employeeFiles:employeeFiles,todayManila:todayManila,monthShift:monthShift,

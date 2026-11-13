@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Sign in · Maddie Journey</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/login.css">
+</head>
+<body>
+  <main class="signin" id="main-content">
+    <span class="eyebrow">MADHOUSE DESIGN STUDIO / PRIVATE MONITORING</span>
+    <h1>Maddie Journey</h1>
+    <p>This view shows confidential People &amp; Culture records retrieved read-only from authorized sources. Sign in with an authorized Google account to continue.</p>
+    <div id="g_id_onload" data-client_id="%CLIENT_ID%" data-callback="mjSignIn" data-auto_prompt="false" data-ux_mode="popup"></div>
+    <div class="g_id_signin" data-type="standard" data-theme="outline" data-size="large" data-text="signin_with" data-shape="rectangular"></div>
+    <p class="status" id="signin-status" role="status" aria-live="polite"></p>
+    <p class="note">No account is created. Access is limited to Google accounts on the server allowlist. Nothing in this view can edit, approve or send records.</p>
+  </main>
+  <script src="/login.js" defer></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</body>
+</html>

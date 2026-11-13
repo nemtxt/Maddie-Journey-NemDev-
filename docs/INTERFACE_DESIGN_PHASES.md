@@ -1,7 +1,7 @@
 # Maddie Journey — Interface Improvement Roadmap
 
 **Goal:** Keep the monitoring workspace professional, calm, fast and immediately legible, rather than adding generic administrative pages or data-entry capabilities.  
-**Baseline:** v3.6 · 51 fictional employees · eight divisions · 13 read-only screens · five main navigation groups.  
+**Baseline:** v3.7 · 51 fictional employees · eight divisions · 13 read-only screens · five main navigation groups.  
 **Source boundary:** All data comes from local sample fixtures; any future Claude/Drive/Airtable connectors require a secure private integration layer.
 
 ## Phase 7 — Cross-workflow monitoring clarity (v3.4)
@@ -36,11 +36,13 @@ The employee preview now shows a compact source-specific origin and Back action.
 
 Completion verified at the source/interaction-test level only. Manual test device rendering, screen-reader names and actual scroll restoration across browsers using [Phase 9 QA](PHASE9_READER_QA.md).
 
-## Phase 10 — Real-device accessibility and responsive acceptance (proposed v3.7)
+## Phase 10 — Responsive and accessibility stabilization (v3.7)
 
-Enhancement: validate 320px/375px/430px phones, 768px and 1024px tablets, 1440px and 1920px desktops, 200% zoom, screen reader labels, keyboard-only use, high contrast and reduced motion. Fix actual clipping and measured responsiveness problems rather than speculative decorative styling.
+**Status: Code-level implementation complete; 119 simulated/source regression checks. Physical-device, screenshot, keyboard/AT and 200%-zoom acceptance remains open.**
 
-Completion: complete documented *rendered* manual viewport checks on real browsers and devices, with severity-ranked issues, screenshots and verified remediation. Passing source-level tests alone is insufficient.
+Implemented: isolate the workspace while a centered read-only dialog is open; recover from phone-to-desktop drawer transitions; support Home/End employee tab navigation and scroll active tabs into view; improve narrow employee return/pager wrapping, short-height dialog safety and forced-color selection cues. No source data, navigation targets, editing, login or real HR connections changed.
+
+The required 320px/375px/430px phone, 768px/1024px tablet, 1440px/1920px desktop, 200% zoom, NVDA/VoiceOver and browser keyboard checks are **not yet visually verified**. Capture test evidence, log defects and re-run acceptance before the phase can be called fully signed off. See [Phase 10 acceptance matrix](PHASE10_ACCESSIBILITY_QA.md).
 
 ## Phase 11 — Source-state UX and secure integration readiness (proposed v3.8)
 
