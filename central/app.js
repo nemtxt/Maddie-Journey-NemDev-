@@ -11,6 +11,7 @@
  // The sidebar is a persistent desktop preference; mobile drawer state is transient.
  let sidebarCollapsed=sv('sidebar-collapsed')==='true';
  let mobileNavOpen=false;
+ let categoryFocus='overview';
  const isMobile=()=>typeof window.matchMedia==='function'&&window.matchMedia('(max-width: 900px)').matches;
  let filter={query:'',status:'all',division:'all',sort:'name',descending:false};
  let routeKey='';
@@ -90,6 +91,10 @@
    '<a class="nav-link '+(current?.id===c.id?'selected':'')+'" '+(current?.id===c.id?'aria-current="page"':'')+
    ' href="'+href(c.id)+'" title="'+esc(c.label)+'" aria-label="'+esc(c.label)+'"><span class="nav-num">'+String(i+1).padStart(2,'0')+'</span>'+icon(c.icon)+
    '<span class="nav-text">'+esc(c.label)+'</span>'+icon('chevron','nav-chevron')+'</a>').join('')+'</nav>'+
+   (current?'<details class="nav-context" open><summary>IN THIS WORKSPACE '+icon('chevron')+'</summary><div class="nav-context-body">'+
+     current.subcategories.slice(0,4).map(s=>'<a href="'+href(current.id,s.id)+'" title="'+esc(s.label)+'">'+
+     '<span>'+esc(s.label)+'</span>'+icon('arrow')+'</a>').join('')+
+     '<a href="'+href(current.id)+'#subcategory-directory" data-action="view-link" data-view="explore">All '+current.subcategories.length+' views '+icon('arrow')+'</a></div></details>':'')+
    '<div class="side-bottom"><span class="trial-dot"></span><span class="side-status-copy">TRIAL ENVIRONMENT<br><small>51 fictional employees · no live sync</small></span></div>'+
    '<button type="button" class="mobile-close-nav" data-action="menu" aria-label="Close navigation">'+icon('close')+' Close menu</button></aside>';
  const header=(cat,sub)=>'<header class="topbar"><button type="button" class="mobile-menu" data-action="menu" aria-label="Open navigation menu" aria-expanded="'+String(mobileNavOpen)+'" aria-controls="side-menu">'+icon('menu')+'</button>'+
@@ -148,7 +153,16 @@
    if(!window.MC_SUMMARY)return '<p role="alert">Category summary module unavailable. Subcategory navigation remains accessible.</p>';
    const summary=window.MC_SUMMARY.create(model,cat.id,overrides);
    const catNum=String(config.categories.indexOf(cat)+1).padStart(2,'0');
-   const jump=(id,label)=>'<button class="mc-quick-chip" type="button" data-action="jump" data-jump="'+id+'">'+esc(label)+icon('arrow')+'</button>';
+   const tabs=[
+     {id:'overview',label:'Overview',icon:'chart',target:'mc-metrics'},
+     {id:'priorities',label:'Priorities',icon:'info',target:'mc-insights'},
+     {id:'updates',label:'Updates',icon:'activity',target:'mc-activity'},
+     {id:'explore',label:'Explore all views',icon:'briefcase',target:'mc-links'}
+   ];
+   const tab=({id,label,icon:ic,target})=>
+     '<button type="button" role="tab" data-action="view" data-view="'+id+'" aria-controls="'+target+
+     '" aria-selected="'+String(categoryFocus===id)+'" tabindex="'+(categoryFocus===id?'0':'-1')+'">'+
+     icon(ic)+'<span>'+label+'</span></button>';
    const metricCard=(m,i)=>
      '<article class="mc-metric-card mc-tone-'+esc(m.tone||'pink')+'"><div class="mc-metric-top">'+
      '<span class="mc-metric-icon">'+icon(m.icon||'chart')+'</span>'+
@@ -182,7 +196,7 @@
      '<span class="mc-white-chip">'+esc(cat.subcategories.length)+' linked views</span></div></div>'+
      '<div class="mc-hero-aside" aria-hidden="true"><span class="mc-hero-orbit"></span><div class="mc-preview-tile mc-preview-primary"><span>01 / SUMMARY</span><b>'+esc(summary.metrics[0]?.value)+'</b><small>'+esc(summary.metrics[0]?.label)+'</small></div>'+
      '<div class="mc-preview-tile mc-preview-secondary"><span>02 / TRACKED</span><b>'+esc(summary.metrics[1]?.value)+'</b><small>'+esc(summary.metrics[1]?.label)+'</small></div></div></div></section>'+
-     '<div class="mc-quickrow" aria-label="Category section shortcuts">'+jump('mc-metrics','Overview')+jump('mc-insights','Highlights')+jump('mc-activity','Updates')+jump('subcategory-directory','All subcategories')+'</div>'+
+     '<div class="mc-section-tabs" role="tablist" aria-label="Dashboard sections">'+tabs.map(tab).join('')+'</div>'+
      '<section class="mc-dashboard-section" id="mc-metrics" aria-labelledby="mc-metrics-title"><div class="mc-section-heading"><div><span class="eyebrow">AT A GLANCE</span><h2 id="mc-metrics-title">'+esc(summary.focus)+'</h2></div><span class="mc-white-chip">Derived from fictional records</span></div>'+
      '<div class="mc-metric-grid">'+summary.metrics.map(metricCard).join('')+'</div></section>'+
      '<section class="mc-dashboard-section mc-insight-section" id="mc-insights" aria-labelledby="mc-insights-title"><div class="mc-section-heading"><div><span class="eyebrow">WORKSPACE HEALTH</span><h2 id="mc-insights-title">Status and priorities</h2></div></div>'+
@@ -195,7 +209,7 @@
      (summary.activity.length?summary.activity.map(activity).join(''):'<p class="mc-muted">No sample updates are recorded for this category.</p>')+'</div></div>'+
      '<div class="mc-panel"><div class="mc-panel-head"><h3>Risks and source limitations</h3><span class="mc-white-chip">Trial only</span></div><div class="mc-notes-list">'+
      summary.risks.map(noteCard).join('')+'</div><p class="mc-panel-note">No real reminders, alerts, emails, decisions or external records are generated.</p></div></div></section>'+
-     '<section class="mc-dashboard-section" aria-labelledby="mc-category-links-title"><div class="mc-section-heading"><div><span class="eyebrow">JUMP INTO DETAILS</span><h2 id="mc-category-links-title">All '+esc(cat.subcategories.length)+' subcategory views</h2></div>'+
+     '<section class="mc-dashboard-section" id="mc-links" aria-labelledby="mc-category-links-title"><div class="mc-section-heading"><div><span class="eyebrow">JUMP INTO DETAILS</span><h2 id="mc-category-links-title">All '+esc(cat.subcategories.length)+' subcategory views</h2></div>'+
      '<span class="mc-white-chip">Select a view</span></div><div class="mc-link-grid">'+cat.subcategories.map((sub,i)=>
        '<a class="mc-link-tile" href="'+href(cat.id,sub.id)+'"><span class="mc-link-number">'+String(i+1).padStart(2,'0')+'</span><span>'+esc(sub.label)+'</span>'+
        icon(allowed(cat,sub)?'arrow':'lock')+'</a>').join('')+'</div></section>';
@@ -305,13 +319,14 @@
  function render(){
    const {cat,sub}=rawRoute();
    const next=cat?(cat.id+'/'+(sub?.id||'')):'home';
-   if(next!==routeKey){routeKey=next;setFilterFromStorage(next);}
+   if(next!==routeKey){routeKey=next;categoryFocus='overview';setFilterFromStorage(next);}
    document.title=(sub?sub.label+' · ':cat?cat.label+' · ':'')+'MADDIE CENTRAL | 2027 (FICTIONAL TRIAL)';
    root.innerHTML='<div class="shell">'+sidebar(cat)+'<div class="content-area">'+header(cat,sub)+
      '<main id="main-content" tabindex="-1">'+banner()+(cat?(sub?renderView(cat,sub):categoryPage(cat)):home())+'</main>'+
      footer()+'</div></div><div class="mobile-scrim" data-action="menu" aria-hidden="true"></div>';
    mobileNavOpen=false;
    syncNavigation();
+   syncCategoryFocus();
    const heading=root.querySelector('main h1');
    if(heading&&location.hash)heading.setAttribute('tabindex','-1');
  }
@@ -337,7 +352,18 @@
  root.addEventListener('click',event=>{
    const button=event.target.closest('[data-action]');if(!button)return;
    const action=button.dataset.action;
-   if(action==='jump'){const id=button.dataset.jump;const target=['mc-metrics','mc-insights','mc-activity','subcategory-directory'].includes(id)?document.getElementById(id):null;if(target){target.scrollIntoView({behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});}return;}
+   if(action==='view'||action==='view-link'){
+     const next=button.dataset.view;
+     if(!['overview','priorities','updates','explore'].includes(next))return;
+     if(action==='view-link'){
+       event.preventDefault();
+       if(!rawRoute().cat||rawRoute().sub)return;
+     }
+     categoryFocus=next;
+     syncCategoryFocus();
+     window.MC_MOTION?.panel();
+     return;
+   }
    if(action==='menu'){
      if(!isMobile())return;
      mobileNavOpen=!mobileNavOpen;
@@ -350,8 +376,16 @@
      if(isMobile())return;
      sidebarCollapsed=!sidebarCollapsed;
      save('sidebar-collapsed',String(sidebarCollapsed));
-     render();
-     root.querySelector('.desktop-collapse')?.focus();
+     // Do not recreate the DOM: a persistent grid makes the rail slide smoothly.
+     syncNavigation();
+     const toggle=root.querySelector?.('.desktop-collapse');
+     if(toggle){
+       toggle.setAttribute('aria-pressed',String(sidebarCollapsed));
+       toggle.setAttribute('aria-label',sidebarCollapsed?'Expand sidebar':'Collapse sidebar');
+       toggle.setAttribute('title',sidebarCollapsed?'Expand sidebar':'Collapse sidebar');
+       toggle.innerHTML=icon(sidebarCollapsed?'expand':'collapse');
+       toggle.focus();
+     }
      return;
    }
    if(action==='theme'){theme=theme==='light'?'dark':'light';save('theme',theme);document.documentElement.dataset.theme=theme;render();return;}
@@ -376,12 +410,40 @@
      overrides[base.recordId]=el.value;save('demo-overrides',JSON.stringify(overrides));refreshResults();
    }
  });
- window.addEventListener('hashchange',()=>{render();const h=root.querySelector('main h1');if(h)h.focus({preventScroll:true});});
+ window.addEventListener('hashchange',()=>{
+   const paint=()=>{
+     render();
+     const h=root.querySelector?.('main h1');
+     if(h)h.focus({preventScroll:true});
+     if(typeof window.scrollTo==='function')window.scrollTo({top:0,left:0,behavior:'instant'});
+   };
+   // The CSS view-transition path slides between screens on supported browsers.
+   // Otherwise, WAAPI reveals the new page; no animation is required for correctness.
+   const canTransition=typeof document.startViewTransition==='function'&&
+     !(window.MC_MOTION?.reduced?.()||window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+   if(canTransition){
+     try{document.startViewTransition(paint);}catch(_){paint();window.MC_MOTION?.enter();}
+   }else{paint();window.MC_MOTION?.enter();}
+ });
  root.addEventListener('click',event=>{
    if(event.target.closest('.sidebar a')&&mobileNavOpen){
      mobileNavOpen=false;syncNavigation();
    }
  });
+ function syncCategoryFocus(){
+   const enabled=Boolean(rawRoute().cat&&!rawRoute().sub);
+   for(const name of ['overview','priorities','updates','explore']){
+     root.classList.toggle('mc-focus-'+name,enabled&&categoryFocus===name);
+   }
+   root.classList.toggle('mc-category-view',enabled);
+   // Real tab selection is reflected for assistive tech as well as for visuals.
+   const buttons=root.querySelectorAll?.('.mc-section-tabs [data-action="view"]')||[];
+   for(const b of buttons){
+     const selected=b.dataset.view===categoryFocus;
+     b.setAttribute('aria-selected',String(selected));
+     b.tabIndex=selected?0:-1;
+   }
+ }
  // Keep navigation keyboard accessible: no off-screen mobile links in Tab order.
  function syncNavigation(){
    root.classList.toggle('sidebar-collapsed',sidebarCollapsed);
@@ -400,6 +462,21 @@
    if(main)main.inert=isMobile()&&mobileNavOpen;
  }
  document.addEventListener('keydown',e=>{
+   const tab=e.target?.closest?.('.mc-section-tabs [role="tab"]');
+   if(tab&&['ArrowRight','ArrowLeft','Home','End'].includes(e.key)){
+     const sequence=['overview','priorities','updates','explore'];
+     const now=sequence.indexOf(tab.dataset.view);
+     const next=e.key==='Home'?0:e.key==='End'?sequence.length-1:
+       (now+(e.key==='ArrowRight'?1:-1)+sequence.length)%sequence.length;
+     if(now>=0){
+       e.preventDefault();
+       categoryFocus=sequence[next];syncCategoryFocus();
+       const selected=root.querySelector?.('.mc-section-tabs [data-view="'+categoryFocus+'"]');
+       selected?.focus();
+       window.MC_MOTION?.panel();
+     }
+     return;
+   }
    if(e.key==='Escape'&&mobileNavOpen){
      mobileNavOpen=false;syncNavigation();
      root.querySelector('.mobile-menu')?.focus();
@@ -415,6 +492,6 @@
  window.addEventListener('resize',()=>{if(!isMobile()&&mobileNavOpen){mobileNavOpen=false;syncNavigation();}});
 
  const skip=document.getElementById('skip-content');if(skip)skip.addEventListener('click',()=>root.querySelector('#main-content')?.focus());
- window.MC_APP={model,config,render,rawRoute,allowed,filteredRows,getRole:()=>role,getFilter:()=>({...filter}),isSidebarCollapsed:()=>sidebarCollapsed,isMobileNavOpen:()=>mobileNavOpen};
+ window.MC_APP={model,config,render,rawRoute,allowed,filteredRows,getRole:()=>role,getFilter:()=>({...filter}),isSidebarCollapsed:()=>sidebarCollapsed,isMobileNavOpen:()=>mobileNavOpen,getCategoryFocus:()=>categoryFocus};
  render();
 })();
