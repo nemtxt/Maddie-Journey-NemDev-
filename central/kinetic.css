@@ -258,7 +258,9 @@ a.mc-white-chip:hover{transform:translateY(-2px);box-shadow:0 7px 20px rgba(17,1
   :root{--mc-motion-fast:0ms;--mc-motion-medium:0ms;--mc-motion-slow:0ms}
   .shell,.sidebar,.mobile-scrim,.nav-link,.nav-home,.mc-section-tabs button,
   .mc-quick-chip,.mc-link-tile,.mc-metric-card,.mc-stack-card,
-  .mc-profile-card{animation:none!important;transition:none!important;transform:none!important}
+  .mc-profile-card{animation:none!important;transition:none!important}
+  /* Preserve the mobile drawer's closed/off-screen transform even with no motion. */
+  .mc-metric-card,.mc-stack-card,.mc-profile-card,.mc-link-tile,.mc-quick-chip{transform:none!important}
   .mc-page-in,.mc-page-out,.mc-view-flash,.mc-progress-bar,
   .nav-context-body,.accordion[open] .accordion-body{animation:none!important}
   @supports(view-transition-name:mc-stage){
