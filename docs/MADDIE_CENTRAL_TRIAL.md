@@ -159,3 +159,48 @@ CI runs both \`node tests/smoke.js\` (preserved v3.7 monitor) and \`node tests/c
 Still requires real browser QA at **280, 320, 375, 430, 768, 1024, 1440 and 1920px**, iPhone Safari, Android Chrome, Windows keyboard-only and screen readers. CSS and mocked event tests are not substitutes for actual screenshot-based visual inspection.
 
 **Operational deployment warning:** GitHub's repository-level Pages configuration is currently producing "pages build and deployment" jobs on pushes to this trial branch. These deployments can target the same URL as the live \`main\` site even though no commit, merge or push touches \`main\`. To maintain separate public preview and live environments, production Pages settings must be corrected independently before treating the published URL as an isolated trial preview.
+
+
+## Uploaded \`maddie-central.html\` wireframe integration (November 13, 2026)
+
+This phase translated the uploaded standalone wireframe's **information architecture and interaction patterns** into the existing *isolated* Maddie Central 2027 trial. It did **not** copy the uploaded source wholesale, because that source uses separate hardcoded data for **54 employees**, ten departments, fictitious payroll totals, candidate counts, sample passcode/login messaging, and claims about live connectors. Those claims conflict with this branch's protected, read-only **51 fictional employees / eight divisions / zero live integrations** contract.
+
+### Integrated visual and interactive patterns
+
+| Uploaded wireframe design pattern | Implemented trial behavior |
+| --- | --- |
+| Executive hero and attention queue | New source-derived executive operating picture with fictional document, attendance, journey and decision review counts |
+| Week / month / quarter segmented controls | Real client-side selection of due dates within the next 7 / 30 / 90 days relative to the November 13, 2026 demo snapshot |
+| Severity tabs | All / High review queue filters, with no fake notification acknowledgment or dismissal |
+| Color-accent KPI tiles | Linked and responsive cards showing fictional headcount, requisitions, attendance exceptions, document requests and sample upcoming deadlines |
+| Department composition | Aggregated headcount-by-division stacked bar and legend calculated directly from the unchanged 51-person masterlist |
+| Coming-up timeline | Due dates sourced only from fictional journey, recruiting, learning, culture and executive records |
+| Workspace monitoring table | Nine-row status/coverage table, each row linked to the existing category dashboard |
+| Global quick-search | Ctrl / Cmd + K command palette finds all nine workspaces and their 86 subcategory views |
+| People Directory | Live-derived *fictional* division composition panel; existing Employee Masterlist search, filters and record pages remain |
+| Pay & Benefits | Benefits readiness pipeline derived from sample statuses, **without** claiming payroll release dates, pay totals or benefit enrollment |
+| Workforce Pulse | Weekday exception visualization from verified fictional late/absent entries; not an official daily presence rate |
+| Maddie Journey | Non-editable progression board using existing employee journey stage/status and checklist completion |
+| Learning Hub | Attendance-based program rings with transparent denominator; not invented training assessments |
+| Culture & Community | November / December 2026 calendar whose marks reflect fictional event due dates |
+| Talent Acquisition | Stage-grouped **requisition** board, not unsupported candidates or offer approval |
+| People Governance | De-identified aggregate case-state matrix; no names, allegations, evidence or sensitive personnel information |
+| Executive Scoreboard | Percentage coverage against actual sample-record denominators; no fabricated WIG #4 targets |
+
+The prior nine category summary dashboards, protected simulated-role previews, 86 subcategory deep links, mobile and desktop collapsible navigation, keyboard controls, local-only fictional updates, white chips and reduced-motion protections remain in place. The older redundant bottom-of-home KPI row was removed to reduce duplicate information; six executive saved-view shortcuts are preserved in an optional expandable section.
+
+### Code and safety
+
+- \`central/wireframe.js\`: purely source-based HTML renderers and derived fictional data; no connector or fetch calls.
+- \`central/wireframe.css\`: responsive executive cards, table, timeline, status boards, heat visualization, sample calendar and native command dialog.
+- \`central/app.js\`: safe integration points and interactive period/severity/calendar controls, native-dialog command palette and keyboard shortcut.
+- \`tests/central-smoke.js\`: new reconciliation tests for source-driven values, all nine visuals, search, deep links, privacy and controls.
+- \`index.html\`: trial-only assets; no uploaded base64 photograph, passcode system or real connector scripts were added.
+
+### Constraints and next acceptance review
+
+The trial's role selector **is not** server authentication; do not put real HR data or secrets in the public repository. The dashboard cannot claim real-time freshness, actual payroll approval, employee relations findings, staff attendance today, or candidate pipeline performance.
+
+Device/browser testing is still required at 320 / 375 / 430 / 768 / 1024 / 1440 widths, keyboard-only, iPhone Safari, Android Chrome, screen readers, dark mode, and reduced-motion. Verify the global search opens with Ctrl / Cmd + K, all result links resolve, November/December calendar switching works, and each executive period filter changes only documented due-date counts.
+
+**Publishing warning:** The repository's existing Pages settings are triggering a **production URL deployment from trial-branch pushes**. Git branch isolation does not isolate GitHub Pages deployment. Do not assume \`https://nemtxt.github.io/Maddie-Journey-NemDev-/\` is a safe preview, and confirm repository Pages source before relying on that URL for confidential or live operations. No changes were made to \`main\` or the Claude branch by this work.
