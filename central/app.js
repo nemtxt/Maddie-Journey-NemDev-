@@ -356,8 +356,10 @@
      const next=button.dataset.view;
      if(!['overview','priorities','updates','explore'].includes(next))return;
      if(action==='view-link'){
-       event.preventDefault();
+       // On a detail page, follow the ordinary category href; in the summary,
+       // switch directly to Explore without losing the current route.
        if(!rawRoute().cat||rawRoute().sub)return;
+       event.preventDefault();
      }
      categoryFocus=next;
      syncCategoryFocus();
