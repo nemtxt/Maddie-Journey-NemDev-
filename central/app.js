@@ -108,20 +108,78 @@
      '<div class="section-head lower"><div><span class="eyebrow">QUICK NAVIGATION</span><h2>Executive and operational views</h2></div></div>'+
      '<div class="quick-grid">'+config.savedViews.map(v=>'<a class="quick-link" href="'+href(v.category,v.sub)+'">'+icon('chart')+'<span>'+esc(v.label)+'</span>'+icon('chevron')+'</a>').join('')+'</div>';
  };
+
+ function renderSummaryDashboard(cat){
+   if(!window.MC_SUMMARY)return '<p role="alert">Category summary module unavailable. Subcategory navigation remains accessible.</p>';
+   const summary=window.MC_SUMMARY.create(model,cat.id,overrides);
+   const catNum=String(config.categories.indexOf(cat)+1).padStart(2,'0');
+   const jump=(id,label)=>'<button class="mc-quick-chip" type="button" data-action="jump" data-jump="'+id+'">'+esc(label)+icon('arrow')+'</button>';
+   const metricCard=(m,i)=>
+     '<article class="mc-metric-card mc-tone-'+esc(m.tone||'pink')+'"><div class="mc-metric-top">'+
+     '<span class="mc-metric-icon">'+icon(m.icon||'chart')+'</span>'+
+     '<span class="mc-white-chip">'+esc(i+1)+' / '+esc(summary.metrics.length)+'</span></div>'+
+     '<div class="mc-metric-count">'+esc(m.value)+'</div><h3>'+esc(m.label)+'</h3><p>'+esc(m.detail)+'</p></article>';
+   const entries=summary.distribution.filter(x=>x.value>0).sort((a,b)=>b.value-a.value);
+   const total=entries.reduce((n,x)=>n+x.value,0);
+   const shown=entries.slice(0,5);
+   if(entries.length>5)shown.push({label:'Other statuses',value:entries.slice(5).reduce((n,x)=>n+x.value,0)});
+   const stateChips=shown.length?shown.map((item,i)=>'<span class="mc-white-chip mc-white-chip-wide"><i class="mc-chip-dot mc-dot-'+(i%4)+'"></i>'+esc(item.label)+
+     '<strong>'+esc(item.value)+'</strong></span>').join(''):'<span class="mc-white-chip">No status records in demo fixture</span>';
+   const dist=shown.length?shown.map((item,i)=>'<div class="mc-progress-row"><div class="mc-progress-line"><span>'+esc(item.label)+'</span><strong>'+esc(item.value)+'</strong></div>'+
+     '<div class="mc-progress-track" role="progressbar" aria-label="'+esc(item.label)+' proportion" aria-valuemin="0" aria-valuemax="'+total+'" aria-valuenow="'+item.value+'"><span class="mc-progress-bar mc-bar-'+(i%4)+'" style="width:'+Math.max(0,Math.min(100,total?100*item.value/total:0))+'%"></span></div></div>').join(''):
+     '<p class="mc-muted">No status distribution available in the demo fixture.</p>';
+   const focusCard=(item,i)=>{
+     const block='<span class="mc-focus-index">'+String(i+1).padStart(2,'0')+'</span><span class="mc-focus-copy"><strong>'+esc(item.title)+'</strong><small>'+esc(item.detail)+'</small></span>'+
+       '<span class="mc-white-chip">'+esc(item.tone==='attention'?'Review':item.tone==='positive'?'Ready':'Sample')+'</span>';
+     return item.to?'<a class="mc-focus-row" href="'+href(item.to.category,item.to.subcategory)+'">'+block+icon('chevron')+'</a>':
+       '<div class="mc-focus-row">'+block+'</div>';
+   };
+   const activity=(a,i)=>'<div class="mc-activity-row"><span class="mc-activity-marker mc-dot-'+(i%4)+'"></span><div><strong>'+esc(a.title)+'</strong><small>'+esc(a.detail)+'</small></div>'+
+     '<span class="mc-white-chip">'+esc(a.status||'Sample')+'</span></div>';
+   const noteCard=(n,i)=>'<div class="mc-note-row"><span class="mc-note-symbol">'+icon(n.tone==='attention'?'info':'shield')+'</span><div><strong>'+esc(n.title)+'</strong><p>'+esc(n.detail)+'</p></div></div>';
+   return '<a class="back-link" href="#/home">'+icon('chevron','back-icon')+' Back to main dashboard</a>'+
+     '<section class="mc-summary-hero" aria-labelledby="mc-summary-title"><div class="mc-hero-grid"><div class="mc-hero-text">'+
+     '<div class="mc-summary-label"><span>WORKSPACE '+catNum+' / 09</span><span class="mc-white-chip">'+icon('check')+' Fictional sample data only</span></div>'+
+     '<h1 id="mc-summary-title">'+esc(summary.title)+'</h1><p class="mc-hero-subtitle">'+esc(summary.subtitle)+'</p>'+
+     '<p class="mc-hero-description">'+esc(summary.description)+'</p>'+
+     '<div class="mc-hero-chips"><span class="mc-white-chip">'+icon('calendar')+' Snapshot '+esc(summary.asOf)+'</span>'+
+     '<span class="mc-white-chip">'+icon('users')+' '+esc(role)+' preview</span>'+
+     '<span class="mc-white-chip">'+esc(cat.subcategories.length)+' linked views</span></div></div>'+
+     '<div class="mc-hero-aside" aria-hidden="true"><span class="mc-hero-orbit"></span><div class="mc-preview-tile mc-preview-primary"><span>01 / SUMMARY</span><b>'+esc(summary.metrics[0]?.value)+'</b><small>'+esc(summary.metrics[0]?.label)+'</small></div>'+
+     '<div class="mc-preview-tile mc-preview-secondary"><span>02 / TRACKED</span><b>'+esc(summary.metrics[1]?.value)+'</b><small>'+esc(summary.metrics[1]?.label)+'</small></div></div></div></section>'+
+     '<div class="mc-quickrow" aria-label="Category section shortcuts">'+jump('mc-metrics','Overview')+jump('mc-insights','Highlights')+jump('mc-activity','Updates')+jump('subcategory-directory','All subcategories')+'</div>'+
+     '<section class="mc-dashboard-section" id="mc-metrics" aria-labelledby="mc-metrics-title"><div class="mc-section-heading"><div><span class="eyebrow">AT A GLANCE</span><h2 id="mc-metrics-title">'+esc(summary.focus)+'</h2></div><span class="mc-white-chip">Derived from fictional records</span></div>'+
+     '<div class="mc-metric-grid">'+summary.metrics.map(metricCard).join('')+'</div></section>'+
+     '<section class="mc-dashboard-section mc-insight-section" id="mc-insights" aria-labelledby="mc-insights-title"><div class="mc-section-heading"><div><span class="eyebrow">WORKSPACE HEALTH</span><h2 id="mc-insights-title">Status and priorities</h2></div></div>'+
+     '<div class="mc-insight-grid"><div class="mc-panel"><div class="mc-panel-head"><div><span class="eyebrow">STATUS MIX</span><h3>Sample workflow statuses</h3></div><span class="mc-white-chip">Count · '+esc(total)+'</span></div>'+
+     '<div class="mc-status-chips">'+stateChips+'</div><div class="mc-progress-list">'+dist+'</div></div>'+
+     '<div class="mc-panel"><div class="mc-panel-head"><div><span class="eyebrow">HIGHLIGHTS</span><h3>What needs attention</h3></div><span class="mc-white-chip">Priority view</span></div>'+
+     '<div class="mc-focus-list">'+summary.highlights.map(focusCard).join('')+'</div></div></div></section>'+
+     '<section class="mc-dashboard-section" id="mc-activity" aria-labelledby="mc-activity-title"><div class="mc-section-heading"><div><span class="eyebrow">SAMPLE ACTIVITY</span><h2 id="mc-activity-title">Recent fixture records and notes</h2></div><span class="mc-white-chip">No live activity feed</span></div>'+
+     '<div class="mc-activity-grid"><div class="mc-panel"><div class="mc-panel-head"><h3>Example updates</h3><span class="mc-white-chip">Demo snapshot</span></div><div class="mc-activity-list">'+
+     (summary.activity.length?summary.activity.map(activity).join(''):'<p class="mc-muted">No sample updates are recorded for this category.</p>')+'</div></div>'+
+     '<div class="mc-panel"><div class="mc-panel-head"><h3>Risks and source limitations</h3><span class="mc-white-chip">Trial only</span></div><div class="mc-notes-list">'+
+     summary.risks.map(noteCard).join('')+'</div><p class="mc-panel-note">No real reminders, alerts, emails, decisions or external records are generated.</p></div></div></section>'+
+     '<section class="mc-dashboard-section" aria-labelledby="mc-category-links-title"><div class="mc-section-heading"><div><span class="eyebrow">JUMP INTO DETAILS</span><h2 id="mc-category-links-title">All '+esc(cat.subcategories.length)+' subcategory views</h2></div>'+
+     '<span class="mc-white-chip">Select a view</span></div><div class="mc-link-grid">'+cat.subcategories.map((sub,i)=>
+       '<a class="mc-link-tile" href="'+href(cat.id,sub.id)+'"><span class="mc-link-number">'+String(i+1).padStart(2,'0')+'</span><span>'+esc(sub.label)+'</span>'+
+       icon(allowed(cat,sub)?'arrow':'lock')+'</a>').join('')+'</div></section>';
+ }
  const categoryPage=(cat)=>{
-   const idx=config.categories.indexOf(cat);
-   return '<a class="back-link" href="#/home">'+icon('chevron','back-icon')+' Back to dashboard</a>'+
-     '<div class="page-heading"><div class="eyebrow">WORKSPACE '+String(idx+1).padStart(2,'0')+' / 09</div><h1>'+esc(cat.label)+'</h1><p>'+esc(cat.subtitle)+'</p></div>'+
-     '<div class="section-head"><div><h2>Subcategory navigation</h2><p>Expand a section to read its scope and open the linked view.</p></div><span class="pill">'+cat.subcategories.length+' views</span></div>'+
+   return renderSummaryDashboard(cat)+
+     '<section class="mc-dashboard-section mc-directory" id="subcategory-directory" aria-labelledby="mc-directory-title">'+
+     '<div class="mc-section-heading"><div><span class="eyebrow">EXPLORE FURTHER</span><h2 id="mc-directory-title">Expandable subcategory directory</h2>'+
+     '<p class="mc-muted">Expand a section to review scope or open its fictional linked view.</p></div>'+
+     '<span class="mc-white-chip">'+cat.subcategories.length+' views</span></div>'+
      '<div class="accordion-grid">'+cat.subcategories.map((s,i)=>{
        const permitted=allowed(cat,s);
        return '<details class="accordion"><summary><span class="sub-num">'+String(i+1).padStart(2,'0')+'</span>'+
          '<span class="sub-label">'+esc(s.label)+'</span>'+icon(permitted?'chevron':'lock','accord-icon')+'</summary>'+
-         '<div class="accordion-body"><p>'+esc(kindDescription(s))+'</p><div class="accord-meta">'+esc(s.classification)+' · '+(permitted?'Demo records':'Restricted role preview')+'</div>'+
+         '<div class="accordion-body"><p>'+esc(kindDescription(s))+'</p><div class="accord-meta">'+esc(s.classification)+' · '+(permitted?'Fictional records':'Restricted role preview')+'</div>'+
          '<a class="open-view" href="'+href(cat.id,s.id)+'">Open '+esc(s.label)+icon('arrow')+'</a></div></details>';
-     }).join('')+'</div>'+
-     '<div class="page-owner">'+icon('info')+' Page owner: P&C (demo) · Last fixture update: '+esc(model.updatedAt)+
-     ' · Open any subcategory for its linked records, filters, and available actions.</div>';
+     }).join('')+'</div></section>'+
+     '<div class="page-owner">'+icon('info')+' Page owner: P&C (fictional trial) · Last fixture update: '+esc(model.updatedAt)+
+     ' · Summary figures and workflow statuses are drawn from sample records; not verified operational reports.</div>';
  };
  function kindDescription(s){
    const lookup={
@@ -243,6 +301,7 @@
  root.addEventListener('click',event=>{
    const button=event.target.closest('[data-action]');if(!button)return;
    const action=button.dataset.action;
+   if(action==='jump'){const id=button.dataset.jump;const target=['mc-metrics','mc-insights','mc-activity','subcategory-directory'].includes(id)?document.getElementById(id):null;if(target){target.scrollIntoView({behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});}return;}
    if(action==='menu'){root.classList.toggle('navigation-open');return;}
    if(action==='theme'){theme=theme==='light'?'dark':'light';save('theme',theme);document.documentElement.dataset.theme=theme;render();return;}
    if(action==='clear-filter'){filter={query:'',status:'all',division:'all',sort:'name',descending:false};render();return;}
