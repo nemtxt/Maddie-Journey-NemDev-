@@ -143,14 +143,8 @@
      '<h2 id="mc-team-title">PEOPLE BEHIND <span>THE WORK.</span></h2></div>'+
      '<p>Three fictional identities from the 51-person demonstration masterlist. Monogram artwork is illustrative, not employee photography.</p></div>'+
      '<div class="mc-profile-grid">'+spotlight.map(editorial).join('')+'</div></section>'+
-     '<div class="section-head lower"><div><span class="eyebrow">EXECUTIVE MONITORING / SAMPLE SNAPSHOT</span><h2>A sharper overview.</h2></div>'+
-     '<span class="mc-white-chip">Derived from fictional records</span></div>'+
-     '<div class="metric-grid">'+metric(m.missing201,'201 file requests','Derived from sample checklist')+
-       metric(m.attendanceExceptions,'Attendance exceptions','Verified fictional records only')+
-       metric(m.openRequisitions,'Sample requisitions','Not real open positions')+
-       metric(m.pendingJourney,'Pending journey records','Calculated from sample milestones')+'</div>'+
-     '<div class="section-head lower"><div><span class="eyebrow">QUICK NAVIGATION</span><h2>Executive shortcuts.</h2></div></div>'+
-     '<div class="quick-grid">'+config.savedViews.map(v=>'<a class="quick-link" href="'+href(v.category,v.sub)+'">'+icon('chart')+'<span>'+esc(v.label)+'</span>'+icon('chevron')+'</a>').join('')+'</div>';
+     '<details class="wf-extras"><summary>Executive saved-view shortcuts <span>'+config.savedViews.length+' linked views</span>'+icon('chevron')+'</summary>'+
+     '<div class="quick-grid">'+config.savedViews.map(v=>'<a class="quick-link" href="'+href(v.category,v.sub)+'">'+icon('chart')+'<span>'+esc(v.label)+'</span>'+icon('chevron')+'</a>').join('')+'</div></details>';
  };
  function renderSummaryDashboard(cat){
    if(!window.MC_SUMMARY)return '<p role="alert">Category summary module unavailable. Subcategory navigation remains accessible.</p>';
