@@ -10,7 +10,7 @@ const root=path.resolve(__dirname,'..');
 const read=name=>fs.readFileSync(path.join(root,name),'utf8');
 let passed=0;
 function test(label,fn){fn();console.log('PASS '+label);passed++;}
-const pages=['index.html','legacy.html','central/config.js','central/model.js','central/app.js','central/styles.css','data.js'];
+const pages=['index.html','legacy.html','central/config.js','central/model.js','central/app.js','central/styles.css','central/editorial.css','central/summary.css','data.js'];
 for(const file of pages)assert(fs.existsSync(path.join(root,file)),file+' missing');
 const config=require('../central/config.js');
 global.window={};
@@ -91,9 +91,17 @@ test('UI assets parse and preserve small-screen/reduced-motion support',()=>{
  assert(css.includes('prefers-reduced-motion:reduce'));
  assert(css.includes(':focus-visible'));
 });
-function boot(hash){
- const handlers={},store={},listeners={},mount={
-  innerHTML:'',classList:{remove(){},toggle(){}},querySelector(){return null;},
+function boot(hash,opts={}){
+ const handlers={},store={},listeners={},classes=new Set(),mount={
+  innerHTML:'',classList:{
+   remove(name){classes.delete(name)},
+   toggle(name,force){
+    const val=force===undefined?!classes.has(name):Boolean(force);
+    if(val)classes.add(name);else classes.delete(name);
+    return val;
+   },
+   contains(name){return classes.has(name)}
+  },querySelector(){return null;},
   addEventListener(type,fn){handlers[type]=fn}
  };
  const document={
@@ -104,6 +112,7 @@ function boot(hash){
  const loc={hash:hash||'#/home'};
  const window={
   MC_CONFIG:config,MC_DATA:model,MC_SUMMARY:summary,
+  matchMedia(query){return {matches:Boolean(opts.mobile)&&/max-width:\s*900px/.test(query)}},
   addEventListener(type,fn){listeners[type]=fn}
  };
  const ctx={window,document,location:loc,
@@ -112,7 +121,7 @@ function boot(hash){
   setTimeout(){},console};
  vm.createContext(ctx);
  vm.runInContext(read('central/app.js'),ctx,{filename:'central/app.js'});
- return {window,document,loc,mount,handlers,listeners};
+ return {window,document,loc,mount,handlers,listeners,store,classes};
 }
 test('Dashboard renders 9 category links and synthetic summary',()=>{
  const ctx=boot('#/home');
@@ -255,6 +264,93 @@ test('Category summaries use no external services and leave legacy monitor loade
  assert(!index.includes('data-adapter.js'));
  assert(read('legacy.html').includes('data-adapter.js'));
  assert.doesNotThrow(()=>new vm.Script(read('central/summary.js')));
+});
+
+
+test('Editorial home uses functional note-style links, vivid sample cards and three fictional identities',()=>{
+ const ctx=boot('#/home'),html=ctx.mount.innerHTML;
+ assert(html.includes('mc-editorial-hero'));
+ assert(html.includes('mc-home-card-stack'));
+ assert(html.includes('mc-stack-coral')&&html.includes('mc-stack-yellow')&&html.includes('mc-stack-blue'));
+ assert(html.includes('mc-profile-grid'));
+ assert.equal((html.match(/class="mc-profile-card /g)||[]).length,3);
+ for(const p of model.people.slice(0,3))assert(html.includes(p.name),'missing fictional '+p.name);
+ assert(html.includes('Monogram artwork is illustrative'));
+ assert(html.includes('#/category/people-directory'));
+ assert(html.includes('#/category/executive-scoreboard'));
+ assert(!html.includes('<img '),'No headshot image references: simulated identities are CSS monograms');
+});
+test('Desktop sidebar toggles between full and icon-only rail and saves preference locally',()=>{
+ const ctx=boot('#/home');
+ assert.equal(ctx.window.MC_APP.isSidebarCollapsed(),false);
+ assert(ctx.mount.innerHTML.includes('data-action="collapse"'));
+ assert(ctx.mount.innerHTML.includes('aria-controls="side-menu"'));
+ const trigger=action=>ctx.handlers.click({target:{closest(s){return s==='[data-action]'?{dataset:{action}}:null;}}});
+ trigger('collapse');
+ assert.equal(ctx.window.MC_APP.isSidebarCollapsed(),true);
+ assert.equal(ctx.store['mc-trial-sidebar-collapsed'],'true');
+ assert(ctx.classes.has('sidebar-collapsed'));
+ assert(ctx.mount.innerHTML.includes('aria-label="Expand sidebar"'));
+ trigger('collapse');
+ assert.equal(ctx.window.MC_APP.isSidebarCollapsed(),false);
+ assert(ctx.mount.innerHTML.includes('aria-label="Collapse sidebar"'));
+ assert.equal(ctx.store['mc-trial-sidebar-collapsed'],'false');
+});
+test('Mobile navigation opens and closes independently of saved desktop rail preference',()=>{
+ const ctx=boot('#/home',{mobile:true});
+ const trigger=action=>ctx.handlers.click({target:{closest(s){return s==='[data-action]'?{dataset:{action}}:null;}}});
+ assert.equal(ctx.window.MC_APP.isMobileNavOpen(),false);
+ trigger('menu');
+ assert.equal(ctx.window.MC_APP.isMobileNavOpen(),true);
+ assert(ctx.classes.has('navigation-open'));
+ trigger('menu');
+ assert.equal(ctx.window.MC_APP.isMobileNavOpen(),false);
+ assert(!ctx.classes.has('navigation-open'));
+ trigger('collapse'); // hidden desktop control must never change state on mobile
+ assert.equal(ctx.window.MC_APP.isSidebarCollapsed(),false);
+ trigger('menu');
+ ctx.listeners.keydown({key:'Escape'});
+ assert.equal(ctx.window.MC_APP.isMobileNavOpen(),false);
+});
+test('Every navigation item keeps accessible labels when collapsed and old routes are preserved',()=>{
+ const ctx=boot('#/home');
+ const html=ctx.mount.innerHTML;
+ assert(html.includes('aria-label="Dashboard"'));
+ for(const cat of config.categories){
+   assert(html.includes('title="'+cat.label.replace(/&/g,'&amp;')+'"'));
+   assert(html.includes('href="#/category/'+cat.id+'"'));
+ }
+ for(const cat of config.categories){
+   ctx.loc.hash='#/category/'+cat.id;
+   ctx.window.MC_APP.render();
+   assert(ctx.mount.innerHTML.includes('mc-editorial-summary'));
+   assert(ctx.mount.innerHTML.includes('mc-workspace-'+cat.id));
+ }
+ const deep=boot('#/category/people-directory/employee-masterlist');
+ assert(deep.mount.innerHTML.includes('51 records'));
+});
+test('Visual system keeps white chips and adapts at mobile, tablet, desktop and reduced motion',()=>{
+ const index=read('index.html'),styles=read('central/editorial.css');
+ assert(index.includes('central/editorial.css'));
+ assert(index.indexOf('central/editorial.css')>index.indexOf('central/summary.css'));
+ for(const expr of ['.sidebar-collapsed .shell','grid-template-columns:78px minmax(0,1fr)',
+  '.mc-editorial-hero','.mc-profile-grid','.mc-home-card-stack','@media(max-width:900px)',
+  '@media(max-width:700px)','@media(max-width:440px)','@media(prefers-reduced-motion:reduce)',
+  '@media(forced-colors:active)']) assert(styles.includes(expr),expr);
+ assert(styles.includes('background:#fff!important'));
+ assert(styles.includes('color:#15151b!important'));
+ const app=read('central/app.js');
+ assert(app.includes("save('sidebar-collapsed',String(sidebarCollapsed))"));
+ assert(app.includes('aside.inert=isMobile()&&!mobileNavOpen'));
+ assert(app.includes("if(e.key==='Escape'&&mobileNavOpen)"));
+ assert(app.includes("if(e.key!=='Tab'||!mobileNavOpen||!isMobile())return"));
+});
+test('Editorial layer contains no live data integrations or third-party photo URLs',()=>{
+ const source=read('central/editorial.css')+read('central/app.js');
+ assert(!/https?:\/\/[^'"\s]*\.(jpg|jpeg|png|webp)/i.test(source));
+ assert(!/api\.airtable\.com|supabase\.co|sheets\.googleapis\.com|gmail\.googleapis\.com/i.test(source));
+ assert(!read('index.html').includes('data-adapter.js'));
+ assert(read('legacy.html').includes('data-adapter.js'));
 });
 
 console.log('\n'+passed+' Maddie Central fictional-trial tests passed. Manual browser and device tests still required.');
