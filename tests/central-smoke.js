@@ -92,7 +92,9 @@ test('UI assets parse and preserve small-screen/reduced-motion support',()=>{
  assert(css.includes(':focus-visible'));
 });
 function boot(hash,opts={}){
- const handlers={},store={},listeners={},classes=new Set(),mount={
+ const handlers={},store={},listeners={},classes=new Set();
+ const toggle={attributes:{},innerHTML:'',setAttribute(k,v){this.attributes[k]=v},focus(){this.focused=true}};
+ const mount={
   innerHTML:'',classList:{
    remove(name){classes.delete(name)},
    toggle(name,force){
@@ -101,7 +103,7 @@ function boot(hash,opts={}){
     return val;
    },
    contains(name){return classes.has(name)}
-  },querySelector(){return null;},
+  },querySelector(selector){return selector==='.desktop-collapse'?toggle:null;},
   addEventListener(type,fn){
     const previous=handlers[type];
     handlers[type]=previous?(event=>{previous(event);fn(event);}):fn;
@@ -124,7 +126,7 @@ function boot(hash,opts={}){
   setTimeout(){},console};
  vm.createContext(ctx);
  vm.runInContext(read('central/app.js'),ctx,{filename:'central/app.js'});
- return {window,document,loc,mount,handlers,listeners,store,classes};
+ return {window,document,loc,mount,handlers,listeners,store,classes,toggle};
 }
 test('Dashboard renders 9 category links and synthetic summary',()=>{
  const ctx=boot('#/home');
@@ -293,10 +295,10 @@ test('Desktop sidebar toggles between full and icon-only rail and saves preferen
  assert.equal(ctx.window.MC_APP.isSidebarCollapsed(),true);
  assert.equal(ctx.store['mc-trial-sidebar-collapsed'],'true');
  assert(ctx.classes.has('sidebar-collapsed'));
- assert(ctx.mount.innerHTML.includes('aria-label="Expand sidebar"'));
+ assert.equal(ctx.toggle.attributes['aria-label'],'Expand sidebar');
  trigger('collapse');
  assert.equal(ctx.window.MC_APP.isSidebarCollapsed(),false);
- assert(ctx.mount.innerHTML.includes('aria-label="Collapse sidebar"'));
+ assert.equal(ctx.toggle.attributes['aria-label'],'Collapse sidebar');
  assert.equal(ctx.store['mc-trial-sidebar-collapsed'],'false');
 });
 test('Mobile navigation opens and closes independently of saved desktop rail preference',()=>{
@@ -354,6 +356,96 @@ test('Editorial layer contains no live data integrations or third-party photo UR
  assert(!/api\.airtable\.com|supabase\.co|sheets\.googleapis\.com|gmail\.googleapis\.com/i.test(source));
  assert(!read('index.html').includes('data-adapter.js'));
  assert(read('legacy.html').includes('data-adapter.js'));
+});
+
+
+test('Executive view tabs selectively expose the right dashboard sections',()=>{
+ const ctx=boot('#/category/people-directory');
+ assert(ctx.mount.innerHTML.includes('role="tablist"'));
+ assert.equal(ctx.window.MC_APP.getCategoryFocus(),'overview');
+ assert(ctx.classes.has('mc-focus-overview'));
+ assert(ctx.mount.innerHTML.includes('data-view="explore"'));
+ const click=view=>ctx.handlers.click({target:{
+   closest(s){return s==='[data-action]'?{dataset:{action:'view',view}}:null}
+ }});
+ click('priorities');
+ assert.equal(ctx.window.MC_APP.getCategoryFocus(),'priorities');
+ assert(ctx.classes.has('mc-focus-priorities'));
+ assert(!ctx.classes.has('mc-focus-overview'));
+ click('updates');assert(ctx.classes.has('mc-focus-updates'));
+ click('explore');assert(ctx.classes.has('mc-focus-explore'));
+ assert(ctx.mount.innerHTML.includes('id="subcategory-directory"'));
+ ctx.loc.hash='#/category/people-directory/employee-masterlist';
+ ctx.window.MC_APP.render();
+ assert(!ctx.classes.has('mc-category-view'));
+ assert(ctx.mount.innerHTML.includes('51 records'));
+});
+test('Category view resets to Overview on a different category while preserving routes',()=>{
+ const ctx=boot('#/category/people-directory');
+ ctx.handlers.click({target:{closest(s){
+   return s==='[data-action]'?{dataset:{action:'view',view:'explore'}}:null;
+ }}});
+ assert.equal(ctx.window.MC_APP.getCategoryFocus(),'explore');
+ ctx.loc.hash='#/category/workforce-pulse';
+ ctx.window.MC_APP.render();
+ assert.equal(ctx.window.MC_APP.getCategoryFocus(),'overview');
+ assert(ctx.classes.has('mc-focus-overview'));
+ assert(ctx.mount.innerHTML.includes('WORKFORCE PULSE'));
+});
+test('Workspace sidebar offers four contextual drilldowns without expanding all 86 links',()=>{
+ const ctx=boot('#/category/people-directory');
+ assert(ctx.mount.innerHTML.includes('class="nav-context" open'));
+ assert(ctx.mount.innerHTML.includes('IN THIS WORKSPACE'));
+ assert(ctx.mount.innerHTML.includes('All 10 views'));
+ for(const sub of config.categories[0].subcategories.slice(0,4)){
+   assert(ctx.mount.innerHTML.includes('#/category/people-directory/'+sub.id));
+ }
+ const home=boot('#/home');
+ assert(!home.mount.innerHTML.includes('class="nav-context" open'));
+});
+test('Motion module remains optional and does not depend on animation service',()=>{
+ const index=read('index.html'),motion=read('central/motion.js');
+ assert(index.includes('central/motion.js'));
+ assert(index.includes('central/kinetic.css'));
+ assert(index.indexOf('central/motion.js')>index.indexOf('central/app.js'));
+ assert.doesNotThrow(()=>new vm.Script(motion));
+ for(const text of ['prefers-reduced-motion: reduce','IntersectionObserver',
+  'getBoundingClientRect','transform','MC_MOTION','root.addEventListener'])assert(motion.includes(text),text);
+ assert(!/fetch\s*\(|XMLHttpRequest|supabase|airtable/i.test(motion));
+ assert(motion.includes("typeof el.animate!=='function'")||motion.includes("typeof el.animate !== 'function'"));
+});
+test('Kinetic CSS fixes narrow sidebar overflow and animates without horizontal page scrolling',()=>{
+ const css=read('central/kinetic.css');
+ for(const expected of [
+  'min-width:0!important','max-width:100%','overflow-x:clip',
+  'overflow-x:hidden','grid-template-columns','transition:grid-template-columns',
+  'mc-page-enter','mc-page-exit','mc-reveal-up','mc-bar-grow',
+  '.mobile-scrim','opacity:0','pointer-events:none',
+  '@media(max-width:900px)','@media(max-width:600px)','@media(max-width:380px)',
+  '@media(prefers-reduced-motion:reduce)','@media(forced-colors:active)'
+ ])assert(css.includes(expected),expected);
+ assert(css.includes('width:min(315px,calc(100vw - 20px))'));
+});
+test('Executive tabs use valid destinations and allow all 86 underlying views',()=>{
+ const ctx=boot('#/category/executive-scoreboard');
+ const html=ctx.mount.innerHTML;
+ for(const view of ['overview','priorities','updates','explore'])assert(html.includes('data-view="'+view+'"'));
+ for(const sub of config.categories[8].subcategories)assert(html.includes('#/category/executive-scoreboard/'+sub.id));
+ assert(html.includes('aria-selected="true"'));
+ assert(html.includes('aria-controls="mc-metrics"'));
+ assert(html.includes('aria-controls="mc-insights"'));
+ assert(html.includes('aria-controls="mc-activity"'));
+ assert(html.includes('aria-controls="mc-links"'));
+});
+test('Collapsed sidebar leaves live DOM in place for smooth transition and keeps focus target',()=>{
+ const source=read('central/app.js');
+ const part=source.slice(source.indexOf("if(action==='collapse')"),source.indexOf("if(action==='theme')"));
+ assert(part.includes("save('sidebar-collapsed'"));
+ assert(part.includes('syncNavigation()'));
+ assert(!part.includes('render()'));
+ assert(part.includes('toggle.focus()'));
+ assert(source.includes("document.startViewTransition"));
+ assert(source.includes("window.MC_MOTION?.enter()"));
 });
 
 console.log('\n'+passed+' Maddie Central fictional-trial tests passed. Manual browser and device tests still required.');
