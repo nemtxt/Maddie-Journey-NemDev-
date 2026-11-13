@@ -117,10 +117,18 @@ Navigation, routes, filters, keyboard behavior and the 13 screens are unchanged.
 4. Run `node server/index.js` behind HTTPS (reverse proxy or the host's TLS). Visit `/login`.
 5. Compare Data & Sources with this inventory: 60 records, 54 active, 10 without Employee ID at discovery time.
 
+### Presenter mode (`--local`)
+
+For presenting on a single computer without Google Sign-In: `node --env-file=server/.env server/index.js --local`.
+- Binds to `127.0.0.1` only. It rejects any request whose socket is not loopback or whose `Host` header is not `127.0.0.1`/`localhost` (DNS-rebinding protection).
+- A random 192-bit access token and a random session secret are generated on each run. The access link is printed once and dies when the process stops.
+- Google sign-in and all POST routes are disabled. Same read-only provider client, same payload, same UI guards.
+- Guide: [PRESENTING_THE_MONITORING_VIEW.md](PRESENTING_THE_MONITORING_VIEW.md).
+
 ## 8. Testing
 
 - `node tests/smoke.js`: 119 existing regression checks (sample mode unchanged).
-- `node tests/connectors.js`: 37 connector-contract, security and connected-UI checks on anonymized fixtures. No network access.
+- `node tests/connectors.js`: 39 connector-contract, security and connected-UI checks on anonymized fixtures, including presenter mode. No network access.
 - CI runs both on every pull request.
 
 ## 9. Not done / blocked

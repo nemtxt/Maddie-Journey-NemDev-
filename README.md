@@ -226,8 +226,9 @@ The later connected-account phase can implement source normalization against the
 
 - Open index.html in a modern browser or use VS Code Live Server.
 - Run: node tests/smoke.js (119 sample-mode regression checks)
-- Run: node tests/connectors.js (37 connector-contract, security and connected-UI checks; synthetic fixtures, no network)
+- Run: node tests/connectors.js (39 connector-contract, security and connected-UI checks; synthetic fixtures, no network)
 - Private service (authorized hosts only): node server/index.js --check, then node server/index.js. See docs/PHASE11_SECURE_ARCHITECTURE.md §7.
+- Presenting real data on one computer: node --env-file=server/.env server/index.js --local. See docs/PRESENTING_THE_MONITORING_VIEW.md.
 - On main, the custom GitHub Actions validation workflow runs the regression tests. Anime.js and the Inter web font are optional third-party CDN resources; UI navigation and sample data do not depend on their availability. GitHub Pages uses its separate publishing workflow.
 - Confirm both test and Pages workflow statuses under GitHub Actions. The automated suite currently includes 119 cases; physical Windows/macOS/Android/iOS visual acceptance remains separate.
 

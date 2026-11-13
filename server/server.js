@@ -75,6 +75,18 @@ function createServer(options) {
     });
   }
   function sameOrigin(req) { return config.publicOrigin && req.headers.origin === config.publicOrigin; }
+  // Local presenter mode: loopback only, one random access token, no Google sign-in.
+  const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost']);
+  function loopbackRequest(req) {
+    const remote = String(req.socket && req.socket.remoteAddress || '');
+    const host = String(req.headers.host || '').replace(/:\d+$/, '').toLowerCase();
+    return (remote === '127.0.0.1' || remote === '::1' || remote === '::ffff:127.0.0.1') && LOOPBACK_HOSTS.has(host);
+  }
+  function tokenMatches(given) {
+    const expected = Buffer.from(String(config.localAccessToken || ''));
+    const actual = Buffer.from(String(given || ''));
+    return expected.length > 0 && actual.length === expected.length && crypto.timingSafeEqual(actual, expected);
+  }
 
   function loginPage() {
     return fs.readFileSync(path.join(__dirname, 'public', 'login.html'), 'utf8')
@@ -87,6 +99,13 @@ function createServer(options) {
     const p = url.pathname;
     const method = req.method;
     const session = sessions.read(req.headers.cookie);
+    // DNS-rebinding and LAN protection: presenter mode answers loopback requests only.
+    if (config.localAccessToken && !loopbackRequest(req)) return send(res, 403, 'Presenter mode only accepts requests from this computer.');
+    if (config.localAccessToken && method === 'GET' && p === '/local-access') {
+      if (!tokenMatches(url.searchParams.get('token'))) return send(res, 403, 'This access link is not valid. Use the link printed in the terminal.');
+      return send(res, 302, '', 'text/plain', { 'Set-Cookie': sessions.cookie(sessions.issue('local presenter (this computer)'), false), Location: '/' });
+    }
+    if (config.localAccessToken && method === 'POST') return send(res, 405, 'Read-only presenter mode.', 'text/plain', { Allow: 'GET, HEAD' });
 
     if (method === 'POST' && p === '/auth/session') {
       if (!sameOrigin(req)) return send(res, 403, 'Cross-origin sign-in refused.');
@@ -106,7 +125,8 @@ function createServer(options) {
     if (method !== 'GET' && method !== 'HEAD') return send(res, 405, 'Read-only service: method not allowed.', 'text/plain', { Allow: 'GET, HEAD' });
 
     if (p === '/healthz') return send(res, 200, JSON.stringify({ ok: true }), 'application/json');
-    if (p === '/login') return send(res, 200, loginPage(), 'text/html; charset=utf-8');
+    if (p === '/login') return send(res, 200, config.localAccessToken ?
+      fs.readFileSync(path.join(__dirname, 'public', 'local.html'), 'utf8') : loginPage(), 'text/html; charset=utf-8');
     if (LOGIN_FILES[p]) return send(res, 200, fs.readFileSync(path.join(ROOT, LOGIN_FILES[p][0])), LOGIN_FILES[p][1] + '; charset=utf-8');
     if (p === '/logout') return send(res, 200, fs.readFileSync(path.join(__dirname, 'public', 'logout.html'), 'utf8'), 'text/html; charset=utf-8');
 

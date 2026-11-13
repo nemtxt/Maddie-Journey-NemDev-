@@ -3,6 +3,9 @@
  *   node server/index.js           start the authenticated private server
  *   node server/index.js --check   one read-only refresh; prints AGGREGATE counts
  *                                  and provider states only (no names, no IDs)
+ *   node server/index.js --local   presenter mode on THIS computer only: binds to
+ *                                  127.0.0.1, prints a one-time access link, needs
+ *                                  no Google sign-in setup (Airtable token only)
  * Configuration comes from environment variables (see server/.env.example). */
 'use strict';
 
@@ -10,6 +13,29 @@ const { loadConfig, validateForServe } = require('./config');
 const { createSnapshotService } = require('./snapshot-service');
 const { createVerifier, createSessions } = require('./auth');
 const { createServer } = require('./server');
+const crypto = require('node:crypto');
+
+async function local(config) {
+  const port = config.port;
+  const token = crypto.randomBytes(24).toString('base64url');
+  const localConfig = Object.assign({}, config, {
+    localAccessToken: token, insecureLocalCookies: true, publicOrigin: 'http://127.0.0.1:' + port,
+    sessionSecret: crypto.randomBytes(32).toString('base64url') // new every run; links expire when the server stops
+  });
+  const service = createSnapshotService(localConfig);
+  const verifier = { verifyIdToken: async function () { const e = new Error('Google sign-in is disabled in presenter mode.'); e.code = 'unauthorized'; throw e; } };
+  const server = createServer({ config: localConfig, service, verifier, sessions: createSessions(localConfig.sessionSecret) });
+  server.listen(port, '127.0.0.1', async function () {
+    process.stdout.write('\nMaddie Journey presenter mode (read-only, this computer only).\n' +
+      (config.airtableToken && config.airtableBaseId ? '' : 'WARNING: MJ_AIRTABLE_TOKEN / MJ_AIRTABLE_BASE_ID are not set; no roster can be loaded.\n') +
+      'Retrieving the roster...\n');
+    const state = await service.refresh();
+    process.stdout.write((state.available ? 'Roster loaded: ' + state.snapshot.employees.length + ' active records.\n' :
+      'Roster NOT loaded: ' + ((state.sources.find(function (x) { return x.id === 'airtable'; }) || {}).lastError || 'unknown error') + '\n') +
+      '\nOpen this link in your browser (do not share it):\n  http://127.0.0.1:' + port + '/local-access?token=' + token +
+      '\n\nPress Ctrl+C to stop. The link stops working when the server stops.\n');
+  });
+}
 
 async function check(config) {
   const service = createSnapshotService(config);
@@ -38,6 +64,7 @@ async function check(config) {
 async function main() {
   const config = loadConfig();
   if (process.argv.includes('--check')) return check(config);
+  if (process.argv.includes('--local')) return local(config);
   const problems = validateForServe(config);
   if (problems.length) {
     process.stderr.write('Refusing to start the private server:\n- ' + problems.join('\n- ') + '\n');

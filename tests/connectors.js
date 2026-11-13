@@ -427,6 +427,44 @@ check('Private server enforces authentication, read-only methods and file allowl
     assert.equal((await request(port, 'GET', '/healthz')).body, '{"ok":true}');
   } finally { server.close(); }
 });
+check('Presenter mode admits only this computer with the one-time link and stays read-only', async () => {
+  const ctx = service();
+  await ctx.svc.refresh();
+  const sessions = createSessions('p'.repeat(40));
+  const token = 'presenter-token-abcdefghijklmnop';
+  const server = createServer({ config: { publicOrigin: 'http://127.0.0.1:0', localAccessToken: token, insecureLocalCookies: true, signInClientId: '' },
+    service: ctx.svc, verifier: { verifyIdToken: async () => { throw Object.assign(new Error('disabled'), { code: 'unauthorized' }); } }, sessions });
+  await new Promise((r) => server.listen(0, '127.0.0.1', r));
+  const port = server.address().port;
+  const host = { Host: '127.0.0.1:' + port };
+  try {
+    assert.equal((await request(port, 'GET', '/private/payload.js', host)).status, 401);
+    assert.equal((await request(port, 'GET', '/local-access?token=wrong', host)).status, 403);
+    assert.equal((await request(port, 'GET', '/local-access', host)).status, 403);
+    // DNS rebinding: a foreign Host header is refused even from loopback.
+    assert.equal((await request(port, 'GET', '/local-access?token=' + token, { Host: 'attacker.example:' + port })).status, 403);
+    const login = await request(port, 'GET', '/login', host);
+    assert(login.body.includes('PRESENTER MODE') && !login.body.includes('accounts.google.com'));
+    const r = await request(port, 'GET', '/local-access?token=' + token, host);
+    assert.equal(r.status, 302);
+    assert.equal(r.headers.location, '/');
+    const cookie = r.headers['set-cookie'][0];
+    assert(/HttpOnly/.test(cookie) && /SameSite=Strict/.test(cookie));
+    const auth = Object.assign({ Cookie: cookie.split(';')[0] }, host);
+    const payload = await request(port, 'GET', '/private/payload.js', auth);
+    assert.equal(payload.status, 200);
+    assert(payload.body.includes('Sample Person'));
+    assert.equal((await request(port, 'POST', '/auth/session', Object.assign({ Origin: 'http://127.0.0.1:0' }, host), '{}')).status, 405);
+    assert.equal((await request(port, 'DELETE', '/private/payload.js', auth)).status, 405);
+  } finally { server.close(); }
+});
+check('Normal private server has no presenter access route', async () => {
+  const ctx = service();
+  const server = createServer({ config: { publicOrigin: 'https://hr.example.com', signInClientId: 'client-123' }, service: ctx.svc, verifier, sessions: createSessions('q'.repeat(40)) });
+  await new Promise((r) => server.listen(0, '127.0.0.1', r));
+  try { assert.equal((await request(server.address().port, 'GET', '/local-access?token=')).status, 404); }
+  finally { server.close(); }
+});
 check('Payload script escaping prevents script-context injection', () => {
   const out = scriptJson({ name: '</script><script>alert(1)</script>\u2028' });
   assert(!out.includes('</script>') && !out.includes('\u2028'));
