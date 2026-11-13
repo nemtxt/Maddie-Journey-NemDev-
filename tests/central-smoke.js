@@ -116,7 +116,7 @@ function boot(hash){
 test('Dashboard renders 9 category links and synthetic summary',()=>{
  const ctx=boot('#/home');
  const html=ctx.mount.innerHTML;
- for(const cat of config.categories)assert(html.includes(cat.label));
+ for(const cat of config.categories)assert(html.includes(cat.label.replace(/&/g,'&amp;')));
  assert(html.includes('51 fictional employees'));
  assert(html.includes('No connected systems'));
 });
@@ -126,7 +126,7 @@ test('Each category renders its required accordion link titles',()=>{
   ctx.loc.hash='#/category/'+cat.id;
   ctx.window.MC_APP.render();
   const html=ctx.mount.innerHTML;
-  for(const sub of cat.subcategories)assert(html.includes(sub.label),cat.id+'/'+sub.id);
+  for(const sub of cat.subcategories)assert(html.includes(sub.label.replace(/&/g,'&amp;')),cat.id+'/'+sub.id);
   assert(html.includes('<details class="accordion">'));
  }
 });
