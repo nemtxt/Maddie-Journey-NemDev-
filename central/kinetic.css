@@ -1,0 +1,272 @@
+/* MADDIE CENTRAL 2027 — executive interaction layer
+   Trial only. Motion is progressive enhancement: all content works without JS/animation. */
+:root {
+  --mc-motion-fast: 170ms;
+  --mc-motion-medium: 360ms;
+  --mc-motion-slow: 520ms;
+  --mc-motion-ease: cubic-bezier(.22, 1, .36, 1);
+  --mc-motion-smooth: cubic-bezier(.2,.75,.15,1);
+  --mc-nav-outline: rgba(255,255,255,.16);
+}
+html, body { max-width:100%; overflow-x:clip; }
+#app { max-width:100%; min-width:0; overflow-x:clip; }
+.shell {
+  max-width:100%; min-width:0;
+  transition:grid-template-columns var(--mc-motion-medium) var(--mc-motion-ease);
+}
+.sidebar {
+  box-sizing:border-box;
+  min-width:0; max-width:100%; overflow-x:hidden; overflow-y:auto;
+  overscroll-behavior:contain;
+  scrollbar-color:var(--line-strong) transparent; scrollbar-width:thin;
+  transition:transform var(--mc-motion-medium) var(--mc-motion-ease),
+    box-shadow var(--mc-motion-medium) var(--mc-motion-ease);
+}
+.sidebar .brand,.sidebar .nav-list,.sidebar .nav-home,.sidebar .nav-link,.sidebar .side-bottom,
+.sidebar .nav-context{min-width:0;max-width:100%;box-sizing:border-box;}
+.sidebar .brand-copy {min-width:0;flex:1;overflow:hidden;}
+.sidebar .brand-copy strong,.sidebar .brand-copy small{
+  overflow:hidden;max-width:100%;text-overflow:ellipsis;white-space:nowrap;
+}
+.nav-list{width:100%;overflow-x:hidden;gap:4px}
+.nav-link,.nav-home{position:relative;min-width:0;max-width:100%;overflow:hidden;isolation:isolate}
+.nav-link .nav-num{flex:none;width:20px}
+.nav-link .nav-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nav-link .nav-chevron{flex:none;margin-left:auto}
+.nav-link::after,.nav-home::after{
+  content:"";position:absolute;inset:4px;border-radius:8px;pointer-events:none;
+  background:linear-gradient(110deg,transparent,rgba(221,170,255,.09),transparent);
+  opacity:0;transform:translateX(-60%);transition:opacity var(--mc-motion-fast) ease,transform var(--mc-motion-medium) var(--mc-motion-ease);
+}
+.nav-link:hover::after,.nav-home:hover::after{opacity:1;transform:translateX(0)}
+.nav-link.selected,.nav-home.selected{box-shadow:inset 0 0 0 1px var(--line);}
+.nav-link.selected::before,.nav-home.selected::before{
+  left:0;top:calc(50% - 12px);height:24px;width:3px;
+  box-shadow:0 0 12px rgba(233,81,141,.22);
+  transition:transform var(--mc-motion-fast) ease;
+}
+.nav-link:hover .nav-chevron{transform:translateX(3px)}
+.nav-link .nav-chevron{transition:transform var(--mc-motion-fast) var(--mc-motion-ease)}
+.sidebar-collapsed .sidebar .nav-link.selected::before,
+.sidebar-collapsed .sidebar .nav-home.selected::before{left:1px}
+/* Selected workspace only: optional disclosure of its most useful subsections. */
+.nav-context {
+  margin:15px 4px 8px;
+  border:1px solid var(--line);border-radius:13px;background:var(--surface-alt);
+  overflow:hidden;
+}
+.nav-context>summary{
+  min-height:43px;cursor:pointer;display:flex;align-items:center;gap:9px;
+  list-style:none;padding:11px 12px;font-size:10px;letter-spacing:.065em;
+  color:var(--text);font-weight:750;user-select:none;
+}
+.nav-context>summary::-webkit-details-marker{display:none}
+.nav-context>summary .icon{width:15px;height:15px;margin-left:auto;transition:transform var(--mc-motion-fast) ease}
+.nav-context[open]>summary .icon{transform:rotate(90deg)}
+.nav-context-body{display:grid;gap:4px;padding:3px 9px 11px;animation:mc-accordion-in var(--mc-motion-medium) var(--mc-motion-ease) both}
+.nav-context-body a{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  min-height:33px;padding:7px 9px;border-radius:8px;
+  color:var(--muted);font-size:10px;font-weight:625;line-height:1.45;
+  transition:color var(--mc-motion-fast),background var(--mc-motion-fast),transform var(--mc-motion-fast);
+}
+.nav-context-body a:hover,.nav-context-body a:focus-visible{
+  color:var(--text);background:var(--surface);transform:translateX(2px)
+}
+.nav-context-body a .icon{width:13px;height:13px;flex:none}
+.sidebar-collapsed .nav-context{display:none;}
+/* Navigation affordances always show on narrow devices; never produce horizontal overflow. */
+.mobile-menu,.desktop-collapse,.icon-button{
+  transition:background var(--mc-motion-fast),border-color var(--mc-motion-fast),
+    transform var(--mc-motion-fast) var(--mc-motion-ease);
+}
+.desktop-collapse:hover,.mobile-menu:hover,.icon-button:hover{
+  background:var(--surface-alt);transform:translateY(-1px);
+}
+.topbar{
+  position:sticky;top:0;z-index:18;
+  background:var(--surface);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+}
+.breadcrumbs{flex:1;min-width:0;}
+.content-area{min-width:0;overflow:clip;}
+/* Executive page switches. No hidden content until the browser actually animates. */
+@keyframes mc-page-enter{
+  from{opacity:0;transform:translate3d(0,17px,0);filter:blur(2px)}
+  to{opacity:1;transform:translate3d(0,0,0);filter:blur(0)}
+}
+@keyframes mc-page-exit{
+  from{opacity:1;transform:translate3d(0,0,0)}
+  to{opacity:0;transform:translate3d(-14px,0,0)}
+}
+@keyframes mc-reveal-up{
+  from{opacity:0;transform:translate3d(0,22px,0)}
+  to{opacity:1;transform:translate3d(0,0,0)}
+}
+@keyframes mc-accordion-in{
+  from{opacity:.3;transform:translateY(-9px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@keyframes mc-bar-grow{
+  from{transform:scaleX(.03)}
+  to{transform:scaleX(1)}
+}
+@keyframes mc-chip-slide{
+  from{opacity:.1;transform:translateX(-12px)}
+  to{opacity:1;transform:translateX(0)}
+}
+@keyframes mc-focus-sheen{
+  from{background-position:130% 0}
+  to{background-position:-110% 0}
+}
+.mc-page-in{animation:mc-page-enter var(--mc-motion-medium) var(--mc-motion-ease) both;}
+.mc-page-out{animation:mc-page-exit 150ms ease both;pointer-events:none}
+@supports(view-transition-name:mc-stage){
+  #main-content{view-transition-name:mc-stage;}
+  ::view-transition-old(mc-stage){animation:mc-page-exit 190ms ease both}
+  ::view-transition-new(mc-stage){animation:mc-page-enter var(--mc-motion-medium) var(--mc-motion-ease) both}
+}
+.mc-section-tabs{
+  position:sticky;top:72px;z-index:12;display:flex;gap:6px;flex-wrap:wrap;
+  padding:9px;background:var(--surface);border:1px solid var(--line);
+  border-radius:15px;box-shadow:0 9px 28px rgba(15,15,20,.05);margin:17px 0 22px;
+}
+.mc-section-tabs button{
+  flex:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:10px 15px;min-height:39px;border-radius:10px;border:1px solid transparent;
+  background:transparent;color:var(--muted);font-size:11px;font-weight:750;
+  transition:background var(--mc-motion-medium) var(--mc-motion-ease),
+    color var(--mc-motion-fast),box-shadow var(--mc-motion-fast),transform var(--mc-motion-fast);
+}
+.mc-section-tabs button:hover{background:var(--surface-alt);color:var(--text)}
+.mc-section-tabs button[aria-selected="true"]{
+  background:var(--text);color:var(--bg);
+  box-shadow:0 8px 21px rgba(15,15,20,.16);
+}
+.mc-section-tabs button[aria-selected="true"] .icon{color:inherit}
+.mc-section-tabs .icon{width:14px;height:14px}
+.mc-section-tabs button:active{transform:scale(.975)}
+/* Progressive disclosure reduces long-page fatigue. All sections remain in DOM and navigable. */
+.mc-focus-overview #mc-activity,.mc-focus-overview #mc-links,.mc-focus-overview #subcategory-directory{display:none;}
+.mc-focus-priorities #mc-metrics,.mc-focus-priorities #mc-activity,
+.mc-focus-priorities #mc-links,.mc-focus-priorities #subcategory-directory{display:none;}
+.mc-focus-updates #mc-metrics,.mc-focus-updates #mc-insights,
+.mc-focus-updates #mc-links,.mc-focus-updates #subcategory-directory{display:none;}
+.mc-focus-explore #mc-metrics,.mc-focus-explore #mc-insights,.mc-focus-explore #mc-activity{display:none;}
+/* When switching tabs the new panel eases into view without delaying user input. */
+.mc-category-view #mc-metrics,.mc-category-view #mc-insights,
+.mc-category-view #mc-activity,.mc-category-view #mc-links,
+.mc-category-view #subcategory-directory{scroll-margin-top:160px;}
+.mc-view-flash{animation:mc-reveal-up 310ms var(--mc-motion-ease) both;}
+/* More dimensional executive cards but not busy or oversaturated. */
+.mc-metric-card,.category-card,.mc-editorial-category,.mc-profile-card{
+  transform-style:preserve-3d;will-change:auto;
+  transition:transform var(--mc-motion-medium) var(--mc-motion-ease),
+    box-shadow var(--mc-motion-medium) var(--mc-motion-ease),
+    border-color var(--mc-motion-fast);
+}
+.mc-metric-card:hover,.mc-editorial-category:hover{
+  transform:translateY(-5px);
+  box-shadow:0 21px 42px rgba(20,19,30,.12),0 4px 10px rgba(20,19,30,.05);
+}
+.mc-metric-card:active,.category-card:active{transform:translateY(-1px) scale(.992)}
+.mc-metric-card{position:relative;overflow:hidden;}
+.mc-metric-card:after,.mc-editorial-category:after{
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  opacity:0;transition:opacity var(--mc-motion-medium);
+  background:radial-gradient(220px circle at var(--mc-pointer-x,50%) var(--mc-pointer-y,35%),rgba(255,255,255,.34),transparent 75%);
+}
+.mc-metric-card:hover:after,.mc-editorial-category:hover:after{opacity:1}
+.mc-metric-card h3,.mc-metric-card p{position:relative;z-index:1}
+.mc-metric-count{font-variant-numeric:tabular-nums;position:relative;z-index:1}
+.mc-progress-bar{
+  transform-origin:left center;animation:mc-bar-grow 850ms var(--mc-motion-ease) both;
+}
+.mc-white-chip{transition:box-shadow var(--mc-motion-fast),transform var(--mc-motion-fast)}
+a.mc-white-chip:hover{transform:translateY(-2px);box-shadow:0 7px 20px rgba(17,16,25,.09)}
+.mc-quick-chip:hover,.mc-link-tile:hover,.quick-link:hover{
+  transform:translate3d(0,-2px,0);box-shadow:0 12px 25px rgba(20,19,31,.075)
+}
+.mc-quick-chip:active,.mc-link-tile:active,.quick-link:active{transform:translateY(0)}
+.mc-link-tile .icon,.quick-link .icon:last-child{
+  transition:transform var(--mc-motion-fast) var(--mc-motion-ease)
+}
+.mc-link-tile:hover .icon,.quick-link:hover .icon:last-child{transform:translateX(4px)}
+.mc-focus-row{transition:background var(--mc-motion-fast),box-shadow var(--mc-motion-fast),transform var(--mc-motion-fast)}
+.mc-focus-row:hover{box-shadow:0 8px 22px rgba(20,19,31,.055)}
+.accordion{transition:box-shadow var(--mc-motion-fast),border-color var(--mc-motion-fast)}
+.accordion[open] .accordion-body{animation:mc-accordion-in 280ms var(--mc-motion-ease) both}
+.accordion summary .accord-icon{transition:transform 290ms var(--mc-motion-ease)}
+.mc-home-card-stack .mc-stack-card{
+  transition:transform var(--mc-motion-medium) var(--mc-motion-ease),
+    filter var(--mc-motion-fast),box-shadow var(--mc-motion-medium)
+}
+.mc-stack-card:hover{box-shadow:0 22px 42px rgba(0,0,0,.22)}
+.mc-profile-card:hover{box-shadow:0 19px 38px rgba(20,19,31,.18)}
+/* Responsive nav: slide and backdrop in/out independently, not display:none snaps. */
+@media(max-width:900px){
+  .sidebar{
+    width:min(315px,calc(100vw - 20px))!important;
+    max-width:calc(100dvw - 20px)!important;
+    height:100dvh;
+    padding-bottom:max(18px,env(safe-area-inset-bottom));
+    transform:translate3d(-104%,0,0);
+    transition:transform 390ms var(--mc-motion-ease),box-shadow 390ms;
+    border-radius:0 20px 20px 0;
+    z-index:35;
+    overscroll-behavior:contain;
+    contain:layout style;
+  }
+  .navigation-open .sidebar{transform:translate3d(0,0,0)}
+  .mobile-scrim{
+    display:block!important;
+    opacity:0;visibility:hidden;pointer-events:none;
+    background:rgba(6,6,12,.56);
+    -webkit-backdrop-filter:blur(0);backdrop-filter:blur(0);
+    transition:opacity var(--mc-motion-medium),visibility var(--mc-motion-medium),
+      backdrop-filter var(--mc-motion-medium);
+    z-index:25;
+  }
+  .navigation-open .mobile-scrim{
+    opacity:1;visibility:visible;pointer-events:auto;
+    -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);
+  }
+  .mc-section-tabs{top:64px}
+  .sidebar .nav-link,.sidebar .nav-home{padding-right:8px}
+  .sidebar .nav-context{margin-inline:0}
+}
+@media(max-width:600px){
+  .topbar{padding-inline:12px;gap:7px}
+  .breadcrumbs{max-width:none;min-width:0;flex:1;gap:5px}
+  .top-actions{flex:none;gap:6px}
+  .top-actions select{max-width:122px;min-width:0}
+  .mobile-menu{flex:none;width:36px;height:36px}
+  .mc-section-tabs{top:64px;gap:4px;padding:7px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  .mc-section-tabs::-webkit-scrollbar{display:none}
+  .mc-section-tabs button{flex:1 0 auto;padding:9px 10px;min-width:0;font-size:10px}
+  .mc-editorial-hero,.mc-summary-hero{max-width:100%;overflow:hidden}
+  .mc-hero-chips{min-width:0}
+  .mc-metric-grid{min-width:0}
+}
+@media(max-width:380px){
+  .top-actions select{max-width:100px;font-size:9px}
+  .breadcrumbs{font-size:10px}
+  .mc-section-tabs button{padding:8px 9px}
+}
+@media(prefers-reduced-motion:reduce){
+  :root{--mc-motion-fast:0ms;--mc-motion-medium:0ms;--mc-motion-slow:0ms}
+  .shell,.sidebar,.mobile-scrim,.nav-link,.nav-home,.mc-section-tabs button,
+  .mc-quick-chip,.mc-link-tile,.mc-metric-card,.mc-stack-card,
+  .mc-profile-card{animation:none!important;transition:none!important;transform:none!important}
+  .mc-page-in,.mc-page-out,.mc-view-flash,.mc-progress-bar,
+  .nav-context-body,.accordion[open] .accordion-body{animation:none!important}
+  @supports(view-transition-name:mc-stage){
+    ::view-transition-old(mc-stage),::view-transition-new(mc-stage){animation:none!important}
+  }
+}
+@media(forced-colors:active){
+  .nav-link.selected,.nav-home.selected,.mc-section-tabs button[aria-selected="true"]{
+    outline:2px solid Highlight;outline-offset:-2px
+  }
+  .mc-section-tabs button,.nav-context{border:1px solid CanvasText}
+}
