@@ -12,6 +12,7 @@
  let sidebarCollapsed=sv('sidebar-collapsed')==='true';
  let mobileNavOpen=false;
  let categoryFocus='overview';
+ let wfPeriod='month',wfAlertFilter='all',wfCalendarMonth=10;
  const isMobile=()=>typeof window.matchMedia==='function'&&window.matchMedia('(max-width: 900px)').matches;
  let filter={query:'',status:'all',division:'all',sort:'name',descending:false};
  let routeKey='';
@@ -101,6 +102,7 @@
    '<button type="button" class="desktop-collapse" data-action="collapse" aria-label="'+(sidebarCollapsed?'Expand sidebar':'Collapse sidebar')+'" aria-pressed="'+String(sidebarCollapsed)+'" aria-controls="side-menu" title="'+(sidebarCollapsed?'Expand sidebar':'Collapse sidebar')+'">'+icon(sidebarCollapsed?'expand':'collapse')+'</button>'+
    '<div class="breadcrumbs"><a href="#/home">Workspace</a>'+ (cat?' <span>/</span> <a href="'+href(cat.id)+'">'+esc(cat.label)+'</a>':'')+
    (sub?' <span>/</span> <b>'+esc(sub.label)+'</b>':'')+'</div>'+
+   '<button type="button" class="wf-command-open" data-action="wf-command-open" aria-label="Search workspaces and views" title="Search workspaces and views">'+icon('search')+' <span>Search</span> <span class="wf-keycap">Ctrl K</span></button>'+ 
    '<div class="top-actions"><label class="role-label" for="role-select">Role preview</label><select id="role-select" aria-label="Simulated role (not authentication)">'+config.roles.map(r=>'<option '+(role===r?'selected':'')+'>'+esc(r)+'</option>').join('')+'</select>'+
    '<button class="icon-button" data-action="theme" aria-label="Toggle appearance" title="Toggle appearance">'+icon(theme==='dark'?'sun':'moon')+'</button></div></header>';
  const footer=()=>'<footer class="footnote">MADDIE CENTRAL | 2027 · Isolated navigation trial · Source: fictional v3.7 fixture · No connected systems or real-time updates. <a href="./legacy.html">Original v3.7 monitoring</a></footer>';
@@ -128,7 +130,8 @@
      '<a class="mc-stack-card mc-stack-coral" href="'+href('people-directory')+'"><span class="mc-stack-label">01 / PEOPLE</span><strong>'+esc(m.headcount)+'</strong><small>fictional employees</small>'+icon('users')+'</a>'+
      '<a class="mc-stack-card mc-stack-yellow" href="'+href('executive-scoreboard')+'"><span class="mc-stack-label">09 / EXECUTIVE</span><strong>'+esc(config.categories.length)+'</strong><small>connected workspaces</small>'+icon('chart')+'</a>'+
      '<a class="mc-stack-card mc-stack-blue" href="'+href('maddie-journey')+'"><span class="mc-stack-label">04 / JOURNEY</span><strong>'+esc(m.pendingJourney)+'</strong><small>sample journeys to review</small>'+icon('route')+'</a></div>'+
-     '</div><span class="mc-home-decoration" aria-hidden="true"></span></section>'+
+     '</div><span class="mc-home-decoration" aria-hidden="true"></span></section>'+ 
+     (window.MC_WIREFRAME?.home?.(model,config,window.MC_SUMMARY,overrides,{period:wfPeriod,alertFilter:wfAlertFilter})||'')+
      '<div class="section-head mc-section-editorial"><div><span class="eyebrow">01—09 / WORKSPACE NAVIGATION</span><h2>Everything in its place.</h2></div>'+
      '<span class="mc-white-chip">Select a workspace '+icon('arrow')+'</span></div>'+
      '<div class="category-grid mc-editorial-categories">'+config.categories.map((c,i)=>
@@ -198,7 +201,8 @@
      '<div class="mc-preview-tile mc-preview-secondary"><span>02 / TRACKED</span><b>'+esc(summary.metrics[1]?.value)+'</b><small>'+esc(summary.metrics[1]?.label)+'</small></div></div></div></section>'+
      '<div class="mc-section-tabs" role="tablist" aria-label="Dashboard sections">'+tabs.map(tab).join('')+'</div>'+
      '<section class="mc-dashboard-section" role="tabpanel" id="mc-metrics" aria-labelledby="mc-tab-overview"><div class="mc-section-heading"><div><span class="eyebrow">AT A GLANCE</span><h2 id="mc-metrics-title">'+esc(summary.focus)+'</h2></div><span class="mc-white-chip">Derived from fictional records</span></div>'+
-     '<div class="mc-metric-grid">'+summary.metrics.map(metricCard).join('')+'</div></section>'+
+     '<div class="mc-metric-grid">'+summary.metrics.map(metricCard).join('')+'</div>'+ 
+     (window.MC_WIREFRAME?.category?.(model,cat,overrides,{calendarMonth:wfCalendarMonth})||'')+'</section>'+
      '<section class="mc-dashboard-section mc-insight-section" role="tabpanel" id="mc-insights" aria-labelledby="mc-tab-priorities"><div class="mc-section-heading"><div><span class="eyebrow">WORKSPACE HEALTH</span><h2 id="mc-insights-title">Status and priorities</h2></div></div>'+
      '<div class="mc-insight-grid"><div class="mc-panel"><div class="mc-panel-head"><div><span class="eyebrow">STATUS MIX</span><h3>Sample workflow statuses</h3></div><span class="mc-white-chip">Count · '+esc(total)+'</span></div>'+
      '<div class="mc-status-chips">'+stateChips+'</div><div class="mc-progress-list">'+dist+'</div></div>'+
@@ -323,7 +327,8 @@
    document.title=(sub?sub.label+' · ':cat?cat.label+' · ':'')+'MADDIE CENTRAL | 2027 (FICTIONAL TRIAL)';
    root.innerHTML='<div class="shell">'+sidebar(cat)+'<div class="content-area">'+header(cat,sub)+
      '<main id="main-content" tabindex="-1">'+banner()+(cat?(sub?renderView(cat,sub):categoryPage(cat)):home())+'</main>'+
-     footer()+'</div></div><div class="mobile-scrim" data-action="menu" aria-hidden="true"></div>';
+     footer()+'</div></div><div class="mobile-scrim" data-action="menu" aria-hidden="true"></div>'+ 
+     (window.MC_WIREFRAME?.palette?.(config)||'');
    mobileNavOpen=false;
    syncNavigation();
    syncCategoryFocus();
@@ -352,6 +357,36 @@
  root.addEventListener('click',event=>{
    const button=event.target.closest('[data-action]');if(!button)return;
    const action=button.dataset.action;
+   if(action==='wf-command-open'){
+     const dialog=root.querySelector?.('#mc-command');
+     if(dialog){
+       if(typeof dialog.showModal==='function')dialog.showModal();
+       else dialog.setAttribute('open','');
+       root.querySelector?.('#mc-command-input')?.focus();
+     }
+     return;
+   }
+   if(action==='wf-command-close'){
+     const dialog=root.querySelector?.('#mc-command');
+     if(dialog?.close)dialog.close();else dialog?.removeAttribute?.('open');
+     root.querySelector?.('.wf-command-open')?.focus();
+     return;
+   }
+   if(action==='wf-period'){
+     const p=button.dataset.period;
+     if(['week','month','quarter'].includes(p)){wfPeriod=p;render();}
+     return;
+   }
+   if(action==='wf-alert-filter'){
+     const f=button.dataset.filter;
+     if(['all','high'].includes(f)){wfAlertFilter=f;render();}
+     return;
+   }
+   if(action==='wf-calendar'){
+     const m=Number(button.dataset.month);
+     if([10,11].includes(m)){wfCalendarMonth=m;render();}
+     return;
+   }
    if(action==='view'||action==='view-link'){
      const next=button.dataset.view;
      if(!['overview','priorities','updates','explore'].includes(next))return;
@@ -398,6 +433,11 @@
    if(action==='export'){const {cat,sub}=rawRoute();if(cat&&sub)exportCsv(cat,sub);return;}
  });
  root.addEventListener('input',event=>{
+   if(event.target.id==='mc-command-input'){
+     const list=root.querySelector?.('#mc-command-results');
+     if(list&&window.MC_WIREFRAME)list.innerHTML=window.MC_WIREFRAME.results(config,event.target.value);
+     return;
+   }
    if(event.target.id!=='record-search')return;
    filter.query=event.target.value;refreshResults();
  });
@@ -466,6 +506,21 @@
    if(main)main.inert=isMobile()&&mobileNavOpen;
  }
  document.addEventListener('keydown',e=>{
+   if((e.ctrlKey||e.metaKey)&&String(e.key).toLowerCase()==='k'){
+     e.preventDefault();
+     const dialog=root.querySelector?.('#mc-command');
+     if(dialog){
+       if(typeof dialog.showModal==='function'&&!dialog.open)dialog.showModal();
+       else if(!dialog.open)dialog.setAttribute('open','');
+       root.querySelector?.('#mc-command-input')?.focus();
+     }
+     return;
+   }
+   if(e.key==='Enter'&&e.target?.id==='mc-command-input'){
+     const link=root.querySelector?.('#mc-command-results a');
+     if(link){e.preventDefault();link.click();}
+     return;
+   }
    const tab=e.target?.closest?.('.mc-section-tabs [role="tab"]');
    if(tab&&['ArrowRight','ArrowLeft','Home','End'].includes(e.key)){
      const sequence=['overview','priorities','updates','explore'];
@@ -496,6 +551,6 @@
  window.addEventListener('resize',()=>{if(!isMobile()&&mobileNavOpen){mobileNavOpen=false;syncNavigation();}});
 
  const skip=document.getElementById('skip-content');if(skip)skip.addEventListener('click',()=>root.querySelector('#main-content')?.focus());
- window.MC_APP={model,config,render,rawRoute,allowed,filteredRows,getRole:()=>role,getFilter:()=>({...filter}),isSidebarCollapsed:()=>sidebarCollapsed,isMobileNavOpen:()=>mobileNavOpen,getCategoryFocus:()=>categoryFocus};
+ window.MC_APP={model,config,render,rawRoute,allowed,filteredRows,getRole:()=>role,getFilter:()=>({...filter}),isSidebarCollapsed:()=>sidebarCollapsed,isMobileNavOpen:()=>mobileNavOpen,getCategoryFocus:()=>categoryFocus,getWireframePeriod:()=>wfPeriod,getWireframeAlertFilter:()=>wfAlertFilter,getWireframeCalendarMonth:()=>wfCalendarMonth};
  render();
 })();
