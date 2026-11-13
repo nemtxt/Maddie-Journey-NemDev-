@@ -94,7 +94,7 @@
    (current?'<details class="nav-context" open><summary>IN THIS WORKSPACE '+icon('chevron')+'</summary><div class="nav-context-body">'+
      current.subcategories.slice(0,4).map(s=>'<a href="'+href(current.id,s.id)+'" title="'+esc(s.label)+'">'+
      '<span>'+esc(s.label)+'</span>'+icon('arrow')+'</a>').join('')+
-     '<a href="'+href(current.id)+'#subcategory-directory" data-action="view-link" data-view="explore">All '+current.subcategories.length+' views '+icon('arrow')+'</a></div></details>':'')+
+     '<a href="'+href(current.id)+'" data-action="view-link" data-view="explore">All '+current.subcategories.length+' views '+icon('arrow')+'</a></div></details>':'')+
    '<div class="side-bottom"><span class="trial-dot"></span><span class="side-status-copy">TRIAL ENVIRONMENT<br><small>51 fictional employees · no live sync</small></span></div>'+
    '<button type="button" class="mobile-close-nav" data-action="menu" aria-label="Close navigation">'+icon('close')+' Close menu</button></aside>';
  const header=(cat,sub)=>'<header class="topbar"><button type="button" class="mobile-menu" data-action="menu" aria-label="Open navigation menu" aria-expanded="'+String(mobileNavOpen)+'" aria-controls="side-menu">'+icon('menu')+'</button>'+
@@ -361,6 +361,8 @@
      }
      categoryFocus=next;
      syncCategoryFocus();
+     if(mobileNavOpen){mobileNavOpen=false;syncNavigation();}
+     root.querySelector?.('.mc-section-tabs [data-view="'+next+'"]')?.focus();
      window.MC_MOTION?.panel();
      return;
    }
