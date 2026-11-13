@@ -160,7 +160,7 @@
      {id:'explore',label:'Explore all views',icon:'briefcase',target:'mc-links'}
    ];
    const tab=({id,label,icon:ic,target})=>
-     '<button type="button" role="tab" data-action="view" data-view="'+id+'" aria-controls="'+target+
+     '<button type="button" role="tab" id="mc-tab-'+id+'" data-action="view" data-view="'+id+'" aria-controls="'+target+
      '" aria-selected="'+String(categoryFocus===id)+'" tabindex="'+(categoryFocus===id?'0':'-1')+'">'+
      icon(ic)+'<span>'+label+'</span></button>';
    const metricCard=(m,i)=>
@@ -197,19 +197,19 @@
      '<div class="mc-hero-aside" aria-hidden="true"><span class="mc-hero-orbit"></span><div class="mc-preview-tile mc-preview-primary"><span>01 / SUMMARY</span><b>'+esc(summary.metrics[0]?.value)+'</b><small>'+esc(summary.metrics[0]?.label)+'</small></div>'+
      '<div class="mc-preview-tile mc-preview-secondary"><span>02 / TRACKED</span><b>'+esc(summary.metrics[1]?.value)+'</b><small>'+esc(summary.metrics[1]?.label)+'</small></div></div></div></section>'+
      '<div class="mc-section-tabs" role="tablist" aria-label="Dashboard sections">'+tabs.map(tab).join('')+'</div>'+
-     '<section class="mc-dashboard-section" id="mc-metrics" aria-labelledby="mc-metrics-title"><div class="mc-section-heading"><div><span class="eyebrow">AT A GLANCE</span><h2 id="mc-metrics-title">'+esc(summary.focus)+'</h2></div><span class="mc-white-chip">Derived from fictional records</span></div>'+
+     '<section class="mc-dashboard-section" role="tabpanel" id="mc-metrics" aria-labelledby="mc-tab-overview"><div class="mc-section-heading"><div><span class="eyebrow">AT A GLANCE</span><h2 id="mc-metrics-title">'+esc(summary.focus)+'</h2></div><span class="mc-white-chip">Derived from fictional records</span></div>'+
      '<div class="mc-metric-grid">'+summary.metrics.map(metricCard).join('')+'</div></section>'+
-     '<section class="mc-dashboard-section mc-insight-section" id="mc-insights" aria-labelledby="mc-insights-title"><div class="mc-section-heading"><div><span class="eyebrow">WORKSPACE HEALTH</span><h2 id="mc-insights-title">Status and priorities</h2></div></div>'+
+     '<section class="mc-dashboard-section mc-insight-section" role="tabpanel" id="mc-insights" aria-labelledby="mc-tab-priorities"><div class="mc-section-heading"><div><span class="eyebrow">WORKSPACE HEALTH</span><h2 id="mc-insights-title">Status and priorities</h2></div></div>'+
      '<div class="mc-insight-grid"><div class="mc-panel"><div class="mc-panel-head"><div><span class="eyebrow">STATUS MIX</span><h3>Sample workflow statuses</h3></div><span class="mc-white-chip">Count · '+esc(total)+'</span></div>'+
      '<div class="mc-status-chips">'+stateChips+'</div><div class="mc-progress-list">'+dist+'</div></div>'+
      '<div class="mc-panel"><div class="mc-panel-head"><div><span class="eyebrow">HIGHLIGHTS</span><h3>What needs attention</h3></div><span class="mc-white-chip">Priority view</span></div>'+
      '<div class="mc-focus-list">'+summary.highlights.map(focusCard).join('')+'</div></div></div></section>'+
-     '<section class="mc-dashboard-section" id="mc-activity" aria-labelledby="mc-activity-title"><div class="mc-section-heading"><div><span class="eyebrow">SAMPLE ACTIVITY</span><h2 id="mc-activity-title">Recent fixture records and notes</h2></div><span class="mc-white-chip">No live activity feed</span></div>'+
+     '<section class="mc-dashboard-section" role="tabpanel" id="mc-activity" aria-labelledby="mc-tab-updates"><div class="mc-section-heading"><div><span class="eyebrow">SAMPLE ACTIVITY</span><h2 id="mc-activity-title">Recent fixture records and notes</h2></div><span class="mc-white-chip">No live activity feed</span></div>'+
      '<div class="mc-activity-grid"><div class="mc-panel"><div class="mc-panel-head"><h3>Example updates</h3><span class="mc-white-chip">Demo snapshot</span></div><div class="mc-activity-list">'+
      (summary.activity.length?summary.activity.map(activity).join(''):'<p class="mc-muted">No sample updates are recorded for this category.</p>')+'</div></div>'+
      '<div class="mc-panel"><div class="mc-panel-head"><h3>Risks and source limitations</h3><span class="mc-white-chip">Trial only</span></div><div class="mc-notes-list">'+
      summary.risks.map(noteCard).join('')+'</div><p class="mc-panel-note">No real reminders, alerts, emails, decisions or external records are generated.</p></div></div></section>'+
-     '<section class="mc-dashboard-section" id="mc-links" aria-labelledby="mc-category-links-title"><div class="mc-section-heading"><div><span class="eyebrow">JUMP INTO DETAILS</span><h2 id="mc-category-links-title">All '+esc(cat.subcategories.length)+' subcategory views</h2></div>'+
+     '<section class="mc-dashboard-section" role="tabpanel" id="mc-links" aria-labelledby="mc-tab-explore"><div class="mc-section-heading"><div><span class="eyebrow">JUMP INTO DETAILS</span><h2 id="mc-category-links-title">All '+esc(cat.subcategories.length)+' subcategory views</h2></div>'+
      '<span class="mc-white-chip">Select a view</span></div><div class="mc-link-grid">'+cat.subcategories.map((sub,i)=>
        '<a class="mc-link-tile" href="'+href(cat.id,sub.id)+'"><span class="mc-link-number">'+String(i+1).padStart(2,'0')+'</span><span>'+esc(sub.label)+'</span>'+
        icon(allowed(cat,sub)?'arrow':'lock')+'</a>').join('')+'</div></section>';
