@@ -18,6 +18,7 @@ require('../data.js');
 const seed=global.window.MJ_SEED;
 const build=require('../central/model.js');
 const summary=require('../central/summary.js');
+const wireframe=require('../central/wireframe.js');
 const model=build(seed,config);
 
 test('Nine workspace labels match the required order exactly',()=>{
@@ -116,7 +117,7 @@ function boot(hash,opts={}){
  };
  const loc={hash:hash||'#/home'};
  const window={
-  MC_CONFIG:config,MC_DATA:model,MC_SUMMARY:summary,
+  MC_CONFIG:config,MC_DATA:model,MC_SUMMARY:summary,MC_WIREFRAME:wireframe,
   matchMedia(query){return {matches:Boolean(opts.mobile)&&/max-width:\s*900px/.test(query)}},
   addEventListener(type,fn){listeners[type]=fn}
  };
@@ -491,6 +492,146 @@ test('Reduced-motion CSS does not expose closed off-canvas mobile navigation',()
  const offscreen=css.indexOf('transform:translate3d(-104%,0,0)');
  const opened=css.indexOf('.navigation-open .sidebar{transform:translate3d(0,0,0)}');
  assert(offscreen>0&&opened>offscreen);
+});
+
+
+test('Wireframe adaptation uses the existing 51 fictional identities and existing category schema',()=>{
+ const overview=wireframe.home(model,config,summary,{}, {period:'month',alertFilter:'all'});
+ assert(overview.includes('wf-executive'));
+ assert(overview.includes('51 fictional people'));
+ assert(overview.includes('9 workspaces'));
+ assert(overview.includes('No live sync'));
+ assert(overview.includes('Headcount by division'));
+ assert(overview.includes('Executive monitoring matrix'));
+ assert(overview.includes('Needs attention'));
+ assert(overview.includes('data-action="wf-period"'));
+ assert(overview.includes('data-action="wf-alert-filter"'));
+ assert(!overview.includes('54 people across'));
+ assert(!overview.includes('PHP 1.84M'));
+ assert(!overview.includes('Connected sources'));
+ assert(!overview.includes('178 candidates'));
+});
+test('Wireframe alert amounts are derived from fictional records, not hardcoded counts',()=>{
+ const d=wireframe.cleanOverrides(model);
+ const list=wireframe.allAlerts(d);
+ assert.equal(list.length,5);
+ assert.equal(list.find(a=>a.id==='documents').count,d.docs.filter(r=>r.status==='Requested').length);
+ assert.equal(list.find(a=>a.id==='attendance').count,d.attendance.filter(r=>['Late','Absent'].includes(r.status)).length);
+ assert.equal(list.find(a=>a.id==='decisions').count,d.decisions.filter(r=>r.status==='Decision Required').length);
+ const first=d.docs.find(r=>r.status==='Requested');assert(first);
+ const revised=wireframe.cleanOverrides(model,{[first.recordId]:'Approved/Verified'});
+ assert.equal(wireframe.allAlerts(revised).find(a=>a.id==='documents').count,list.find(a=>a.id==='documents').count-1);
+ assert.equal(first.status,'Requested');
+});
+test('Wireframe executive period and severity filters produce distinct functional views',()=>{
+ const w=wireframe.home(model,config,summary,{}, {period:'week',alertFilter:'all'});
+ const q=wireframe.home(model,config,summary,{}, {period:'quarter',alertFilter:'high'});
+ assert(w.includes('aria-pressed="true">Week</button>'));
+ assert(q.includes('aria-pressed="true">Quarter</button>'));
+ assert(q.includes('aria-pressed="true">High</button>'));
+ assert(w.includes('Next 7 days'));
+ assert(q.includes('Next 90 days'));
+ assert(!q.includes('Documents not reviewed</strong>'));
+});
+test('Nine category wireframe panels have matching functional visualizations',()=>{
+ const expected={
+ 'people-directory':'Headcount by division',
+ 'pay-benefits':'Benefit readiness tracker',
+ 'workforce-pulse':'Late and absent demo records by weekday',
+ 'maddie-journey':'Employee journey stages',
+ 'maddie-learning-hub':'Course participation example',
+ 'culture-community':'Scheduled sample activities',
+ 'talent-acquisition':'Requisition pipeline',
+ 'people-governance':'Governance case stages',
+ 'executive-scoreboard':'Source-based demo coverage'
+ };
+ for(const c of config.categories){
+   const html=wireframe.category(model,c,{}, {calendarMonth:11});
+   assert(html.includes('wf-category-feature'),c.id);
+   assert(html.includes(expected[c.id]),c.id);
+   assert(html.includes('Fictional sample data'),c.id);
+   assert(!html.includes('54 people across'),c.id);
+   assert(!html.includes('PHP 1.84M'),c.id);
+ }
+});
+test('Wireframe governance never leaks sample names, identifiers, salary or evidence',()=>{
+ const cat=config.categories.find(c=>c.id==='people-governance');
+ const html=wireframe.category(model,cat,{});
+ assert(html.includes('no employee names'));
+ assert(!html.includes(model.people[0].name));
+ assert(!html.includes(model.people[0].employeeId));
+ assert(!html.includes('PHP '));
+ assert(!html.includes('Case Documentation'));
+});
+test('Wireframe uses one searchable navigation source across all 9 workspaces and 86 views',()=>{
+ const html=wireframe.palette(config);
+ assert(html.includes('id="mc-command"'));
+ assert(html.includes('id="mc-command-input"'));
+ assert(html.includes('role')||html.includes('Search'));
+ const link=wireframe.results(config,'Employee Masterlist');
+ assert(link.includes('#/category/people-directory/employee-masterlist'));
+ assert(wireframe.results(config,'zzzzzz-not-real').includes('No matching demo navigation'));
+ const broad=wireframe.results(config,'');
+ assert(broad.includes('#/category/people-directory'));
+ const script=read('central/wireframe.js');
+ assert(!/fetch\s*\(|XMLHttpRequest|api\.airtable\.com|sheets\.googleapis\.com/.test(script));
+});
+test('Executive deadline view uses documented fictional dates only',()=>{
+ const d=wireframe.cleanOverrides(model);
+ const rows=wireframe.deadlineRows(d);
+ assert(rows.length>10);
+ assert(rows.every(r=>/^\d{4}-\d{2}-\d{2}$/.test(r.dueDate)));
+ assert(rows.every(r=>r.category&&r.sub&&config.categories.some(c=>c.id===r.category&&c.subcategories.some(s=>s.id===r.sub))));
+ assert(rows.every((r,i)=>!i||rows[i-1].dueDate<=r.dueDate));
+});
+test('Wireframe assets are connected to the trial entrypoint and dashboard render paths',()=>{
+ const index=read('index.html'),app=read('central/app.js'),css=read('central/wireframe.css');
+ assert(index.includes('central/wireframe.css'));
+ assert(index.includes('central/wireframe.js'));
+ assert(index.indexOf('central/wireframe.js')<index.indexOf('central/app.js'));
+ assert(app.includes('MC_WIREFRAME?.home'));
+ assert(app.includes('MC_WIREFRAME?.category'));
+ assert(app.includes('MC_WIREFRAME?.palette'));
+ assert(app.includes("if(action==='wf-period')"));
+ assert(app.includes("if(action==='wf-alert-filter')"));
+ assert(app.includes("if(action==='wf-calendar')"));
+ assert(app.includes("e.key).toLowerCase()==='k'"));
+ assert(css.includes('prefers-reduced-motion:reduce'));
+ assert(css.includes('@media(max-width:600px)'));
+ assert(!index.includes('data-adapter.js'));
+});
+test('Every route still renders fictional wireframe sections plus existing sample controls',()=>{
+ const ctx=boot('#/home');
+ assert(ctx.mount.innerHTML.includes('wf-executive'));
+ assert(ctx.mount.innerHTML.includes('mc-command'));
+ for(const c of config.categories){
+   ctx.loc.hash='#/category/'+c.id;
+   ctx.window.MC_APP.render();
+   assert(ctx.mount.innerHTML.includes('wf-category-feature'),c.id);
+   assert(ctx.mount.innerHTML.includes('id="mc-metrics"'),c.id);
+   assert(ctx.mount.innerHTML.includes('id="subcategory-directory"'),c.id);
+ }
+ ctx.loc.hash='#/category/people-directory/employee-masterlist';
+ ctx.window.MC_APP.render();
+ assert(ctx.mount.innerHTML.includes('51 records'));
+});
+test('Wireframe period, attention filter and calendar controls preserve route and sample records',()=>{
+ const ctx=boot('#/home');
+ const trigger=(action,extras)=>ctx.handlers.click({target:{closest(s){
+   return s==='[data-action]'?{dataset:{action,...extras}}:null;
+ }}});
+ trigger('wf-period',{period:'quarter'});
+ assert.equal(ctx.window.MC_APP.getWireframePeriod(),'quarter');
+ assert(ctx.mount.innerHTML.includes('Next 90 days'));
+ trigger('wf-alert-filter',{filter:'high'});
+ assert.equal(ctx.window.MC_APP.getWireframeAlertFilter(),'high');
+ ctx.loc.hash='#/category/culture-community';
+ ctx.window.MC_APP.render();
+ trigger('wf-calendar',{month:'11'});
+ assert.equal(ctx.window.MC_APP.getWireframeCalendarMonth(),11);
+ assert(ctx.mount.innerHTML.includes('December 2026'));
+ assert.equal(ctx.window.MC_APP.getCategoryFocus(),'overview');
+ assert.equal(ctx.window.MC_APP.model.people.length,51);
 });
 
 console.log('\n'+passed+' Maddie Central fictional-trial tests passed. Manual browser and device tests still required.');
