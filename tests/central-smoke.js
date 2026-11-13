@@ -17,6 +17,7 @@ global.window={};
 require('../data.js');
 const seed=global.window.MJ_SEED;
 const build=require('../central/model.js');
+const summary=require('../central/summary.js');
 const model=build(seed,config);
 
 test('Nine workspace labels match the required order exactly',()=>{
@@ -102,7 +103,7 @@ function boot(hash){
  };
  const loc={hash:hash||'#/home'};
  const window={
-  MC_CONFIG:config,MC_DATA:model,
+  MC_CONFIG:config,MC_DATA:model,MC_SUMMARY:summary,
   addEventListener(type,fn){listeners[type]=fn}
  };
  const ctx={window,document,location:loc,
@@ -154,4 +155,106 @@ test('Normal views support search and sorted linked tables',()=>{
  assert.equal(filter.status,'all');
  assert.equal(ctx.window.MC_APP.filteredRows(config.categories[0],config.categories[0].subcategories[0]).length,51);
 });
+
+test('All nine categories have distinct 4-8 source-derived KPI summary cards',()=>{
+ const titles=new Set();
+ for(const cat of config.categories){
+   const result=summary.create(model,cat.id);
+   assert.equal(result.title,cat.label);
+   assert.equal(result.subtitle,cat.subtitle);
+   assert.equal(result.asOf,model.updatedAt);
+   assert.equal(result.fictional,true);
+   assert(result.metrics.length>=4&&result.metrics.length<=8);
+   assert(result.metrics.every(m=>m.label&&m.icon&&m.tone&&m.value!==undefined&&m.detail));
+   assert(result.highlights.length>=2);
+   assert(result.activity.length>=1);
+   assert(result.risks.length>=1);
+   assert(result.distribution.length>=2);
+   assert(!titles.has(result.title));titles.add(result.title);
+   for(const item of [...result.highlights,...result.activity,...result.risks]){
+     if(item.to)assert(cat.subcategories.some(s=>s.id===item.to.subcategory));
+   }
+ }
+ assert.equal(titles.size,9);
+});
+test('Summary rollups reconcile to fictional records instead of manually entered totals',()=>{
+ const p=summary.create(model,'people-directory');
+ const metricByLabel=(result,label)=>result.metrics.find(m=>m.label===label).value;
+ assert.equal(metricByLabel(p,'Fictional employees'),51);
+ assert.equal(metricByLabel(p,'201 file checkpoints'),model.collections.docs.length);
+ assert.equal(metricByLabel(p,'Files requested'),model.collections.docs.filter(d=>d.status==='Requested').length);
+ const a=summary.create(model,'workforce-pulse');
+ assert.equal(metricByLabel(a,'Verified demo logs'),model.collections.attendance.length);
+ assert.equal(metricByLabel(a,'Present today'),'Not tracked');
+ const j=summary.create(model,'maddie-journey');
+ assert.equal(metricByLabel(j,'Journey profiles'),51);
+ const l=summary.create(model,'maddie-learning-hub');
+ assert.equal(metricByLabel(l,'Training programs'),model.collections.training.length);
+ const e=summary.create(model,'executive-scoreboard');
+ assert.equal(metricByLabel(e,'Decisions required'),model.collections.decisions.filter(x=>x.status==='Decision Required').length);
+});
+test('Local fictional status edits recalculate dependent summary figures',()=>{
+ const doc=model.collections.docs.find(d=>d.status==='Requested');
+ assert(doc);
+ const baseline=summary.create(model,'people-directory');
+ const revised=summary.create(model,'people-directory',{[doc.recordId]:'Approved/Verified'});
+ const get=(s,label)=>s.metrics.find(m=>m.label===label).value;
+ assert.equal(get(revised,'Files requested'),get(baseline,'Files requested')-1);
+ assert.equal(get(revised,'Verified checkpoints'),get(baseline,'Verified checkpoints')+1);
+ assert.equal(doc.status,'Requested','source model was not mutated');
+});
+test('Sensitive category summaries expose aggregates only and no named case/pay entries',()=>{
+ for(const id of ['pay-benefits','people-governance']){
+   const text=JSON.stringify(summary.create(model,id));
+   assert(!text.includes('PHP 25,000'));
+   assert(!text.includes('salary-'));
+   assert(!text.includes('MJ-001'));
+   assert(!text.includes('employee01@example.com'));
+   assert(!text.includes('Avery Santos'));
+ }
+ const gov=summary.create(model,'people-governance');
+ assert(gov.activity.every(x=>!x.title.includes('Case Documentation')));
+});
+test('Nine category routes render a unique summary dashboard plus the preserved directory',()=>{
+ const ctx=boot('#/home');
+ for(const cat of config.categories){
+   ctx.loc.hash='#/category/'+cat.id;
+   ctx.window.MC_APP.render();
+   const html=ctx.mount.innerHTML;
+   assert(html.includes('id="mc-summary-title"'),cat.id);
+   assert(html.includes('id="mc-metrics"'),cat.id);
+   assert(html.includes('id="mc-insights"'),cat.id);
+   assert(html.includes('id="mc-activity"'),cat.id);
+   assert(html.includes('id="subcategory-directory"'),cat.id);
+   assert(html.includes('mc-metric-card'),cat.id);
+   assert(html.includes('mc-white-chip'),cat.id);
+   assert(html.includes('Fictional sample data only'),cat.id);
+   assert(html.includes('<details class="accordion">'),cat.id);
+   for(const sub of cat.subcategories){
+     assert(html.includes('#/category/'+cat.id+'/'+sub.id),'missing direct link '+cat.id+'/'+sub.id);
+   }
+ }
+});
+test('Summary stylesheet enforces white chips in both themes and accessible viewports',()=>{
+ const html=read('index.html'),css=read('central/summary.css');
+ assert(html.includes('central/summary.js'));
+ assert(html.includes('central/summary.css'));
+ assert(html.indexOf('central/summary.js')>html.indexOf('central/model.js'));
+ assert(html.indexOf('central/summary.js')<html.indexOf('central/app.js'));
+ assert(css.includes('--mc-white:#fff'));
+ assert(css.includes('background:var(--mc-white)!important'));
+ assert(css.includes('color:var(--mc-ink)!important'));
+ assert(css.includes('@media (max-width:380px)'));
+ assert(css.includes('@media(prefers-reduced-motion:reduce)'));
+ assert(css.includes('@media(forced-colors:active)'));
+ assert(css.includes(':focus-visible')||read('central/styles.css').includes(':focus-visible'));
+});
+test('Category summaries use no external services and leave legacy monitor loaded separately',()=>{
+ const summaryCode=read('central/summary.js'),index=read('index.html');
+ assert(!/fetch\s*\(|XMLHttpRequest|supabase|gmail|airtable|claude/i.test(summaryCode));
+ assert(!index.includes('data-adapter.js'));
+ assert(read('legacy.html').includes('data-adapter.js'));
+ assert.doesNotThrow(()=>new vm.Script(read('central/summary.js')));
+});
+
 console.log('\n'+passed+' Maddie Central fictional-trial tests passed. Manual browser and device tests still required.');
