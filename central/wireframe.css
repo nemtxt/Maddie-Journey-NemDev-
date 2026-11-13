@@ -256,3 +256,13 @@
  }
  .wf-period button[aria-pressed="true"],.wf-mini-segment button[aria-pressed="true"]{outline:2px solid Highlight}
 }
+
+/* Saved-view shortcuts remain available without repeating executive KPI blocks. */
+.wf-extras{margin:25px 0 35px;border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden}
+.wf-extras>summary{display:flex;align-items:center;gap:13px;cursor:pointer;min-height:58px;padding:15px 18px;list-style:none;font-weight:750;font-size:12px}
+.wf-extras>summary::-webkit-details-marker{display:none}
+.wf-extras>summary>span{color:var(--muted);font-size:10px;font-weight:600;margin-left:auto}
+.wf-extras>summary>.icon{width:15px;height:15px;transition:transform 180ms ease}
+.wf-extras[open]>summary>.icon{transform:rotate(90deg)}
+.wf-extras>.quick-grid{padding:0 17px 18px}
+@media(prefers-reduced-motion:reduce){.wf-extras>summary>.icon{transition:none}}
