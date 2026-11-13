@@ -8,7 +8,7 @@ const path=require('node:path');
 const root=path.resolve(__dirname,'..');
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 
-const files=['index.html','data.js','data-adapter.js','icons.js','monitoring.js','app.js','operations.css','palette.css','landing.css','workspace.css','reader.css','refined.css','mono.css','motion.js'];
+const files=['legacy.html','data.js','data-adapter.js','icons.js','monitoring.js','app.js','operations.css','palette.css','landing.css','workspace.css','reader.css','refined.css','mono.css','motion.js'];
 const src=Object.fromEntries(files.map(name=>[name,read(name)]));
 const results=[];
 function check(name,fn){fn();results.push(name);console.log('PASS '+name);}
@@ -70,11 +70,11 @@ function boot(initial={},hash='',mutateFixture,configureRuntime){
 
 check('Files parse; reader CSS is last and PNG/JPEG media are preserved',()=>{
   new Function(src['data.js']);new Function(src['data-adapter.js']);new Function(src['icons.js']);new Function(src['monitoring.js']);new Function(src['app.js']);new Function(src['motion.js']);
-  assert(src['index.html'].indexOf('reader.css')>src['index.html'].indexOf('workspace.css'));
+  assert(src['legacy.html'].indexOf('reader.css')>src['legacy.html'].indexOf('workspace.css'));
   assert(src['landing.css'].includes('assets/madhalloween.jpg'));
   assert(!src['app.js'].includes('assets/madhouse-logo.png'));
-  assert(!src['index.html'].includes('assets/madhouse-logo.png'));
-  assert(!src['index.html'].includes('.webp'));
+  assert(!src['legacy.html'].includes('assets/madhouse-logo.png'));
+  assert(!src['legacy.html'].includes('.webp'));
 });
 
 const user=boot();
@@ -90,8 +90,8 @@ check('Source adapter returns safe copies and reports all five integrations as d
   copy.employees[0].name='Accidental change';
   assert(user.win.MJ_SEED.employees[0].name!=='Accidental change');
   assert(!a.validateSnapshot({divisions:[],employees:[{id:'fake',division:'missing'}],stages:[],kit:[]}));
-  assert(src['index.html'].indexOf('data-adapter.js')>src['index.html'].indexOf('data.js'));
-  assert(src['index.html'].indexOf('data-adapter.js')<src['index.html'].indexOf('app.js'));
+  assert(src['legacy.html'].indexOf('data-adapter.js')>src['legacy.html'].indexOf('data.js'));
+  assert(src['legacy.html'].indexOf('data-adapter.js')<src['legacy.html'].indexOf('app.js'));
 });
 
 check('Monitoring overview presents eight comparable divisions and milestones',()=>{
@@ -104,7 +104,7 @@ check('Monitoring overview presents eight comparable divisions and milestones',(
   assert(html.includes('overview-milestone-list'));
   assert(html.includes('overview-followups'));
   assert(!html.includes('Hours Studied'));
-  assert(src['index.html'].indexOf('refined.css')>src['index.html'].indexOf('reader.css'));
+  assert(src['legacy.html'].indexOf('refined.css')>src['legacy.html'].indexOf('reader.css'));
 });
 
 check('No access gate, saved persona, chooser or editable source controls remain',()=>{
@@ -401,7 +401,7 @@ check('Desktop sidebar collapses to icon navigation and remembers the state',()=
 });
 
 check('One Inter font and neutral backgrounds are the final theme',()=>{
-  const css=src['mono.css'],html=src['index.html'];
+  const css=src['mono.css'],html=src['legacy.html'];
   assert(html.includes('family=Inter'));
   assert(css.includes('font-family:"Inter",sans-serif!important'));
   assert(css.includes('--mono-bg:#ffffff'));
@@ -413,7 +413,7 @@ check('One Inter font and neutral backgrounds are the final theme',()=>{
 });
 
 check('Anime.js v4 is optional, reduced-motion aware and limits its motion',()=>{
-  const html=src['index.html'],code=src['motion.js'];
+  const html=src['legacy.html'],code=src['motion.js'];
   assert(html.includes('animejs@4.5.0/dist/bundles/anime.umd.min.js'));
   assert(html.indexOf('motion.js')>html.indexOf('app.js'));
   assert(code.includes('prefers-reduced-motion: reduce'));
@@ -969,8 +969,8 @@ check('Phase 6 directory search updates its table in place',()=>{
   assert(scanned>0);
 });
 check('Phase 6 loading and error states give accessible recovery',()=>{
-  assert(src['index.html'].includes('class="boot" role="status" aria-live="polite"'));
-  assert(src['index.html'].includes('Preparing the fictional monitoring snapshot'));
+  assert(src['legacy.html'].includes('class="boot" role="status" aria-live="polite"'));
+  assert(src['legacy.html'].includes('Preparing the fictional monitoring snapshot'));
   const app={innerHTML:''},doc={getElementById:()=>app,title:''};
   new Function('window','document',src['app.js'])({},doc);
   assert(app.innerHTML.includes('Sample data unavailable'));
@@ -1174,7 +1174,7 @@ check('New monitoring styles keep single font, three-to-one calendar layout and 
   assert(css.includes('@media(max-width:760px)'));
   assert(css.includes('@media(max-width:350px)'));
   assert(css.includes('body button.monitor-calendar-date{min-height:44px}'));
-  const html=src['index.html'];
+  const html=src['legacy.html'];
   assert(html.indexOf('data-adapter.js')<html.indexOf('monitoring.js'));
   assert(html.indexOf('monitoring.js')<html.indexOf('app.js'));
   for(const tab of ['calendar','files201']){
@@ -1454,7 +1454,7 @@ check('Icon dependency failure cannot block navigation or file and calendar moni
   instance.click('close');
 });
 check('Icons retain accessible sizes and keyboard, forced-color and motion styles',()=>{
-  const css=src['mono.css'],html=src['index.html'];
+  const css=src['mono.css'],html=src['legacy.html'];
   assert(html.indexOf('icons.js')>html.indexOf('data-adapter.js'));
   assert(html.indexOf('icons.js')<html.indexOf('monitoring.js'));
   assert(html.indexOf('monitoring.js')<html.indexOf('app.js'));
