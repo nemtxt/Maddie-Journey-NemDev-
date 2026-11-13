@@ -63,3 +63,40 @@ The guide's full production scope is **not** claimed as done. This trial does no
 - Independently verify the live `main` website and Claude branch remain on their existing commits. Do not enable Pages deployment for this trial.
 
 **Acceptance boundary:** This is a navigable, testable **fictional prototype**, not a production People & Culture system.
+
+
+## Nine category summary dashboards — trial update (November 13, 2026)
+
+Every category page now opens with a dedicated, source-derived executive **summary dashboard** before the existing expandable directory. The following features are shared across the nine screens:
+
+- Category-specific introductory header, last demo snapshot, simulated viewer role, and clearly visible **Fictional sample data only** label.
+- Between 4 and 8 category-specific metric cards, rendered with restrained pastel backgrounds and **white chips** (with dark text) in light and dark appearance.
+- Source-derived status mix and bar visualization with accessible numeric totals, linked highlights, demo-record activity, and honest risks/source limitations.
+- Direct clickable links to **every** subcategory within the category, plus the original accordions and existing records views.
+- Responsive breakpoints for desktop/tablet/mobile, keyboard focus, reduced motion and forced-colors support.
+- Local test status edits update the relevant summary calculations on next render; no data leaves the browser.
+
+| Workspace | Summary focus |
+| --- | --- |
+| PEOPLE DIRECTORY | 51 employee IDs, 201 file completeness, review requests, movements and performance records |
+| PAY & BENEFITS | Aggregate pay-record coverage, synthetic benefit workflows and compensation movement counts; no individual compensation values |
+| WORKFORCE PULSE | Verified demo attendance entries and late/absent exceptions, without falsely claiming live daily presence |
+| MADDIE JOURNEY | Completion, assessment queues, progress percentages, report cards and movement examples |
+| MADDIE LEARNING HUB | Training programs, fictional schedule statuses and linked attendance |
+| CULTURE & COMMUNITY | Sample events, milestones, recognition and event approval statuses |
+| TALENT ACQUISITION | Demo requisitions and recruitment stages, without inventing candidates or vacancy aging |
+| PEOPLE GOVERNANCE | De-identified fictional case-status aggregates only; no personal allegations or case evidence |
+| EXECUTIVE SCOREBOARD | Derived headcount, document requests, attendance exceptions, recruiting, training, journeys, decisions and blocked actions |
+
+**Source caveat:** This fixture contains no validated HMO enrollment, payroll contributions, daily present-today logs, overtime durations, training assessments, applicant roster, vacancy-creation timestamps or approved WIG #4 targets. The affected metrics display **Not tracked**, not synthetic percentages or fabricated operational totals.
+
+### Relevant trial files and verification
+
+- \`central/summary.js\` — pure category-specific summary definitions and derivations.
+- \`central/summary.css\` — responsive pastel cards, white chips and summary-specific accessible styles.
+- \`central/app.js\` — new category summary renderer; accordion directory and all deep links preserved.
+- \`tests/central-smoke.js\` — includes summary coverage, source-rollup reconciliation, local status edit recomputation, sensitive summary masking, deep links and white-chip checks.
+
+Run \`node tests/smoke.js\` and \`node tests/central-smoke.js\`. As of this update, **119 legacy + 21 new trial checks passed** in GitHub Actions. Browser/device visual acceptance and real security review are still outstanding.
+
+**Publishing note:** GitHub generated automatic “pages build and deployment” runs on trial-branch pushes. Repository branch isolation keeps \`main\` and the Claude branch unchanged, but does **not** by itself guarantee that a separately configured Pages published site will remain unaffected. Review GitHub Settings → Pages before treating the published URL as a protected production environment.
