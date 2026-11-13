@@ -8,6 +8,10 @@
  const save=(key,val)=>{try{localStorage.setItem('mc-trial-'+key,val);}catch(_){}};
  let role=config.roles.includes(sv('role'))?sv('role'):'CEO';
  let theme=sv('theme')==='dark'?'dark':'light';
+ // The sidebar is a persistent desktop preference; mobile drawer state is transient.
+ let sidebarCollapsed=sv('sidebar-collapsed')==='true';
+ let mobileNavOpen=false;
+ const isMobile=()=>typeof window.matchMedia==='function'&&window.matchMedia('(max-width: 900px)').matches;
  let filter={query:'',status:'all',division:'all',sort:'name',descending:false};
  let routeKey='';
  let overrides={};
@@ -35,6 +39,9 @@
    check:'<path d="m5 12 4 4L19 6"/>',
    menu:'<path d="M4 6h16M4 12h16M4 18h16"/>',
    close:'<path d="m6 6 12 12M18 6 6 18"/>',
+   panel:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/>',
+   collapse:'<path d="m14 7-5 5 5 5M19 4v16"/>',
+   expand:'<path d="m10 7 5 5-5 5M5 4v16"/>',
    info:'<circle cx="12" cy="12" r="10"/><path d="M12 11v6M12 7h.01"/>'
  };
  const icon=(name,cls='')=>'<svg class="icon '+cls+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(paths[name]||paths.info)+'</svg>';
@@ -77,14 +84,16 @@
    (role==='Finance'&&cat.id==='pay-benefits'));
  const recordStatus=(r)=>overrides[r.recordId]||r.status;
  const metric=(value,label,detail)=>'<div class="metric"><span class="metric-number">'+esc(value)+'</span><strong>'+esc(label)+'</strong><small>'+esc(detail||'Fictional snapshot')+'</small></div>';
- const sidebar=(current)=>'<aside class="sidebar" id="side-menu" aria-label="Workspace navigation"><div class="brand"><span class="brand-mark">M</span><span><strong>MADDIE CENTRAL</strong><small>PEOPLE & CULTURE · 2027</small></span></div>'+
-   '<a class="nav-home '+(!current?'selected':'')+'" href="#/home">'+icon('home')+' Dashboard</a>'+
+ const sidebar=(current)=>'<aside class="sidebar" id="side-menu" aria-label="Workspace navigation"><div class="brand"><span class="brand-mark" aria-hidden="true">M</span><span class="brand-copy"><strong>MADDIE CENTRAL</strong><small>PEOPLE & CULTURE · 2027</small></span></div>'+
+   '<a class="nav-home '+(!current?'selected':'')+'" href="#/home" aria-label="Dashboard" title="Dashboard">'+icon('home')+'<span class="nav-text">Dashboard</span></a>'+
    '<div class="nav-label">WORKSPACES</div><nav class="nav-list" aria-label="Nine workspace categories">'+config.categories.map((c,i)=>
    '<a class="nav-link '+(current?.id===c.id?'selected':'')+'" '+(current?.id===c.id?'aria-current="page"':'')+
-   ' href="'+href(c.id)+'"><span class="nav-num">'+String(i+1).padStart(2,'0')+'</span>'+icon(c.icon)+
-   '<span>'+esc(c.label)+'</span>'+icon('chevron','nav-chevron')+'</a>').join('')+'</nav>'+
-   '<div class="side-bottom"><span class="trial-dot"></span><span>TRIAL ENVIRONMENT<br><small>51 fictional employees · no live sync</small></span></div></aside>';
- const header=(cat,sub)=>'<header class="topbar"><button type="button" class="mobile-menu" data-action="menu" aria-label="Toggle navigation" aria-expanded="false" aria-controls="side-menu">'+icon('menu')+'</button>'+
+   ' href="'+href(c.id)+'" title="'+esc(c.label)+'" aria-label="'+esc(c.label)+'"><span class="nav-num">'+String(i+1).padStart(2,'0')+'</span>'+icon(c.icon)+
+   '<span class="nav-text">'+esc(c.label)+'</span>'+icon('chevron','nav-chevron')+'</a>').join('')+'</nav>'+
+   '<div class="side-bottom"><span class="trial-dot"></span><span class="side-status-copy">TRIAL ENVIRONMENT<br><small>51 fictional employees · no live sync</small></span></div>'+
+   '<button type="button" class="mobile-close-nav" data-action="menu" aria-label="Close navigation">'+icon('close')+' Close menu</button></aside>';
+ const header=(cat,sub)=>'<header class="topbar"><button type="button" class="mobile-menu" data-action="menu" aria-label="Open navigation menu" aria-expanded="'+String(mobileNavOpen)+'" aria-controls="side-menu">'+icon('menu')+'</button>'+
+   '<button type="button" class="desktop-collapse" data-action="collapse" aria-label="'+(sidebarCollapsed?'Expand sidebar':'Collapse sidebar')+'" aria-pressed="'+String(sidebarCollapsed)+'" aria-controls="side-menu" title="'+(sidebarCollapsed?'Expand sidebar':'Collapse sidebar')+'">'+icon(sidebarCollapsed?'expand':'collapse')+'</button>'+
    '<div class="breadcrumbs"><a href="#/home">Workspace</a>'+ (cat?' <span>/</span> <a href="'+href(cat.id)+'">'+esc(cat.label)+'</a>':'')+
    (sub?' <span>/</span> <b>'+esc(sub.label)+'</b>':'')+'</div>'+
    '<div class="top-actions"><label class="role-label" for="role-select">Role preview</label><select id="role-select" aria-label="Simulated role (not authentication)">'+config.roles.map(r=>'<option '+(role===r?'selected':'')+'>'+esc(r)+'</option>').join('')+'</select>'+
@@ -93,22 +102,48 @@
  const banner=()=>'<div class="notice" role="note">'+icon('info')+' <span><strong>Fictional-data trial.</strong> Role selection is a visual simulation, not real authentication. Edits stay in this browser; no external systems are connected.</span></div>';
  const home=()=>{
    const m=model.metrics;
-   return '<div class="hero"><div><div class="eyebrow">PEOPLE & CULTURE · EXECUTIVE WORKSPACE</div><h1>MADDIE CENTRAL <span>| 2027</span></h1>'+
-     '<p>Nine connected workspaces to review workforce operations, ownership, decisions and progress. Explore an isolated fictional dataset.</p>'+
-     '<span class="eyebrow meta">'+icon('calendar')+' Demo snapshot: '+esc(model.updatedAt)+' · '+esc(model.period)+'</span></div>'+
-     '<div class="hero-side"><div class="hero-metric">'+m.headcount+'<small>Fictional employees</small></div><div class="hero-metric">'+config.categories.length+'<small>Core workspaces</small></div></div></div>'+
-     '<div class="section-head"><div><span class="eyebrow">WORKSPACE MAP</span><h2>Explore the nine categories</h2></div><span class="muted">Select a category to view its subcategories</span></div>'+
-     '<div class="category-grid">'+config.categories.map((c,i)=>'<a class="category-card" href="'+href(c.id)+'"><div class="cat-top"><span class="category-icon tone-'+(i%4)+'">'+icon(c.icon)+'</span><span class="cat-index">'+String(i+1).padStart(2,'0')+' / 09</span></div>'+
-       '<h3>'+esc(c.label)+'</h3><p>'+esc(c.subtitle)+'</p><div class="cat-foot">'+c.subcategories.length+' linked views '+icon('arrow')+'</div></a>').join('')+'</div>'+
-     '<div class="section-head lower"><div><span class="eyebrow">EXECUTIVE MONITORING</span><h2>Fictional operational snapshot</h2></div></div>'+
+   const spotlight=model.people.slice(0,3);
+   const editorial=(p,i)=>{
+     const initials=p.name.split(/\s+/).slice(0,2).map(n=>n.charAt(0)).join('');
+     return '<a class="mc-profile-card mc-profile-'+i+'" href="'+href('people-directory','employee-masterlist')+
+       '" aria-label="Open fictional employee directory; sample profile '+esc(p.name)+'"><div class="mc-profile-art" aria-hidden="true">'+
+       '<span class="mc-profile-orbit"></span><span class="mc-profile-monogram">'+esc(initials)+'</span>'+
+       '<span class="mc-profile-ribbon">FICTIONAL / 0'+(i+1)+'</span></div>'+
+       '<div class="mc-profile-caption"><strong>'+esc(p.name)+'</strong><span>'+esc(p.position)+'</span></div></a>';
+   };
+   return '<section class="mc-editorial-hero" aria-labelledby="mc-home-title"><div class="mc-home-stage">'+
+     '<div class="mc-home-copy"><span class="mc-home-eyebrow">PEOPLE & CULTURE / 2027</span>'+
+     '<h1 id="mc-home-title">MADDIE <em>CENTRAL.</em></h1>'+
+     '<p>One confident view of people, performance and progress. Nine linked workspaces, all running on fictional demonstration data.</p>'+
+     '<div class="mc-hero-filter-chips" aria-label="Workspace shortcuts"><span class="mc-white-chip">All 09 workspaces</span>'+
+     '<a class="mc-white-chip" href="'+href('people-directory')+'">People directory '+icon('arrow')+'</a>'+
+     '<a class="mc-white-chip" href="'+href('executive-scoreboard')+'">Executive view '+icon('arrow')+'</a></div>'+
+     '<div class="mc-hero-context">TRIAL BUILD · '+esc(model.updatedAt)+' · NO LIVE CONNECTIONS</div></div>'+
+     '<div class="mc-home-card-stack" aria-label="Illustrative fictional workspace preview">'+
+     '<a class="mc-stack-card mc-stack-coral" href="'+href('people-directory')+'"><span class="mc-stack-label">01 / PEOPLE</span><strong>'+esc(m.headcount)+'</strong><small>fictional employees</small>'+icon('users')+'</a>'+
+     '<a class="mc-stack-card mc-stack-yellow" href="'+href('executive-scoreboard')+'"><span class="mc-stack-label">09 / EXECUTIVE</span><strong>'+esc(config.categories.length)+'</strong><small>connected workspaces</small>'+icon('chart')+'</a>'+
+     '<a class="mc-stack-card mc-stack-blue" href="'+href('maddie-journey')+'"><span class="mc-stack-label">04 / JOURNEY</span><strong>'+esc(m.pendingJourney)+'</strong><small>sample journeys to review</small>'+icon('route')+'</a></div>'+
+     '</div><span class="mc-home-decoration" aria-hidden="true"></span></section>'+
+     '<div class="section-head mc-section-editorial"><div><span class="eyebrow">01—09 / WORKSPACE NAVIGATION</span><h2>Everything in its place.</h2></div>'+
+     '<span class="mc-white-chip">Select a workspace '+icon('arrow')+'</span></div>'+
+     '<div class="category-grid mc-editorial-categories">'+config.categories.map((c,i)=>
+       '<a class="category-card mc-editorial-category mc-editorial-tone-'+(i%5)+'" href="'+href(c.id)+'" title="Open '+esc(c.label)+'"><div class="cat-top"><span class="category-icon tone-'+(i%4)+'">'+icon(c.icon)+'</span>'+
+       '<span class="mc-white-chip">'+String(i+1).padStart(2,'0')+' / 09</span></div>'+
+       '<h3>'+esc(c.label)+'</h3><p>'+esc(c.subtitle)+'</p>'+
+       '<div class="cat-foot"><span>'+c.subcategories.length+' linked views</span><span class="mc-arrow-spot">'+icon('arrow')+'</span></div></a>').join('')+'</div>'+
+     '<section class="mc-people-editorial" aria-labelledby="mc-team-title"><div class="mc-people-titlebar"><div><span class="eyebrow">FICTIONAL ROSTER / EDITORIAL PREVIEW</span>'+
+     '<h2 id="mc-team-title">PEOPLE BEHIND <span>THE WORK.</span></h2></div>'+
+     '<p>Three fictional identities from the 51-person demonstration masterlist. Monogram artwork is illustrative, not employee photography.</p></div>'+
+     '<div class="mc-profile-grid">'+spotlight.map(editorial).join('')+'</div></section>'+
+     '<div class="section-head lower"><div><span class="eyebrow">EXECUTIVE MONITORING / SAMPLE SNAPSHOT</span><h2>A sharper overview.</h2></div>'+
+     '<span class="mc-white-chip">Derived from fictional records</span></div>'+
      '<div class="metric-grid">'+metric(m.missing201,'201 file requests','Derived from sample checklist')+
        metric(m.attendanceExceptions,'Attendance exceptions','Verified fictional records only')+
        metric(m.openRequisitions,'Sample requisitions','Not real open positions')+
        metric(m.pendingJourney,'Pending journey records','Calculated from sample milestones')+'</div>'+
-     '<div class="section-head lower"><div><span class="eyebrow">QUICK NAVIGATION</span><h2>Executive and operational views</h2></div></div>'+
+     '<div class="section-head lower"><div><span class="eyebrow">QUICK NAVIGATION</span><h2>Executive shortcuts.</h2></div></div>'+
      '<div class="quick-grid">'+config.savedViews.map(v=>'<a class="quick-link" href="'+href(v.category,v.sub)+'">'+icon('chart')+'<span>'+esc(v.label)+'</span>'+icon('chevron')+'</a>').join('')+'</div>';
  };
-
  function renderSummaryDashboard(cat){
    if(!window.MC_SUMMARY)return '<p role="alert">Category summary module unavailable. Subcategory navigation remains accessible.</p>';
    const summary=window.MC_SUMMARY.create(model,cat.id,overrides);
@@ -138,7 +173,7 @@
      '<span class="mc-white-chip">'+esc(a.status||'Sample')+'</span></div>';
    const noteCard=(n,i)=>'<div class="mc-note-row"><span class="mc-note-symbol">'+icon(n.tone==='attention'?'info':'shield')+'</span><div><strong>'+esc(n.title)+'</strong><p>'+esc(n.detail)+'</p></div></div>';
    return '<a class="back-link" href="#/home">'+icon('chevron','back-icon')+' Back to main dashboard</a>'+
-     '<section class="mc-summary-hero" aria-labelledby="mc-summary-title"><div class="mc-hero-grid"><div class="mc-hero-text">'+
+     '<section class="mc-summary-hero mc-editorial-summary mc-workspace-'+esc(cat.id)+'" aria-labelledby="mc-summary-title"><div class="mc-hero-grid"><div class="mc-hero-text">'+
      '<div class="mc-summary-label"><span>WORKSPACE '+catNum+' / 09</span><span class="mc-white-chip">'+icon('check')+' Fictional sample data only</span></div>'+
      '<h1 id="mc-summary-title">'+esc(summary.title)+'</h1><p class="mc-hero-subtitle">'+esc(summary.subtitle)+'</p>'+
      '<p class="mc-hero-description">'+esc(summary.description)+'</p>'+
@@ -275,7 +310,8 @@
    root.innerHTML='<div class="shell">'+sidebar(cat)+'<div class="content-area">'+header(cat,sub)+
      '<main id="main-content" tabindex="-1">'+banner()+(cat?(sub?renderView(cat,sub):categoryPage(cat)):home())+'</main>'+
      footer()+'</div></div><div class="mobile-scrim" data-action="menu" aria-hidden="true"></div>';
-   root.classList.remove('navigation-open');
+   mobileNavOpen=false;
+   syncNavigation();
    const heading=root.querySelector('main h1');
    if(heading&&location.hash)heading.setAttribute('tabindex','-1');
  }
@@ -302,7 +338,22 @@
    const button=event.target.closest('[data-action]');if(!button)return;
    const action=button.dataset.action;
    if(action==='jump'){const id=button.dataset.jump;const target=['mc-metrics','mc-insights','mc-activity','subcategory-directory'].includes(id)?document.getElementById(id):null;if(target){target.scrollIntoView({behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});}return;}
-   if(action==='menu'){root.classList.toggle('navigation-open');return;}
+   if(action==='menu'){
+     if(!isMobile())return;
+     mobileNavOpen=!mobileNavOpen;
+     syncNavigation();
+     if(mobileNavOpen)root.querySelector('#side-menu a')?.focus();
+     else root.querySelector('.mobile-menu')?.focus();
+     return;
+   }
+   if(action==='collapse'){
+     if(isMobile())return;
+     sidebarCollapsed=!sidebarCollapsed;
+     save('sidebar-collapsed',String(sidebarCollapsed));
+     render();
+     root.querySelector('.desktop-collapse')?.focus();
+     return;
+   }
    if(action==='theme'){theme=theme==='light'?'dark':'light';save('theme',theme);document.documentElement.dataset.theme=theme;render();return;}
    if(action==='clear-filter'){filter={query:'',status:'all',division:'all',sort:'name',descending:false};render();return;}
    if(action==='save-filter'){save('filter-'+routeKey,JSON.stringify(filter));button.textContent='View saved locally';return;}
@@ -327,10 +378,43 @@
  });
  window.addEventListener('hashchange',()=>{render();const h=root.querySelector('main h1');if(h)h.focus({preventScroll:true});});
  root.addEventListener('click',event=>{
-   if(event.target.closest('.sidebar a'))root.classList.remove('navigation-open');
+   if(event.target.closest('.sidebar a')&&mobileNavOpen){
+     mobileNavOpen=false;syncNavigation();
+   }
  });
- document.addEventListener('keydown',e=>{if(e.key==='Escape')root.classList.remove('navigation-open');});
+ // Keep navigation keyboard accessible: no off-screen mobile links in Tab order.
+ function syncNavigation(){
+   root.classList.toggle('sidebar-collapsed',sidebarCollapsed);
+   root.classList.toggle('navigation-open',mobileNavOpen);
+   const aside=root.querySelector('#side-menu');
+   if(aside){
+     aside.inert=isMobile()&&!mobileNavOpen;
+     aside.setAttribute('aria-hidden',String(isMobile()&&!mobileNavOpen));
+   }
+   const menu=root.querySelector('.mobile-menu');
+   if(menu){
+     menu.setAttribute('aria-expanded',String(mobileNavOpen));
+     menu.setAttribute('aria-label',mobileNavOpen?'Close navigation menu':'Open navigation menu');
+   }
+   const main=root.querySelector('#main-content');
+   if(main)main.inert=isMobile()&&mobileNavOpen;
+ }
+ document.addEventListener('keydown',e=>{
+   if(e.key==='Escape'&&mobileNavOpen){
+     mobileNavOpen=false;syncNavigation();
+     root.querySelector('.mobile-menu')?.focus();
+     return;
+   }
+   if(e.key!=='Tab'||!mobileNavOpen||!isMobile())return;
+   const items=Array.from(root.querySelectorAll?.('#side-menu a, #side-menu button')||[]).filter(n=>!n.disabled);
+   if(!items.length)return;
+   const first=items[0],last=items[items.length-1];
+   if(e.shiftKey&&(document.activeElement===first||!items.includes(document.activeElement))){e.preventDefault();last.focus();}
+   else if(!e.shiftKey&&(document.activeElement===last||!items.includes(document.activeElement))){e.preventDefault();first.focus();}
+ });
+ window.addEventListener('resize',()=>{if(!isMobile()&&mobileNavOpen){mobileNavOpen=false;syncNavigation();}});
+
  const skip=document.getElementById('skip-content');if(skip)skip.addEventListener('click',()=>root.querySelector('#main-content')?.focus());
- window.MC_APP={model,config,render,rawRoute,allowed,filteredRows,getRole:()=>role,getFilter:()=>({...filter})};
+ window.MC_APP={model,config,render,rawRoute,allowed,filteredRows,getRole:()=>role,getFilter:()=>({...filter}),isSidebarCollapsed:()=>sidebarCollapsed,isMobileNavOpen:()=>mobileNavOpen};
  render();
 })();
