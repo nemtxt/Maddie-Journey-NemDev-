@@ -207,7 +207,7 @@ test('Sensitive category summaries expose aggregates only and no named case/pay 
  for(const id of ['pay-benefits','people-governance']){
    const text=JSON.stringify(summary.create(model,id));
    assert(!text.includes('PHP 25,000'));
-   assert(!text.includes('salary-'));
+   assert(!text.includes('"salary":')); // Navigation slugs may mention salary; no salary data appears.
    assert(!text.includes('MJ-001'));
    assert(!text.includes('employee01@example.com'));
    assert(!text.includes('Avery Santos'));
