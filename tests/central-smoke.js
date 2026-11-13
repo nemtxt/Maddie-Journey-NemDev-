@@ -448,4 +448,49 @@ test('Collapsed sidebar leaves live DOM in place for smooth transition and keeps
  assert(source.includes("window.MC_MOTION?.enter()"));
 });
 
+
+test('Accessible keyboard arrows cycle executive focus tabs without changing route',()=>{
+ const ctx=boot('#/category/people-directory');
+ let prevented=0;
+ const key=(current,name)=>{
+   ctx.listeners.keydown({
+     key:name,target:{dataset:{view:current},closest(s){
+       return s==='.mc-section-tabs [role="tab"]'?this:null;
+     }},
+     preventDefault(){prevented++;}
+   });
+ };
+ key('overview','ArrowRight');
+ assert.equal(ctx.window.MC_APP.getCategoryFocus(),'priorities');
+ key('priorities','End');
+ assert.equal(ctx.window.MC_APP.getCategoryFocus(),'explore');
+ key('explore','ArrowRight');
+ assert.equal(ctx.window.MC_APP.getCategoryFocus(),'overview');
+ key('overview','Home');
+ assert.equal(ctx.window.MC_APP.getCategoryFocus(),'overview');
+ assert.equal(prevented,4);
+ assert(ctx.classes.has('mc-focus-overview'));
+});
+test('Contextual All views retains ordinary category navigation from a detail screen',()=>{
+ const ctx=boot('#/category/people-directory/employee-masterlist');
+ let prevented=false;
+ ctx.handlers.click({preventDefault(){prevented=true},target:{closest(s){
+   return s==='[data-action]'?{dataset:{action:'view-link',view:'explore'}}:null;
+ }}});
+ assert.equal(prevented,false);
+ assert.equal(ctx.window.MC_APP.getCategoryFocus(),'overview');
+ assert(ctx.mount.innerHTML.includes('href="#/category/people-directory" data-action="view-link"'));
+});
+test('Reduced-motion CSS does not expose closed off-canvas mobile navigation',()=>{
+ const css=read('central/kinetic.css');
+ const reduce=css.slice(css.indexOf('@media(prefers-reduced-motion:reduce)'));
+ assert(reduce.includes('Preserve the mobile drawer'));
+ assert(reduce.includes('.sidebar,.mobile-scrim'));
+ assert(reduce.includes('animation:none!important;transition:none!important'));
+ assert(!reduce.includes('.sidebar{transform:none!important}'));
+ const offscreen=css.indexOf('transform:translate3d(-104%,0,0)');
+ const opened=css.indexOf('.navigation-open .sidebar{transform:translate3d(0,0,0)}');
+ assert(offscreen>0&&opened>offscreen);
+});
+
 console.log('\n'+passed+' Maddie Central fictional-trial tests passed. Manual browser and device tests still required.');
