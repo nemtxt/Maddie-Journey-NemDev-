@@ -200,7 +200,7 @@
      '<option value="status" '+(filter.sort==='status'?'selected':'')+'>Status</option><option value="division" '+(filter.sort==='division'?'selected':'')+'>Division</option></select></label>'+
      '<div class="filter-actions"><button class="small-btn" data-action="save-filter">'+icon('check')+' Save view</button>'+
      '<button class="small-btn" data-action="clear-filter">Clear</button>'+
-     '<button class="small-btn" data-action="export" '+(sub.classification==='Highly Restricted'?'disabled title="Export disabled for highly restricted records"':'')+'>'+icon('export')+' Export CSV</button></div></div>'+
+     '<button class="small-btn" data-action="export" '+(sub.classification!=='Internal'?'disabled title="Export disabled for sensitive records"':'')+'>'+icon('export')+' Export CSV</button></div></div>'+
      '<div id="record-results">'+renderRows(cat,sub)+'</div></div>'+
      '<p class="page-owner">This is a local fictional prototype. Controlled fields are for testing only; no cloud edits, uploads, reminders, or real permission checks occur.</p>';
  }
@@ -211,7 +211,7 @@
  }
  function render(){
    const {cat,sub}=rawRoute();
-   const next=cat?.id+'/'+(sub?.id||'')||'home';
+   const next=cat?(cat.id+'/'+(sub?.id||'')):'home';
    if(next!==routeKey){routeKey=next;setFilterFromStorage(next);}
    document.title=(sub?sub.label+' · ':cat?cat.label+' · ':'')+'MADDIE CENTRAL | 2027 (FICTIONAL TRIAL)';
    root.innerHTML='<div class="shell">'+sidebar(cat)+'<div class="content-area">'+header(cat,sub)+
@@ -232,7 +232,7 @@
    return '"'+s.replace(/"/g,'""')+'"';
  }
  function exportCsv(cat,sub){
-   if(!allowed(cat,sub)||sub.classification==='Highly Restricted')return;
+   if(!allowed(cat,sub)||sub.classification!=='Internal')return;
    const cols=['recordId','employeeId','name','division','status','owner','dueDate','updatedAt','detail'];
    const lines=[cols.join(',')].concat(filteredRows(cat,sub).map(r=>cols.map(k=>csvEscape(r[k])).join(',')));
    const blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});
@@ -271,6 +271,7 @@
    if(event.target.closest('.sidebar a'))root.classList.remove('navigation-open');
  });
  document.addEventListener('keydown',e=>{if(e.key==='Escape')root.classList.remove('navigation-open');});
+ const skip=document.getElementById('skip-content');if(skip)skip.addEventListener('click',()=>root.querySelector('#main-content')?.focus());
  window.MC_APP={model,config,render,rawRoute,allowed,filteredRows,getRole:()=>role,getFilter:()=>({...filter})};
  render();
 })();
