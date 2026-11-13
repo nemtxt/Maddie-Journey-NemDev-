@@ -17,11 +17,11 @@
  const unique=(items,fn)=>new Set(items.map(fn)).size;
  const pct=(v,n)=>n?Math.round(v*100/n):0;
  const fmt=n=>Number(n).toLocaleString('en-PH');
- function create(model,catId){
+ function create(model,catId,overrides={}){
    if(!model||!model.collections||!model.metrics||!model.config)throw Error('Fictional summary model unavailable');
    const cat=model.config.categories.find(x=>x.id===catId);
    if(!cat)throw Error('Unknown trial category '+catId);
-   const data=model.collections;
+   const data=Object.fromEntries(Object.entries(model.collections).map(([key,items])=>[key,items.map(r=>({...r,status:overrides[r.recordId]||r.status}))]));
    const entries=(id)=>model.recordsFor(catId,id);
    let metrics=[],distribution=[],highlights=[],activity=[],risks=[],focus='',description='',state='Sample data';
    const dated=model.updatedAt;
@@ -198,11 +198,11 @@
      const decisions=data.decisions,open=decisions.filter(x=>x.status==='Decision Required');
      metrics=[
        metric('Headcount',model.people.length,'Linked demo Employee Masterlist','users','pink'),
-       metric('Document requests',model.metrics.missing201,'201 file review queue','briefcase','butter'),
-       metric('Attendance exceptions',model.metrics.attendanceExceptions,'Verified fictional entries only','activity','coral'),
-       metric('Open requisitions',model.metrics.openRequisitions,'Fictional vacancies','briefcase','mint'),
+       metric('Document requests',counts(data.docs,'Requested'),'201 file review queue','briefcase','butter'),
+       metric('Attendance exceptions',data.attendance.filter(x=>['Late','Absent'].includes(x.status)).length,'Verified fictional entries only','activity','coral'),
+       metric('Open requisitions',data.hiring.filter(x=>!['Hired','Cancelled','Rejected'].includes(x.status)).length,'Fictional vacancies','briefcase','mint'),
        metric('Training programs',model.metrics.trainingPrograms,'Sample programs','graduation','lilac'),
-       metric('Journey reviews pending',model.metrics.pendingJourney,'Incomplete sample journeys','route','butter'),
+       metric('Journey reviews pending',data.journey.filter(x=>x.status!=='Completed').length,'Incomplete sample journeys','route','butter'),
        metric('Decisions required',open.length,'Synthetic executive actions','info','pink'),
        metric('Blocked actions',counts(decisions,'Blocked'),'Fictional blockers','shield','coral')
      ];
