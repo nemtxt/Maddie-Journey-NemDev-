@@ -100,3 +100,30 @@ Every category page now opens with a dedicated, source-derived executive **summa
 Run \`node tests/smoke.js\` and \`node tests/central-smoke.js\`. As of this update, **119 legacy + 21 new trial checks passed** in GitHub Actions. Browser/device visual acceptance and real security review are still outstanding.
 
 **Publishing note:** GitHub generated automatic “pages build and deployment” runs on trial-branch pushes. Repository branch isolation keeps \`main\` and the Claude branch unchanged, but does **not** by itself guarantee that a separately configured Pages published site will remain unaffected. Review GitHub Settings → Pages before treating the published URL as a protected production environment.
+
+
+## Editorial visual refinement + collapsible navigation (November 13, 2026)
+
+This trial-only refinement adapts the user-supplied layouts into an executive monitoring interface rather than reproducing their photography or branding:
+
+- **Black notes-board direction:** A black editorial dashboard masthead with large, confident type; white, rounded filter chips; and three vivid, linked pastel preview cards (people, executive and journey).
+- **People-story direction:** Three colorful, vertical sample-profile cards below the nine workspace categories. These are **fictional employees from the unchanged 51-person demonstration fixture**. Only CSS-generated initials, shapes and gradients are used — **no real headshots, stock portraits or personal photos**.
+- **Graphic-poster direction:** Strong cobalt, violet, apricot and yellow accents, geometric decorative elements, short uppercase metadata labels, and generous typographic hierarchy.
+- **Existing category summary dashboards remain:** Their data-derived metrics, white chips, status breakdowns, highlights, example activity and all 86 subcategory links are unchanged in meaning.
+
+### Collapsible sidebar behavior
+
+1. **Desktop (above 900px):** The sidebar collapse control in the top bar toggles between the full ~270px navigation and a compact **78px icon rail**. The choice is stored under the existing fictional trial storage prefix, using \`mc-trial-sidebar-collapsed\`. Every icon retains its visible title tooltip and accessible link label.
+2. **Mobile/tablet (900px or narrower):** Navigation uses an off-canvas panel and backdrop. The mobile button opens/closes it, **Escape** closes it, and **Tab** remains within the open drawer. While closed, off-screen navigation links are marked inert; the main panel is inert while the drawer is open.
+3. **Route continuity:** Existing category routes, all 86 subcategory deep links, saved local demonstration filters, theme switching, fictional record summaries and \`legacy.html\` remain available.
+4. **Appearance:** White chips keep dark text in both themes. Motion honors reduced-motion preferences, and the design includes a forced-colors fallback.
+
+### Relevant source and regression checks
+
+- \`central/editorial.css\` — new reference-inspired design styles; loaded only by trial \`index.html\`.
+- \`central/app.js\` — editorial dashboard and fictional profile cards, persistent desktop rail, keyboard-friendly mobile drawer.
+- \`tests/central-smoke.js\` — six additional checks covering styled home sections, mock identity provenance, collapse persistence, mobile open/close, route availability, white chips and no external photo/data sources.
+
+**Automated test result:** 119 unchanged legacy v3.7 tests + 27 fictional trial tests = **146 passing tests**. Real-device browser and screen-reader checks remain necessary; an automated smoke suite cannot certify pixel-perfect rendering on every device.
+
+**Deployment caution:** GitHub automatically initiates Pages build/deployment jobs after trial-branch pushes, despite no changes to the \`main\` branch. Check the repository's GitHub Pages source/environment before assuming the live website is unaffected. This refinement makes no changes to \`main\`, Claude branches, repository permissions or production integrations.
