@@ -1,0 +1,28 @@
+name: Maddie Central 2027 - Fictional Trial Checks
+
+on:
+  push:
+    branches:
+      - trial/maddie-central-2027-navigation
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: maddie-central-trial-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Legacy regression + new navigation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Legacy v3.7 regression checks
+        run: node tests/smoke.js
+      - name: Maddie Central navigation and fictional-data checks
+        run: node tests/central-smoke.js
