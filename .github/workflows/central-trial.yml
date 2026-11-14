@@ -28,3 +28,5 @@ jobs:
         run: node tests/central-smoke.js
       - name: macOS wireframe finalization checks
         run: node tests/macos-smoke.js
+      - name: Headless browser route and overflow checks when Chrome is available
+        run: node tests/browser-smoke.js
