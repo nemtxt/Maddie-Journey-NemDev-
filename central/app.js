@@ -326,6 +326,7 @@
    mobileNavOpen=false;
    syncNavigation();
    syncCategoryFocus();
+   window.MC_MACOS?.mount?.(root,model,config,overrides,{cat,sub});
    const heading=root.querySelector('main h1');
    if(heading&&location.hash)heading.setAttribute('tabindex','-1');
  }
@@ -333,6 +334,7 @@
    const {cat,sub}=rawRoute();if(!cat||!sub||!allowed(cat,sub))return;
    const area=root.querySelector('#record-results');
    if(area)area.innerHTML=renderRows(cat,sub);
+   window.MC_MACOS?.mount?.(root,model,config,overrides,{cat,sub});
  }
  function csvEscape(value){
    let s=String(value==null?'':value);
@@ -545,6 +547,7 @@
  window.addEventListener('resize',()=>{if(!isMobile()&&mobileNavOpen){mobileNavOpen=false;syncNavigation();}});
 
  const skip=document.getElementById('skip-content');if(skip)skip.addEventListener('click',()=>root.querySelector('#main-content')?.focus());
+ window.MC_MACOS?.initialize?.(root,()=>model,()=>config,()=>overrides);
  window.MC_APP={model,config,render,rawRoute,allowed,filteredRows,getRole:()=>role,getFilter:()=>({...filter}),isSidebarCollapsed:()=>sidebarCollapsed,isMobileNavOpen:()=>mobileNavOpen,getCategoryFocus:()=>categoryFocus,getWireframePeriod:()=>wfPeriod,getWireframeAlertFilter:()=>wfAlertFilter,getWireframeCalendarMonth:()=>wfCalendarMonth};
  render();
 })();
