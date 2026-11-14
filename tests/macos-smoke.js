@@ -91,7 +91,7 @@ test('Source-based trend is available only for workforce pulse',()=>{
  const html=macos.historyCard(model,'workforce-pulse');
  assert(html.includes('Exceptions over time'));
  assert(html.includes('fictional late/absent'));
- assert(html.includes('No forecast')===false);
+ assert(html.includes('No forecast'));
  assert(!html.includes('attendance rate is 95'));
 });
 test('Dialogs have accessible headings and close buttons',()=>{
