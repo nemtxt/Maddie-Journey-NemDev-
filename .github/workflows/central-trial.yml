@@ -1,9 +1,9 @@
-name: Maddie Central 2027 - Fictional Trial Checks
+name: Maddie Central 2027 - macOS Trial Validation
 
 on:
   push:
     branches:
-      - trial/maddie-central-2027-navigation
+      - trial/maddie-central-2027-macos-ui
   workflow_dispatch:
 
 permissions:
