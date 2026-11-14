@@ -45,8 +45,8 @@
      '<div><span class="mac-eyebrow">FICTIONAL EMPLOYEE SNAPSHOT</span>'+
      '<h2 id="mac-profile-title">'+esc(person.name)+'</h2>'+
      '<p>'+esc(person.position)+' · '+esc(person.division)+'</p></div></div>'+
-     '<div class="mac-profile-data">'+props.map(([label,val])=>
-       '<div><dt>'+esc(label)+'</dt><dd>'+esc(val)+'</dd></div>').join('')+'</div>'+
+     '<dl class="mac-profile-data">'+props.map(([label,val])=>
+       '<div><dt>'+esc(label)+'</dt><dd>'+esc(val)+'</dd></div>').join('')+'</dl>'+
      '<p class="mac-privacy-note">This preview is built exclusively from the 51-person fictional fixture. It contains no salary, email, medical, disciplinary or production personnel data.</p>'+
      '<div class="mac-modal-actions"><button type="button" data-mac-close="profile">Close preview</button>'+
      '<a href="'+path('people-directory','employee-masterlist')+'">Open Employee Masterlist</a></div>';
@@ -167,7 +167,7 @@
    }
  }
  function mount(app,model,config,overrides={},route={}){
-   if(!app||!app.querySelector||!model||!config)return;
+   if(!app||!app.querySelector||typeof app.insertAdjacentHTML!=='function'||!model||!config)return;
    app.classList?.add('mac-finalized');
    const bar=app.querySelector('.topbar');
    if(bar&&!bar.querySelector('[data-mac-alerts]')){
@@ -178,7 +178,7 @@
        .filter(item=>item.level==='high').reduce((n,x)=>n+x.count,0);
      btn.type='button';btn.className='mac-alert-button';btn.dataset.macAlerts='true';
      btn.title='Open fictional executive attention summary';
-     btn.setAttribute('aria-label','Review fictional attention items');
+     btn.setAttribute('aria-label','Review '+count+' fictional high-priority checkpoints');
      btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">'+
        '<path d="M18 8a6 6 0 0 0-12 0c0 8-3 8-3 10h18c0-2-3-2-3-10M10 21h4"/></svg>'+
        '<span class="mac-alert-indicator" aria-hidden="true"></span>';
