@@ -26,3 +26,5 @@ jobs:
         run: node tests/smoke.js
       - name: Maddie Central navigation and fictional-data checks
         run: node tests/central-smoke.js
+      - name: macOS wireframe finalization checks
+        run: node tests/macos-smoke.js
